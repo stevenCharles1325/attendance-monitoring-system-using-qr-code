@@ -106,6 +106,7 @@ const SigninForm = props => {
 				/>
 				<br/>
 				<TextField 
+					type="password"
 					defaultValue={userPass}
 					onChange={e => handleUserPass( e )}
 					sx={{ width: '90%' }} 

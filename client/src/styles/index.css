@@ -10,6 +10,10 @@ body{
 	box-sizing: border-box;
 }
 
+@font-face{
+	font-family: DigitalClock;
+	src: url('../fonts/clock/TickingTimebombBB.ttf');
+}
 
 #root{
 	width: 100vw;
@@ -21,9 +25,12 @@ body{
 }
 
 .App, .sign-in, .form,
-.form-sign-in, .form-sign-up{
+.form-sign-in, .form-sign-up,
+.sysadmin-dashboard {
 	width: 100%;
 	height: 100%;
+	padding: 0;
+	margin:  0;
 }
 
 
@@ -73,12 +80,105 @@ body{
 	transform: translate(-2px, -2px);
 }
 
+
 /*=================
 
-	  	FORM
+	  	MENU
 
 ==================*/
+.menu{
+	width: 100%;
+	height: 50px;
+	background-color: rgba(0, 0, 0, 0.8);
+	
+	margin: 0;
+	box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.4);
+	text-transform: capitalize;
 
+	color: white;
+}
+
+
+/*=================
+
+	REACT-CALENDAR
+
+==================*/
+.calendar{
+	width: 40% !important;
+	min-width: 300px !important;
+	height: 400px !important;
+	
+	background-color: rgba(255, 255, 255, 0.8);
+	font-size: 13px;
+	border: 1px solid rgba(0, 0, 0, 0.1) !important;
+	border-radius: 5px;
+}
+
+
+.calendar button{
+	color: rgba(0, 0, 0, 0.7);
+}
+
+.react-calendar__tile--now{
+}
+
+.react-calendar__month-view__weekdays__weekday{
+	color: #269ed9 !important;
+}
+
+.react-calendar__navigation{
+	font-weight: bold !important;
+}
+
+.react-calendar__tile--active{
+	color: white !important;
+	background-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+
+/*====================
+
+	GRAPH-CONTAINER
+
+======================*/
+.graph-container{
+	padding: 0;
+}
+
+.bar{
+	width: 50%;
+	min-width: 300px !important;
+	height: 400px;
+
+	overflow: auto;
+}
+
+.pie{
+	width: 50%;
+	min-width: 300px !important;
+	height: 400px;
+}
+
+
+/*====================
+
+		CLOCK
+
+======================*/
+.clock{
+	font-family: DigitalClock;
+	font-size: 50px;
+	text-align: left;
+
+	float: right;
+	padding: 0;
+	margin: 0;
+}
+
+/*
+		MOBILE AND TABLETS RESPONSE
+*/
 
 @media screen and (max-width: 912px){
 	.sign-in-side{
@@ -89,4 +189,6 @@ body{
 		display: none !important;
 	}
 }
+
+
 
