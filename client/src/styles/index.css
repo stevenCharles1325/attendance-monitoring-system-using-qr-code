@@ -18,6 +18,8 @@ body{
 #root{
 	width: 100vw;
 	height: 100vh;
+	overflow: auto;
+
 }
 
 .app-text-color{
@@ -26,13 +28,17 @@ body{
 
 .App, .sign-in, .form,
 .form-sign-in, .form-sign-up,
-.sysadmin-dashboard {
+.sysadmin-dashboard, .student-dashboard {
 	width: 100%;
 	height: 100%;
 	padding: 0;
 	margin:  0;
 }
 
+
+.shadow-right{
+	box-shadow: 5px 5px 5px 1px rgba( 0, 0, 0, 0.1 );
+}
 
 /*=================
 
@@ -105,10 +111,10 @@ body{
 
 ==================*/
 .calendar{
-	width: 40% !important;
+	width: 50% !important;
 	min-width: 300px !important;
 	height: 400px !important;
-	
+
 	background-color: rgba(255, 255, 255, 0.8);
 	font-size: 13px;
 	border: 1px solid rgba(0, 0, 0, 0.1) !important;
@@ -149,6 +155,7 @@ body{
 .bar{
 	width: 50%;
 	min-width: 300px !important;
+	/*min-width: 300px !important;*/
 	height: 400px;
 
 	overflow: auto;
@@ -157,6 +164,7 @@ body{
 .pie{
 	width: 50%;
 	min-width: 300px !important;
+	/*min-width: 300px !important;*/
 	height: 400px;
 }
 
@@ -176,10 +184,114 @@ body{
 	margin: 0;
 }
 
+
+/*=====================
+	
+	STUDENT DASHBOARD
+
+======================*/
+.student-dashboard{
+	background-color: #f3f4f2;
+}
+
+.student-dashboard-info-box{
+	background-color: white;
+
+	height: 80%;
+	width: 60%;
+
+	border-radius: 5px;
+}
+
+/*====================
+
+		QR-BOX
+
+======================*/
+.qr-box{
+	width: fit-content;
+
+	padding: 25px 10px 10px 10px;
+	margin: 50px;
+
+	background-color: white;
+	border-radius: 5px;
+	position: relative;
+}
+
+.qr-box::before{	
+	content: "QR CODE";
+
+	width: fit-content;
+	position: absolute;
+	top: -12px;
+	left: 50%;
+	transform: translate(-50%, 0px);
+
+	background-color: white;
+
+	color: rgba(0, 0, 0, 0.7);
+	font-weight: bold;
+	border-radius: 5px;
+	padding: 2px 5px 2px 5px;
+}
+
+
+/*==================
+
+	LABELED-TEXT
+
+====================*/
+.labeled-text{
+	width: 100%;
+
+	color: white;
+	text-transform: capitalize;
+
+	border-left: 5px solid #fad605;
+	transition: .2s ease-in-out;
+
+	position: relative;
+}
+
+.labeled-text-edit-btn{
+	display: none;
+	position: absolute;
+	top: 50%;
+	right: 5px;
+	transform: translate(0, -50%);
+}
+
+.labeled-text:hover{
+	background-color: rgba(0, 0, 0, 0.1);
+}
+
+.labeled-text:hover .labeled-text-edit-btn{
+	display: unset;
+}
+
+.labeled-text span:nth-child(1){
+	align-self: flex-end;
+	color: gray;
+}
+
+.labeled-text span:nth-child(1)::after{
+	content: ": ";
+}
+
+.labeled-text span:nth-child(2){
+	color: rgba(0, 0, 0, 0.7);
+	font-weight: bold;
+}
+
+.labeled-text-selected .labeled-text-edit-btn{
+	display: unset;
+}
+
+
 /*
 		MOBILE AND TABLETS RESPONSE
 */
-
 @media screen and (max-width: 912px){
 	.sign-in-side{
 		width: 100%;
@@ -187,6 +299,22 @@ body{
 
 	.sign-in-decor{
 		display: none !important;
+	}
+
+	.labeled-text{
+		background-color: white;
+		color: rgba(0, 0, 0, 0.8);
+		width: 100%;
+
+		margin: 0;
+
+	}
+
+	.student-dashboard-info-box{
+		width: 90%;
+		margin: 0 !important;
+		padding: 0;
+		background-color: white;
 	}
 }
 

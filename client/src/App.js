@@ -1,7 +1,7 @@
 import React from 'react';
 
 import SignIn from './views/Sign-in';
-import Dashboard from './views/sysadmin/Dashboard';
+import Dashboard from './views/student/Dashboard';
 
 function App() {
   return (

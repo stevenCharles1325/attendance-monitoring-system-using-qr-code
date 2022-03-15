@@ -1,5 +1,6 @@
 import React from 'react';
 
+import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 import Calendar from 'react-calendar';
 import Menu from '../../components/Menu';
@@ -35,7 +36,7 @@ ChartJS.register(
   BarElement,
   Title,
   Tooltip,
-  Legend,
+  Legend,	
   ArcElement
 );
 
@@ -47,23 +48,27 @@ const Dashboard = props => {
 				items={items}
 			/>
 			<div 
-				style={{ width: '100%', height: 'fit-content' }} 
+				style={{ width: '100%', height: 'fit-content', overflow: 'hidden' }} 
 				className="p-0 m-0 row d-flex justify-content-center align-items-center"
 			>	
 				<Clock/>
-				<div style={{ width: '100%'}}>
-					<Divider/>
+				<div style={{ width: '100%' }} className="p-0 m-0">
+					<Divider textAlign="left">
+						<Typography variant="h6">
+							Dasboard
+						</Typography>
+					</Divider>
 				</div>
-				<div style={{ width: '100%' }} className="p-0 m-0 my-5 row d-flex justify-content-center align-items-center">
-					<div className="my-3 col-lg-4 d-flex justify-content-center align-items-center">
+				<div style={{ width: '100%'}} className="p-0 m-0 my-5 row ">
+					<div className="p-0 m-0 my-3 col-lg-4 d-flex justify-content-center">
 						<PieGraph/>
 					</div>
 
-					<div className="my-3 col-lg-4 d-flex justify-content-center align-items-center">
+					<div className="p-0 m-0 my-3 col-lg-4 d-flex justify-content-center">
 						<BarGraph/>
 					</div>
 
-					<div className="my-3 col-lg-4 d-flex justify-content-center align-items-center">
+					<div className="p-0 m-0 my-3 col-lg-4 d-flex justify-content-center">
 						<Calendar className="calendar" />			
 					</div>
 				</div>
