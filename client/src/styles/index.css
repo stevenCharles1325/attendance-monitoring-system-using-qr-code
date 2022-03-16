@@ -26,13 +26,23 @@ body{
 	color: var(--text-color);
 }
 
-.App, .sign-in, .form,
+.App, .gate, .form,
 .form-sign-in, .form-sign-up,
 .sysadmin-dashboard, .student-dashboard {
 	width: 100%;
 	height: 100%;
 	padding: 0;
 	margin:  0;
+	/*transition: .2s ease-in-out;*/
+}
+
+.success-message-form{
+	color: #84d78f !important;
+}
+
+.error-message-form{
+	letter-spacing: 5px;
+	color: #f0806a !important;
 }
 
 
@@ -40,12 +50,13 @@ body{
 	box-shadow: 5px 5px 5px 1px rgba( 0, 0, 0, 0.1 );
 }
 
+
 /*=================
 
-	  SIGN-IN
+	  gate
 
 ==================*/
-.sign-in{
+.gate{
 	background-image: url('~/public/images/cct.jpg');
 	background-position: center;
 	background-repeat: no-repeat;
@@ -53,19 +64,19 @@ body{
 }
 
 
-.sign-in-side{
+.gate-side{
 	width: 40%;
 	padding: 0;
 	margin: 0;
 	background-color: transparent;
 }
 
-.sign-in-decor{
+.gate-decor{
 	background-color: #D9B5B5;
 }
 
 
-.sign-in-card{
+.gate-card{
 	width: 60%;
 	min-width: 300px;
 	height: 80%;
@@ -81,7 +92,7 @@ body{
 	transition: .2s ease-in-out;
 }
 
-.sign-in-card:hover{
+.gate-card:hover{
 	box-shadow: 15px 13px 3px 0 rgba(0, 0, 0, 0.25);
 	transform: translate(-2px, -2px);
 }
@@ -293,11 +304,11 @@ body{
 		MOBILE AND TABLETS RESPONSE
 */
 @media screen and (max-width: 912px){
-	.sign-in-side{
+	.gate-side{
 		width: 100%;
 	}
 
-	.sign-in-decor{
+	.gate-decor{
 		display: none !important;
 	}
 

@@ -31,11 +31,12 @@ var server = http.createServer(app);
 
 mongoose.connect( dbURI, { useUnifiedTopology: true, useNewUrlParser: true })
 .then( res => {
-  const { host, name, port } = res.connections[0];
-
-  server.listen( port, () => 
-    console.log(`DB_NAME: ${name}\nDB_HOST: ${host}\nDB_PORT: ${port}\nServer is now listening on port: ${port}`)
-  );
+  server.listen( port, () => {
+    console.log(`DB_NAME: ${res.connections[0].name}`);
+    console.log(`DB_HOST: ${res.connections[0].host}`);
+    console.log(`DB_PORT: ${res.connections[0].port}`);
+    console.log(`Server is now listening on port: ${port}`);
+  });
 })
 .catch( err => {
   throw err;

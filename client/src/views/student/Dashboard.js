@@ -21,7 +21,7 @@ const Dashboard = props => {
 							eyeRadius={10}
 							logoWidth={80}
 							logoOpacity={0.5}
-							value={props.id ?? 'sample'}
+							value={props.id ?? '1801201'}
 							logoImage="/images/logo/cctLogo_new.png" 
 						/>
 						{/*<ResponsiveQR percent={100} parent={studentQr}/>*/}

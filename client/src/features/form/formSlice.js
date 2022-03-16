@@ -5,7 +5,8 @@ export const formSlice = createSlice({
 	initialState: {
 		userId: '',
 		userPass: '',
-		userBday: ''
+		userBday: '',
+		userRole: ''
 	},
 	reducers: {
 		handleUserId: (state, action) => {
@@ -16,10 +17,19 @@ export const formSlice = createSlice({
 		},
 		handleUserBday: (state, action) => {
 			state.userBday = action.payload
+		},
+		handleUserRole: (state, action) => {
+			state.userRole = action.payload
 		}
 	}
 });
 
-export const { handleUserId, handleUserPass, handleUserBday } = formSlice.actions;
+export const { 
+	handleUserId, 
+	handleUserPass, 
+	handleUserBday, 
+	handleUserRole 
+} = formSlice.actions;
+
 export default formSlice.reducer;
 
