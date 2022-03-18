@@ -1,6 +1,6 @@
 import React from 'react';
 import Axios from 'axios';
-
+import Cookies from 'js-cookie';
 import { 
 	useSelector, 
 	useDispatch 
@@ -13,11 +13,14 @@ import {
 	handleUserRole
 } from '../features/form/formSlice';
 
+import { handleNavigateTo } from '../features/navigation/navigationSlice';
+
 import Stepper from '@mui/material/Stepper';
 import Step from '@mui/material/Step';
 import StepLabel from '@mui/material/StepLabel';
 
 import Spacer from './Spacer';
+import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
@@ -38,54 +41,24 @@ const steps = ['Verification', 'Create account'];
 let stepCount = 0;
 
 const Form = props => {
-	const initMessage = { text: null, variant: null };
-
 	const { 
 		userId, 
 		userPass, 
 		userBday, 
 		userRole 
 	} = useSelector( state => state.form );
-	// const [message, setMessage] = React.useState( initMessage );
+
+	const initMessage = { text: null, variant: null };
+
+	const [message, setMessage] = React.useState( initMessage );
+	const [navigate, setNavigateTo] = React.useState( null );
 	const [content, setContent] = React.useState( null );
 
 	const dispatch = useDispatch();
-	const handleSignin = () => {
-		// In progress...
-	}
+	const [action, setAction] = React.useState( null );
 
-	const handleSignup = () => {
-		// In progress...
-	}
-
-	const handleVerification = async () => {
-		try{
-			const { role } = await Axios.post(`${window.API_BASE_ADDRESS}/verify/user/${userId}`) 
-			dispatch(handleUserRole( role ));
-
-			return 1;
-		}
-		catch( err ){
-			return 0;
-		}
-		// return await Axios.post(`${window.API_BASE_ADDRESS}/verify/user/${userId}`)
-		// .then( res => {
-		// 	dispatch(handleUserRole( res.role ));
-		// 	// setMessage({ text: res.message, variant: 'success' });
-
-		// 	return 1;
-		// })
-		// .catch( err => {
-		// 	// if( err?.response?.data?.message ){
-		// 	// 	setMessage({ text: err.response.data.message, variant: 'error' });
-		// 	// }
-		// 	// else{
-		// 	// 	setMessage({ text: 'Please try again!', variant: 'error' });
-		// 	// }
-
-		// 	return 0;
-		// });
-	}
+	const handleSignin = () => setAction('signin');
+	const handleSignup = () => setAction('signup');
 
 	const signin = (
 		<SigninForm 
@@ -93,6 +66,8 @@ const Form = props => {
 			userPass={userPass} 
 			userBday={userBday}
 			userRole={userRole}
+			setMessage={val => setMessage( val )}
+			handleSignin={() => handleSignin()}
 			handleUserId={e => dispatch(handleUserId( e.target.value ))}
 			handleUserPass={e => dispatch(handleUserPass( e.target.value ))}
 			handleUserBday={e => dispatch(handleUserBday( e.target.value ))}
@@ -106,17 +81,18 @@ const Form = props => {
 			userPass={userPass} 
 			userBday={userBday}
 			userRole={userRole}
+			setMessage={val => setMessage( val )}
 			handleUserId={e => dispatch(handleUserId( e.target.value ))}
 			handleUserPass={e => dispatch(handleUserPass( e.target.value ))}
 			handleUserBday={e => dispatch(handleUserBday( e.target.value ))}
-			handleVerification={() => handleVerification()}
+			// handleVerification={() => handleVerification()}
 			setFormType={val => props?.setFormType?.( val )}
 		/>
 	);	
 
-	// React.useEffect(() => {
-	// 	if( message.text ) setTimeout(() => setMessage( initMessage ), 10000);
-	// }, [message]);
+	React.useEffect(() => {
+		if( message.text ) setTimeout(() => setMessage( initMessage ), 2000);
+	}, [message]);
 
 	React.useEffect(() => {
 		if( props?.formType === 'signin' ){
@@ -129,9 +105,45 @@ const Form = props => {
 		setContent( <FormLoading/> );
 	}, [props?.formType]);
 
+	React.useEffect(() => {
+		switch( action ){
+			case 'signin':
+				// do this
+				Axios.post(`${window.API_BASE_ADDRESS}/auth/sign-in`, {
+					username: userId,
+					password: userPass
+				})
+				.then( res => {
+					Cookies.set('token', res.data.accessToken);
+					Cookies.set('rtoken', res.data.refreshToken);
+
+					dispatch(handleNavigateTo( `app/${res?.data?.role}/dashboard` ))
+				})
+				.catch( err => console.error( err ));
+				break;
+
+			case 'signup':
+				break;
+
+			case 'verify':
+				break;
+
+			default:
+				return;
+		}
+		
+		setAction( null );
+	}, [userId, userPass, userBday, userRole, action]);
 
 	return(
 		<div className="form">
+			{ 
+				message.text && 
+				(<div style={{ position: 'absolute', top: '0', left: '0', width: '100%' }}>
+					<Alert severity={message.variant}>{ message.text }</Alert>
+				</div>)
+			}
+			{ navigate }
 			{ content }
 		</div>
 	);
@@ -193,7 +205,7 @@ const SigninForm = props => {
 					Sign-up
 				</QamsButton>
 
-				<QamsButton size="small" variant="contained">
+				<QamsButton size="small" variant="contained" onClick={() => props?.handleSignin?.()}>
 					Sign-in
 				</QamsButton>
 			</div>		
@@ -211,10 +223,53 @@ const SigninForm = props => {
 // Signing-up users are prompted with a verification form first.
 const SignupForm = props => {
 	const { userId, userPass, handleUserId, handleUserPass } = props;
+
 	const [content, setContent] = React.useState( null );
 	const [activeStep, setActiveStep] = React.useState( 0 );
 
 	const [isApproved, setIsApproved] = React.useState( false );
+	const [action, setAction] = React.useState( null );
+
+	const dispatch = useDispatch();
+
+	const handleVerification = async id => {
+		try{
+			const { role } = await Axios.post(`${window.API_BASE_ADDRESS}/verify/user/${id}`) 
+			dispatch(props.handleUserRole( role ));
+
+			props?.setMessage({
+				text: 'Account has been verified!',
+				variant: 'success'
+			});
+
+			setActiveStep( 1 );
+		}
+		catch( err ){
+			props?.setMessage({
+				text: 'Account does not exist!',
+				variant: 'error'
+			});
+
+			setActiveStep( 0 );
+		}
+		// return await Axios.post(`${window.API_BASE_ADDRESS}/verify/user/${userId}`)
+		// .then( res => {
+		// 	dispatch(handleUserRole( res.role ));
+		// 	// setMessage({ text: res.message, variant: 'success' });
+
+		// 	return 1;
+		// })
+		// .catch( err => {
+		// 	// if( err?.response?.data?.message ){
+		// 	// 	setMessage({ text: err.response.data.message, variant: 'error' });
+		// 	// }
+		// 	// else{
+		// 	// 	setMessage({ text: 'Please try again!', variant: 'error' });
+		// 	// }
+
+		// 	return 0;
+		// });
+	}
 
 	const TrueSignup = () => (
 		<div 
@@ -265,10 +320,11 @@ const SignupForm = props => {
 		</div>	
 	);
 
-	const verify = async fn => {
-		const returnVal = await fn();
-		setActiveStep( returnVal );
-	}
+	React.useEffect(() => {
+		if( action === 'verify' ){
+			handleVerification( userId );
+		}
+	}, [userId, action]);
 
 	React.useEffect(() => {
 		setContent( isApproved ? <TrueSignup/> : <Verification/> );
@@ -304,7 +360,7 @@ const SignupForm = props => {
 						? <QamsButton size="small" variant="contained">
 							Sign-up
 						</QamsButton>
-						: <QamsButton size="small" variant="contained" onClick={() => verify(props?.handleVerification)}>
+						: <QamsButton size="small" variant="contained" onClick={() => setAction('verify')}>
 							Verify
 						</QamsButton>
 				}

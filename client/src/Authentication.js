@@ -13,7 +13,9 @@ import { Navigate } from 'react-router-dom';
 
 const Authentication = props => {
 	const [view, setView] = React.useState( null ); // This will contain the requested view.
+	const [userLevel, setUserLevel] = React.useState( null );
 	const [content, setContent] = React.useState( props?.loading );
+	const [status, setStatus] = React.useState( null );
 
 	/* ====================================================
 	+	These are lists containing each pathnames of views.
@@ -31,27 +33,8 @@ const Authentication = props => {
 	// const gateViews = props?.gateViews;
 
 	const verify = async token => {
-		const success = () => {
-			viewPaths.forEach(( viewPath, index ) => {
-				if( viewPath === window.location.pathname ){
-					return;
-				}
-				else if( index === viewPaths.length - 1 ){
-					return setView( viewPaths[ 0 ] );
-				}
-			});
-		}
-
-		const error = () => {
-			gatePaths.forEach(( gatePath, index ) => {
-				if( gatePath === window.location.pathname ){
-					return;
-				}
-				else if( index === gatePaths.length - 1 ){
-					return setView( gatePaths[ 0 ] );
-				}
-			});
-		}
+		const success = () => setStatus(() => 'success');
+		const error = () => setStatus(() => 'error');
 
 		if( props?.verificationEndpoint ){
 			Axios.get( props.verificationEndpoint, {
@@ -60,6 +43,7 @@ const Authentication = props => {
 	            }
 			})
 			.then( res => {
+				if( res?.data?.user?.role ) setUserLevel( res.data.user.role );
 				if( props?.onSuccess ) props.onSuccess( res );
 				
 				// set view to request view
@@ -83,6 +67,59 @@ const Authentication = props => {
 	}
 
 	React.useEffect(() => {
+		let { pathname } = window.location;
+		pathname = pathname[ pathname.length - 1 ] === '/' && pathname !== '/' 
+			? pathname.slice(0, pathname.length - 1 )
+			: pathname;
+
+		if( status === 'success' ){
+			if(viewPaths.includes( pathname ) || (pathname === props?.root || pathname === '/')){
+				if( userLevel && props?.userLevels ){
+					if( props.userLevels[ userLevel ] ){
+
+						const availablePaths = viewPaths.slice( 
+							props?.userLevels?.[ userLevel ]?.[ 0 ], 
+							props?.userLevels?.[ userLevel ]?.[ 1 ] 
+						);
+
+						const indexOfUserPath = availablePaths.indexOf( pathname );
+
+						if( indexOfUserPath >= 0 ){
+							return setView( pathname );
+						}
+						else if( props?.root === pathname || pathname === '/' ){
+							return setView( availablePaths[ 0 ] );
+						}
+						else{
+							return setContent( props?.pageNotFound );
+						}
+					}
+				}
+
+				return setView( pathname );
+			}
+			else{
+				return setContent( props?.pageNotFound );
+			}
+
+			setStatus( null );
+		}
+		else if( status === 'error' ){
+			gatePaths.forEach(( gatePath, index ) => {
+				if( gatePath === pathname ){
+					return setView( gatePaths[ index ] );
+				}
+				else if( index === gatePaths.length - 1 ){
+					return setView( gatePaths[ 0 ] );
+				}
+			});
+
+			setStatus( null );
+		}
+
+	}, [status, userLevel, viewPaths, gatePaths]);
+
+	React.useEffect(() => {
 		const token = Cookies.get('token');
 
 		verify( token );
@@ -91,10 +128,11 @@ const Authentication = props => {
 	React.useEffect(() => {
 		if( view && props?.status !== 'off' ){ 
 			setTimeout(() => setContent( props.children ), 1000);
-			props?.setRedirectTo?.( <Navigate to={view}/> );
+			props?.setRedirectTo?.( view );
 		}
 
 	}, [view]);
+
 
 	return (
 		<>

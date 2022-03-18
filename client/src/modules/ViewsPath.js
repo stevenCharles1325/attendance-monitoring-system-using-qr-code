@@ -14,9 +14,19 @@ export default class ViewPaths{
 				: `${root}/${path}`;
 		}
 
+		const handleCleanViewName = name => {
+			if( name[ name.length ] === '/' ){
+				if( name[ 0 ] === '/' ) return name.slice( 1, name.length - 2 );
+
+				return name.slice( 0, name.length - 2 );
+			}
+
+			return name;
+		}
+		
 		return viewNames.map( viewName => 
 			viewName.indexOf('/') >= 0
-				? handleGeneratePaths( this.root )( viewName.replaceAll('/', '') )
+				? handleGeneratePaths( this.root )(handleCleanViewName( viewName ))
 				: handleGeneratePaths( this.root )( viewName )
 		);
 
@@ -44,6 +54,10 @@ export default class ViewPaths{
 
 	get signIn(){
 		return this.signInIndex;
+	}
+
+	getRoot(){
+		return this.root;
 	}
 
 	printPaths(){

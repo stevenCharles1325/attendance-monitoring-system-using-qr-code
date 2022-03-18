@@ -19,6 +19,7 @@ var User = require('../models/User');
 var Student = require('../models/StudentRecord');
 var Teacher = require('../models/TeacherRecord');
 
+const MASTER_ROLE = 'sysadmin';
 
 const requestAccessToken = ( user ) => {
   return jwt.sign( user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '24h' } );
@@ -41,6 +42,7 @@ router.post('/sign-in', async (req, res, next) => {
 
         return res.json({
           message: `Welcome ${ username }!`,
+          role: doc.role,
           accessToken,
           refreshToken
         });
