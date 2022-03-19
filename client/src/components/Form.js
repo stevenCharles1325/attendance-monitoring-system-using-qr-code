@@ -117,15 +117,20 @@ const Form = props => {
 					Cookies.set('token', res.data.accessToken);
 					Cookies.set('rtoken', res.data.refreshToken);
 
-					dispatch(handleNavigateTo( `app/${res?.data?.role}/dashboard` ))
+					dispatch(handleUserRole( res.data.role ));
+					dispatch(handleNavigateTo( `app/${res?.data?.role}/dashboard` ));
 				})
-				.catch( err => console.error( err ));
+				.catch( err => {
+					if( err?.response?.status === 403 && err?.response?.data?.message ){
+						setMessage({
+							text: err.response.data.message,
+							variant: 'error'
+						});
+					}
+				});
 				break;
 
 			case 'signup':
-				break;
-
-			case 'verify':
 				break;
 
 			default:
@@ -136,7 +141,7 @@ const Form = props => {
 	}, [userId, userPass, userBday, userRole, action]);
 
 	return(
-		<div className="form">
+		<div className="form pt-3">
 			{ 
 				message.text && 
 				(<div style={{ position: 'absolute', top: '0', left: '0', width: '100%' }}>
@@ -162,6 +167,24 @@ const FormLoading = () => (
 
 const SigninForm = props => {
 	const { userId, userPass, handleUserId, handleUserPass } = props;
+
+	const password = React.useRef();
+
+	const handleEnter = e => {
+		if( e.key === 'Enter' ) props?.handleSignin?.();
+	}
+
+	React.useEffect(() => {
+		if( password.current ){
+			password.current.addEventListener('keydown', e => handleEnter( e ));
+		}
+
+		return () => {
+			if( password.current ){
+				password.current.removeEventListener('keydown', e => handleEnter( e ));
+			}
+		}
+	}, [password]);
 
 	return(
 		<div className="form-sign-in d-flex flex-column justify-content-around align-items-center">
@@ -189,6 +212,7 @@ const SigninForm = props => {
 				/>
 				<br/>
 				<TextField 
+					ref={password}
 					type="password"
 					defaultValue={userPass}
 					onChange={e => handleUserPass( e )}
@@ -242,7 +266,9 @@ const SignupForm = props => {
 				variant: 'success'
 			});
 
+			setIsApproved( true );
 			setActiveStep( 1 );
+			setAction( null );
 		}
 		catch( err ){
 			props?.setMessage({
@@ -250,7 +276,9 @@ const SignupForm = props => {
 				variant: 'error'
 			});
 
+			setIsApproved( false );
 			setActiveStep( 0 );
+			setAction( null );
 		}
 		// return await Axios.post(`${window.API_BASE_ADDRESS}/verify/user/${userId}`)
 		// .then( res => {
@@ -320,6 +348,23 @@ const SignupForm = props => {
 		</div>	
 	);
 
+	const handleEnter = approval => e => {
+		if( e.key === 'Enter' ){
+			if( approval ){
+				// In progress...
+			}
+			else{
+				setAction('verify');
+			}
+		} 
+	}
+
+	React.useEffect(() => {
+		window.addEventListener('keydown', handleEnter( isApproved ));
+
+		return () => window.removeEventListener('keydown', handleEnter( isApproved ));
+	}, [isApproved]);
+
 	React.useEffect(() => {
 		if( action === 'verify' ){
 			handleVerification( userId );
@@ -347,6 +392,7 @@ const SignupForm = props => {
 				<SignUpSteps activeStep={activeStep}/>
 			</div>
 			{ content }
+			<br/>
 			<div 
 				style={{ width: '100%' }}
 				className="my-3 d-flex flex-row justify-content-around align-items-center"
@@ -354,7 +400,6 @@ const SignupForm = props => {
 				<QamsButton size="small" variant="contained" onClick={() => props?.setFormType?.( 'signin' )}>
 					Sign-in
 				</QamsButton>
-
 				{
 					isApproved
 						? <QamsButton size="small" variant="contained">

@@ -1,5 +1,8 @@
 import React from 'react';
 import uniqid from 'uniqid';
+import Cookie from 'js-cookie';
+import { useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 import Collapse from '@mui/material/Collapse';
 import Drawer from '@mui/material/Drawer';
@@ -25,9 +28,12 @@ import AccountCircle from '@mui/icons-material/AccountCircle';
 
 
 const Menu = props => {
+	const { userRole } = useSelector( state => state.form );
+
 	const [drawer, setDrawer] = React.useState( false );
 	const [dropDowns, setDropDowns] = React.useState( {} );
-	const [active, setActive] = React.useState( props?.items?.[0]?.text );
+	const [active, setActive] = React.useState( Cookie.get('active-menu') ?? props?.items?.[ userRole ]?.[0]?.text );
+	const location = useLocation();
 
 	const toggleDrawer = (open) => (event) => {
 		if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
@@ -51,23 +57,25 @@ const Menu = props => {
 		: { backgroundColor: 'white', color: 'black' };
 
 	const handleActiveItem = title => fn => () => {
+		Cookie.set('active-menu', title);
 		setActive( title );
+		
 		return fn?.();
 	}	
 
 	React.useEffect(() => {
-		if( props?.items?.length ){
+		if( props?.items?.[ userRole ]?.length ){
 			let tempDropDowns = {};
 
-			props.items.forEach(({ collapsable }, index) => {
+			props.items[ userRole ].forEach(({ collapsable }, index) => {
 				if( collapsable	) tempDropDowns[ index ] = false;
 			});
 
 			setDropDowns(() => ({ ...tempDropDowns }));
 			tempDropDowns = null;
 		}
-	}, [props?.items]);
 
+	}, [props?.items, userRole]);
  
 	const list = () => (
 		<Box
@@ -93,7 +101,6 @@ const Menu = props => {
 				</div>
 				<br/>
 				<div 
-					style={{ }} 
 					className="col-12 d-flex justify-content-center align-items-center"
 				>
 					<h6>{ props?.username ?? 'User' }</h6>
@@ -103,7 +110,7 @@ const Menu = props => {
 			<Divider sx={{ margin: '5px' }} variant="inset"/>
 			<br/>
 			<List>
-				{props?.items?.map?.(({ text, icon, onClick, collapsable, subList }, index) => (
+				{props?.items?.[ userRole ]?.map?.(({ text, icon, onClick, collapsable, subList }, index) => (
 					collapsable	=== true 
 						? <React.Fragment key={uniqid()}>
 							<ListItemButton onClick={() => handleCollapsableListClick( index )}>
@@ -147,30 +154,40 @@ const Menu = props => {
 		</Box>
 	);
 	
-
 	return(
-		<div className="menu d-flex justify-content-start align-items-center">
-			<Drawer
-				anchor="left"
-				open={drawer}
-				onClose={toggleDrawer( false )}
-			>
-				{ list() }
-			</Drawer>
-			<div style={{ width: 'fit-content' }} className="mx-3">
-				<IconButton onClick={() => setDrawer( !drawer )}>
-					<MenuOpen sx={{ color: 'white' }}/>
-				</IconButton>
-			</div>
-			<div className="col-5">
-				<Typography variant="h6">
-					{ props.title ?? 'menu' }
-				</Typography>
-			</div>
-			<div style={{ width: '100%' }} className="mx-3 d-flex justify-content-end">
-				<IconButton>
-					<PowerSettingsNew sx={{ color: 'white' }}/>
-				</IconButton>
+		<div className="view-box d-flex flex-column">
+			{
+				location.pathname === '/app/gate'
+					? null
+					: (
+						<div className="menu d-flex justify-content-start align-items-center">
+							<Drawer
+								anchor="left"
+								open={drawer}
+								onClose={toggleDrawer( false )}
+							>
+								{ list() }
+							</Drawer>
+							<div style={{ width: 'fit-content' }} className="mx-3">
+								<IconButton onClick={() => setDrawer( !drawer )}>
+									<MenuOpen sx={{ color: 'white' }}/>
+								</IconButton>
+							</div>
+							<div className="col-5">
+								<Typography variant="h6">
+									{ props.title ?? 'menu' }
+								</Typography>
+							</div>
+							<div style={{ width: '100%' }} className="mx-3 d-flex justify-content-end">
+								<IconButton>
+									<PowerSettingsNew sx={{ color: 'white' }}/>
+								</IconButton>
+							</div>
+						</div>
+					)
+			}
+			<div className="view-content flex-grow-1">
+				{ props?.children }
 			</div>
 		</div>
 	);	

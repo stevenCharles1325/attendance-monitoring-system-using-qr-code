@@ -3,7 +3,6 @@ import React from 'react';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 import Calendar from 'react-calendar';
-import Menu from '../../components/Menu';
 import Clock from '../../components/Clock';
 
 import {
@@ -18,16 +17,6 @@ import {
 } from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
 
-
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import AccountBox from '@mui/icons-material/AccountBox';
-import Folder from '@mui/icons-material/Folder';
-import Assessment from '@mui/icons-material/Assessment';
-import AccountCircle from '@mui/icons-material/AccountCircle';
-import SsidChart from '@mui/icons-material/SsidChart';
-import Feed from '@mui/icons-material/Feed';
-import ListAlt from '@mui/icons-material/ListAlt';
-
 import 'react-calendar/dist/Calendar.css';
 
 ChartJS.register(
@@ -41,36 +30,27 @@ ChartJS.register(
 );
 
 const Dashboard = props => {
-
 	return(
-		<div className="sysadmin-dashboard">
-			<Menu 
-				items={items}
-			/>
-			<div 
-				style={{ width: '100%', height: 'fit-content', overflow: 'hidden' }} 
-				className="p-0 m-0 row d-flex justify-content-center align-items-center"
-			>	
-				<Clock/>
-				<div style={{ width: '100%' }} className="p-0 m-0">
-					<Divider textAlign="left">
-						<Typography variant="h6">
-							Dasboard
-						</Typography>
-					</Divider>
+		<div className="sysadmin-dashboard row d-flex justify-content-center align-items-center">
+			<Clock/>
+			<div style={{ width: '100%' }} className="p-0 m-0">
+				<Divider textAlign="left">
+					<Typography variant="h6">
+						Dasboard
+					</Typography>
+				</Divider>
+			</div>
+			<div style={{ width: '100%'}} className="p-0 m-0 my-5 row ">
+				<div className="p-0 m-0 my-3 col-lg-4 d-flex justify-content-center">
+					<PieGraph/>
 				</div>
-				<div style={{ width: '100%'}} className="p-0 m-0 my-5 row ">
-					<div className="p-0 m-0 my-3 col-lg-4 d-flex justify-content-center">
-						<PieGraph/>
-					</div>
 
-					<div className="p-0 m-0 my-3 col-lg-4 d-flex justify-content-center">
-						<BarGraph/>
-					</div>
+				<div className="p-0 m-0 my-3 col-lg-4 d-flex justify-content-center">
+					<BarGraph/>
+				</div>
 
-					<div className="p-0 m-0 my-3 col-lg-4 d-flex justify-content-center">
-						<Calendar className="calendar" />			
-					</div>
+				<div className="p-0 m-0 my-3 col-lg-4 d-flex justify-content-center">
+					<Calendar className="calendar" />			
 				</div>
 			</div>
 		</div>
@@ -128,64 +108,6 @@ const BarGraph = props => {
 		</div>
 	);
 }
-
-
-const items = [
-	{
-		text: 'Dashboard',
-		icon: <DashboardIcon/>
-	},
-	{
-		text: 'Account',
-		icon: <AccountBox/>,
-		collapsable: true,
-		subList: [
-			{
-				text: 'Students Account',
-				icon: <AccountCircle/>
-			},
-			{
-				text: 'Teachers Account',
-				icon: <AccountCircle/>
-			}
-		]
-	},
-	{
-		text: 'Records',
-		icon: <Folder/>,
-		collapsable: true,
-		subList: [
-			{
-				text: 'Students Record',
-				icon: <ListAlt/>
-			},
-			{
-				text: 'Teachers Record',
-				icon: <ListAlt/>
-			},
-			{
-				text: 'Attendance Record',
-				icon: <ListAlt/>
-			}
-		]
-	},
-	{
-		text: 'Reports',
-		icon: <Assessment/>,
-		collapsable: true,
-		subList: [
-			{
-				text: 'Graph',
-				icon: <SsidChart/>
-			},
-			{
-				text: 'School Form 2',
-				icon: <Feed/>
-			}
-		]
-	}
-];
-
 
 
 export default Dashboard;

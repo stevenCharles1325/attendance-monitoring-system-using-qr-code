@@ -19,7 +19,6 @@ body{
 	width: 100vw;
 	height: 100vh;
 	overflow: auto;
-
 }
 
 .app-text-color{
@@ -34,7 +33,14 @@ body{
 	height: 100%;
 	padding: 0;
 	margin:  0;
+
+	background-color: transparent;
 	/*transition: .2s ease-in-out;*/
+}
+
+.sysadmin-dashboard, .student-dashboard,
+.students-account, .teachers-account {
+	overflow: auto;
 }
 
 .form{
@@ -48,7 +54,7 @@ body{
 
 /*=================
 
-	  gate
+	  	gate
 
 ==================*/
 .gate{
@@ -98,9 +104,17 @@ body{
 	  	MENU
 
 ==================*/
+.view-box{
+	width: 100%;
+	height: 100%;
+}
+
 .menu{
 	width: 100%;
-	height: 50px;
+	height: 5%;
+	min-height: 50px;
+	max-height: 50px;
+
 	background-color: rgba(0, 0, 0, 0.8);
 	
 	margin: 0;
@@ -108,6 +122,12 @@ body{
 	text-transform: capitalize;
 
 	color: white;
+}
+
+.view-content{
+	width: 100%;
+
+	overflow: auto;
 }
 
 
@@ -295,6 +315,81 @@ body{
 	display: unset;
 }
 
+/*=======================
+
+		Account-view
+
+========================*/
+.account-view{
+	width: 80%;
+	min-width: 1000px;
+	height: 80%;
+	min-height: 500px;
+
+	background-color: white;
+}
+
+.account-view-top-bar, .account-view-bot-bar{
+	color: var( --text-color );
+	height:  10%;
+}
+
+.account-view-add-user, .account-view-add-section,
+.account-view-add-strand {
+	width: fit-content;
+	transition: .8s ease-in-out;
+}
+
+
+.account-view-add-user:hover, .account-view-add-section:hover,
+.account-view-add-strand:hover{
+	cursor: pointer;
+
+	width: 150px;
+	border-radius: 25px;
+	background-color: var( --bg-color );
+}
+
+.account-view-add-user:hover::after{
+	content: "ADD ACCOUNT";
+	font-size: 13px;
+
+	width: 150px;
+	
+	border-radius: 25px;
+	background-color: var( --bg-color );
+}
+
+.account-view-add-section:hover::after{
+	content: "ADD SECTION";
+	font-size: 13px;
+
+	width: 150px;
+	
+	border-radius: 25px;
+	background-color: var( --bg-color );
+}
+
+.account-view-add-strand:hover::after{
+	content: "ADD STRAND";
+	font-size: 13px;
+
+	width: 150px;
+	
+	border-radius: 25px;
+	background-color: var( --bg-color );
+}
+
+.account-view-item{
+	color: #8e8e8e;
+}
+
+.account-view-item:hover{
+	background-color: #e8e8e8;
+	display: flex;
+	align-content: center;
+}
+
 
 /*
 		MOBILE AND TABLETS RESPONSE
@@ -326,4 +421,21 @@ body{
 }
 
 
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
 
+::-webkit-scrollbar-track {
+  background: #d0d0d0;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #7a7a7a;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var( --text-color );
+}

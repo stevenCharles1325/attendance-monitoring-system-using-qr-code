@@ -1,7 +1,7 @@
 import React from 'react';
 import Axios from 'axios';
 import Cookies from 'js-cookie';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 
 
 /* ========================================================================
@@ -16,6 +16,7 @@ const Authentication = props => {
 	const [userLevel, setUserLevel] = React.useState( null );
 	const [content, setContent] = React.useState( props?.loading );
 	const [status, setStatus] = React.useState( null );
+	const location = useLocation();
 
 	/* ====================================================
 	+	These are lists containing each pathnames of views.
@@ -43,7 +44,12 @@ const Authentication = props => {
 	            }
 			})
 			.then( res => {
-				if( res?.data?.user?.role ) setUserLevel( res.data.user.role );
+				if( res?.data?.user?.role ){
+					if( props?.setRole ) props.setRole( res.data.user.role );
+					
+					setUserLevel( res.data.user.role );
+				}
+
 				if( props?.onSuccess ) props.onSuccess( res );
 				
 				// set view to request view
@@ -67,7 +73,8 @@ const Authentication = props => {
 	}
 
 	React.useEffect(() => {
-		let { pathname } = window.location;
+		let { pathname } = location;
+
 		pathname = pathname[ pathname.length - 1 ] === '/' && pathname !== '/' 
 			? pathname.slice(0, pathname.length - 1 )
 			: pathname;
@@ -117,7 +124,7 @@ const Authentication = props => {
 			setStatus( null );
 		}
 
-	}, [status, userLevel, viewPaths, gatePaths]);
+	}, [status, userLevel, viewPaths, gatePaths, location]);
 
 	React.useEffect(() => {
 		const token = Cookies.get('token');
