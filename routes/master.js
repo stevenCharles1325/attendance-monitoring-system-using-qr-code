@@ -3,7 +3,6 @@
     	*REGULAR ROUTES*
 
 ==========================*/
-
 require('dotenv').config();
 
 
@@ -18,6 +17,7 @@ var Token = require('../models/Token');
 var User = require('../models/User');
 var Student = require('../models/StudentRecord');
 var Teacher = require('../models/TeacherRecord');
+var SectionStrand = require('../models/SectionStrand');
 
 
 const authentication = (req, res, next) => {
@@ -47,6 +47,85 @@ router.delete('/sign-out', authentication, async ( req, res ) => {
 
     return res.sendStatus( 200 );
   });
+});
+
+
+router.get('/get-users/type/:type', async ( req, res ) => {
+  const { type } = req.params;
+
+  switch( type ){
+    case 'student':
+      Student.find({}, ( err, doc ) => {
+        if( err ) return res.sendStatus( 500 );
+
+        return res.json( doc );
+      });
+      break;
+
+    case 'teacher':
+      Teacher.find({}, ( err, doc ) => {
+        if( err ) return res.sendStatus( 500 );
+
+        return res.json( doc );
+      });   
+      break;   
+
+    default:
+      return res.sendStatus( 200 );  
+  }
+});
+
+
+router.get('/get-items/type/:type', async ( req, res ) => {
+  const { type } = req.params;
+
+  SectionStrand.find({ type }, ( err, doc ) => {
+    if( err ) return res.sendStatus( 500 );
+
+    return res.json( doc );
+  });      
+});
+
+
+router.post('/add/type/:type', authentication, async ( req, res ) => {
+  const { type } = req.params;
+
+  switch( type ){
+    case 'section':
+      SectionStrand.create({ ...req.body, type }, err => {
+        if( err ) return res.sendStatus( 500 );
+
+        return res.json({ message: 'Successfully added a new Section' });
+      });
+      break;
+
+    case 'strand':
+      SectionStrand.create({ ...req.body, type }, err => {
+        if( err ) return res.sendStatus( 500 );
+
+        return res.json({ message: 'Successfully added a new Strand' });
+      });      
+      break;
+
+    case 'student':
+      Student.create({ ...req.body }, err => {
+        if( err ) return res.sendStatus( 500 );
+
+        return res.json({ message: 'Successfully added a new Student' });
+      });
+      break;
+
+    case 'teacher':
+      Teacher.create({ ...req.body }, err => {
+        if( err ) return res.sendStatus( 500 );
+
+        return res.json({ message: 'Successfully added a new Teacher' });
+      });
+      break;
+
+    default:
+      return res.sendStatus( 404 );
+  }
 });
 
 

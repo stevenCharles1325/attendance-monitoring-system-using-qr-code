@@ -28,10 +28,12 @@ import DashboardStudent from './views/student/Dashboard';
 
 import DashboardSysadmin from './views/sysadmin/Dashboard';
 import StudentsAccount from './views/sysadmin/StudentsAccount';
+import StudentsRecord from './views/sysadmin/StudentsRecord';
+
 
 import PageLoading from './components/PageLoading';
 
-// viewsPath count/length will be deducted by 1
+// Root will always be excluded. Index 1 = 0
 const views = new ViewsPath( 
   'app', // ROOT
   
@@ -48,9 +50,9 @@ const views = new ViewsPath(
   'sysadmin/account',
   'sysadmin/students-account',
   'sysadmin/teachers-account',
-  'sysadmin/student-records',
-  'sysadmin/teacher-records',
-  'sysadmin/attendance-records',
+  'sysadmin/students-record',
+  'sysadmin/teachers-record',
+  'sysadmin/attendance-record',
   'sysadmin/graph-report',
   'sysadmin/school-form-2',
 
@@ -101,7 +103,8 @@ function App() {
       subList: [
         {
           text: 'Students Record',
-          icon: <ListAlt/>
+          icon: <ListAlt/>,
+          onClick: () => handleNavigation('/app/sysadmin/students-record')
         },
         {
           text: 'Teachers Record',
@@ -302,6 +305,7 @@ function App() {
             <Route path="/app/gate" element={<Gate />}/>
           
             <Route path="/app/sysadmin/dashboard" element={<DashboardSysadmin/>}/>
+            <Route path="/app/sysadmin/students-record" element={<StudentsRecord/>}/>
             <Route path="/app/sysadmin/students-account" element={<StudentsAccount/>}/>
             
             <Route path="/app/student/dashboard" element={<DashboardStudent/>}/>

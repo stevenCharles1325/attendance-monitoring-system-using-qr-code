@@ -8,7 +8,8 @@ const teacherRecordScheme = new Schema({
 	middleName: { type: String, required: true },
 	lastName: { type: String, required: true },
 	birthDate: { type: String, required: true },
-	password: { type: String, required: true }
+	section: { type: [ String ], required: true },
+	strand: { type: [ String ], required: true },
 });
 
 

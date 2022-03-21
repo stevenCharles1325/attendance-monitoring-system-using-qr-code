@@ -5,7 +5,12 @@ const StudentsAccount = props => {
 	return(
 		<div className="students-account d-flex justify-content-center align-items-center">
 			<AccountView 
-				header={['ID', 'Full name', 'Section']}
+				// addUserOn
+				// addStrandOn
+				// addSectionOn
+				statusSwitchOn
+				userType="student"
+				header={['ID', 'Full name', 'Section', 'Status']}
 				searchIndex={1}
 				filter={[
 					{
@@ -19,12 +24,7 @@ const StudentsAccount = props => {
 						text: 'B-2'
 					}
 				]}
-				items={[
-					['1', 'tae', 'B-5'],
-					['2', 'tang', 'B-2'],
-					['3', 'ihi', 'B-3'],
-					['4', 'tanga', 'B-2'],
-				]}
+				items={[]}
 			/>
 		</div>
 	);
