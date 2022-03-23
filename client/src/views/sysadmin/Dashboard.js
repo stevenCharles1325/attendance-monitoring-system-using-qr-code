@@ -2,8 +2,15 @@ import React from 'react';
 
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
+import IconButton from '@mui/material/IconButton';
+import Button from '@mui/material/Button';
+import AppRegistrationIcon from '@mui/icons-material/AppRegistration';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+
 import Calendar from 'react-calendar';
 import Clock from '../../components/Clock';
+import DialogForm from '../../components/DialogForm';
 
 import {
   Chart as ChartJS,
@@ -30,12 +37,20 @@ ChartJS.register(
 );
 
 const Dashboard = props => {
+	const [settingOpen, setSettingOpen] = React.useState( false );
+	const [tabIndex, setTabIndex] = React.useState( 0 );
+
 	return(
 		<div className="sysadmin-dashboard row d-flex justify-content-center align-items-center">
-			<Clock/>
+			<div className="px-5 d-flex justify-content-between align-items-center">
+				<Clock/>
+				<IconButton onClick={() => setSettingOpen( true )}> 
+					<AppRegistrationIcon/>
+				</IconButton>
+			</div>
 			<div style={{ width: '100%' }} className="p-0 m-0">
-				<Divider textAlign="left">
-					<Typography variant="h6">
+				<Divider textAlign="right">
+					<Typography variant="h6" sx={{ color: 'var(--text-color)' }}>
 						Dasboard
 					</Typography>
 				</Divider>
@@ -53,9 +68,17 @@ const Dashboard = props => {
 					<Calendar className="calendar" />			
 				</div>
 			</div>
+			<DialogForm 
+				open={settingOpen} 
+				close={() => setSettingOpen( false )}
+			/>
 		</div>
 	);
 }
+
+// const TabSettings = props => {
+// 	return()
+// }
 
 const PieGraph = props => {
 	const data = {

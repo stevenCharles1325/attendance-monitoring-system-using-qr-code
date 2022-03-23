@@ -6,19 +6,12 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 import { useSnackbar } from 'notistack';
 import { FixedSizeList as List } from 'react-window';
 
-
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Pagination from '@mui/material/Pagination';
 import Divider from '@mui/material/Divider';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
-
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogTitle from '@mui/material/DialogTitle';
 
 import Chip from '@mui/material/Chip';
 import Menu from '@mui/material/Menu';
@@ -48,6 +41,7 @@ import StoreIcon from '@mui/icons-material/Store';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 
+import DialogForm from './DialogForm';
 
 /*
 	@param { boolean } statusSwitchOn
@@ -590,35 +584,7 @@ const AccountHeader = props => {
 	);
 }
 
-const DialogForm = props => {
-	const theme = useTheme();
-	const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
 
-	const handleFormProcess = fn => {
-		props?.onProcess?.();
-		return fn;
-	}
-
-	return(
-		<Dialog 
-			open={props?.open} 
-			onClose={props?.close}
-			fullScreen={fullScreen}
-		>
-	        <DialogTitle>{ props?.formTitle ?? '' }</DialogTitle>
-	        <DialogContent>
-				<DialogContentText>
-					{ props?.infoMessage ?? '' }
-				</DialogContentText>
-				{ props?.fields }
-		    </DialogContent>
-	        <DialogActions>
-				<Button onClick={props?.close}>Cancel</Button>
-				<Button onClick={() => handleFormProcess(props?.close)}>Process</Button>
-	        </DialogActions>
-		</Dialog>
-	);
-}
 
 const IconField = ({ Icon, label, type, onChange, params, placeholder, defaultValue }) => {
 	return(

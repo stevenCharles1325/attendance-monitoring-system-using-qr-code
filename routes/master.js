@@ -36,7 +36,7 @@ const authentication = (req, res, next) => {
 
 
 router.get('/verify-me', authentication, async (req, res, next) => {
-  // If a request came here then it is authorized
+  // If a request came here then the user is authorized
   return res.json({ user: req.user, message: `Welcome ${ req.user.username }`});
 });
 
