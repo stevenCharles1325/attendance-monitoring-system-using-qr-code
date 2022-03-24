@@ -74,9 +74,9 @@ const StudentsRecord = props => {
 					},
 					...strands
 				]}
-				items={[ ...items ]}
-				sections={[ ...sections ]}
-				strands={[ ...strands ]}
+				items={items}
+				sections={sections}
+				strands={strands}
 				refresh={() => refresh()}
 			/>
 		</div>

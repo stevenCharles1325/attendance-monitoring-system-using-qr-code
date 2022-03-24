@@ -5,7 +5,7 @@ const { Schema } = mongoose;
 const teacherRecordScheme = new Schema({
 	employeeNo: { type: String, required: true },
 	firstName: { type: String, required: true },
-	middleName: { type: String, required: true },
+	middleName: { type: String, default: "N/A" },
 	lastName: { type: String, required: true },
 	birthDate: { type: String, required: true },
 	section: { type: [ String ], required: true },

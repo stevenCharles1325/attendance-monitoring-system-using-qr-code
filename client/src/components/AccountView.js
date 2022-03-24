@@ -138,13 +138,19 @@ const AccountView = props => {
 		setAnchorEl( null );
 	}
 
+
 	const handleSelectFilter = text => {
-		if(selectedFilter.includes( text )){
-			setSelectedFilter( selectedFilter => selectedFilter.filter( filter => filter !== text ));
+		let tempSelectedFilter = [ ...selectedFilter ];
+
+		if(tempSelectedFilter.includes( text )){
+			tempSelectedFilter = [ ...tempSelectedFilter.filter( filter => filter !== text ) ];
 		}
 		else{
-			setSelectedFilter( selectedFilter => [ ...selectedFilter, text ]);
+			tempSelectedFilter = [ ...tempSelectedFilter, text ];
 		}
+
+		tempSelectedFilter = Array.from( new Set( tempSelectedFilter ) );
+		setSelectedFilter([ ...tempSelectedFilter ]);
 	}
 
 	const handleUserAddFormType = type => fn => {
@@ -396,30 +402,45 @@ const AccountView = props => {
 			)
 		});
 
-	React.useEffect(() => {
-		if( props?.items ){
-			const tempFilteredItems = [];
+	const filtering = items => {
+		const tempFilteredItems = [];
+		const tempSelectedFiler = selectedFilter.map( reformatText );
 
-			props?.items?.forEach?.(( item, index )=> {
-				const keys = Object.keys(props?.items?.[ index ]);
-	
-				if(item[keys[ props?.searchIndex ?? 0 ]].toLowerCase().includes( searchText.toLowerCase() )){
-					if( selectedFilter.length ){
-						selectedFilter.forEach( filter => {
-							if( item.section.includes( filter ) || item.strand.includes( filter )){
+		items?.forEach?.(( item, index ) => {
+			const keys = Object.keys(props?.items?.[ index ]);
+
+			if(reformatText(item[keys[ props?.searchIndex ?? 0 ]]).includes(reformatText( searchText ))){
+				if( tempSelectedFiler.length ){
+
+					const applyFilter = () => {
+						for( let section of item.section ){
+							if( tempSelectedFiler.includes(reformatText( section )) ){
 								tempFilteredItems.push( item );
+								return;
 							}
-						})
-					}
-					else{
-						tempFilteredItems.push( item );
-					}
-				}
-			});
+						}
 
-			setFilteredItems([ ...tempFilteredItems ]);
-		}
-	}, [props?.items, selectedFilter, searchText]);
+						for( let strand of item.strand ){
+							if( tempSelectedFiler.includes(reformatText( strand )) ){
+								tempFilteredItems.push( item );
+								return;
+							}
+						}
+					}
+
+					applyFilter();
+				}
+				else{
+					tempFilteredItems.push( item );
+				}
+			}
+		});
+
+		setFilteredItems(() => [ ...tempFilteredItems ]);
+	}
+
+	const memoizedFiltering = React.useCallback(() => filtering( props?.items ), [ props?.items, selectedFilter, searchText ]);
+	React.useEffect(() => memoizedFiltering(), [props?.items, selectedFilter, searchText]);
 
 	return(
 		<div className="account-view border rounded d-flex flex-column">
@@ -627,6 +648,8 @@ const IconAutocomplete = ({ list, multiple, Icon, label, placeholder, defaultVal
 	    />
 	);
 }
+
+const reformatText = text => text?.toLowerCase()?.replaceAll?.(' ', '');
 
 
 export default AccountView;
