@@ -55,7 +55,7 @@ router.get('/get-users/type/:type', async ( req, res ) => {
 
   switch( type ){
     case 'student':
-      Student.find({}, ( err, doc ) => {
+      Student.find({}).sort({ firstName: 1 }).exec(( err, doc ) => {
         if( err ) return res.sendStatus( 500 );
 
         return res.json( doc );
@@ -63,7 +63,7 @@ router.get('/get-users/type/:type', async ( req, res ) => {
       break;
 
     case 'teacher':
-      Teacher.find({}, ( err, doc ) => {
+      Teacher.find({}).sort({ firstName: 1 }).exec(( err, doc ) => {
         if( err ) return res.sendStatus( 500 );
 
         return res.json( doc );
@@ -79,7 +79,7 @@ router.get('/get-users/type/:type', async ( req, res ) => {
 router.get('/get-items/type/:type', async ( req, res ) => {
   const { type } = req.params;
 
-  SectionStrand.find({ type }, ( err, doc ) => {
+  SectionStrand.find({ type }).sort({ name: 1 }).exec(( err, doc ) => {
     if( err ) return res.sendStatus( 500 );
 
     return res.json( doc );
@@ -90,9 +90,11 @@ router.get('/get-items/type/:type', async ( req, res ) => {
 router.post('/add/type/:type', authentication, async ( req, res ) => {
   const { type } = req.params;
 
+  if( !req.body ) return res.sendStatus( 406 );
+
   switch( type ){
     case 'section':
-      SectionStrand.create({ ...req.body, type }, err => {
+      SectionStrand.create({ name: req.body.name.toUpperCase(), type }, err => {
         if( err ) return res.sendStatus( 500 );
 
         return res.json({ message: 'Successfully added a new Section' });
@@ -100,7 +102,7 @@ router.post('/add/type/:type', authentication, async ( req, res ) => {
       break;
 
     case 'strand':
-      SectionStrand.create({ ...req.body, type }, err => {
+      SectionStrand.create({ name: req.body.name.toUpperCase(), type }, err => {
         if( err ) return res.sendStatus( 500 );
 
         return res.json({ message: 'Successfully added a new Strand' });

@@ -315,7 +315,7 @@ const AccountView = props => {
 				return {
 					formTitle: 'Add a Student',
 					infoMessage: `Adding a ${infoMessageFor} requires you to fill all fields`,
-					fields: generateFields(),
+					content: generateFields(),
 					onProcess: handleAddStudent
 				};
 
@@ -323,14 +323,14 @@ const AccountView = props => {
 				return {
 					formTitle: 'Add a Teacher',
 					infoMessage: `Adding a ${infoMessageFor} requires you to fill all fields`,
-					fields: generateFields()
+					content: generateFields()
 				};
 
 			case 'section':
 				return {
 					formTitle: 'Add a Section',
 					infoMessage: `Adding a ${infoMessageFor} requires you to fill this field`,
-					fields: [
+					content: [
 						<IconField 
 							key={uniqid()} 
 							label="Section name"
@@ -345,7 +345,7 @@ const AccountView = props => {
 				return {
 					formTitle: 'Add a Strand',
 					infoMessage: `Adding a ${infoMessageFor} requires you to fill this field`,
-					fields: [
+					content: [
 						<IconField 
 							key={uniqid()} 
 							label="Section strand"
@@ -367,11 +367,15 @@ const AccountView = props => {
 			const keys = Object.keys(filteredItems[ index1 ]);
 
 			return( 
-				<div id={uniqid()} style={style} className="account-view-item px-4 d-flex justify-content-between align-items-center">
+				<div 
+					id={uniqid()} 
+					style={{...style, backgroundColor: index % 2 === 0 ? 'white' : '#f6f6f6'}} 
+					className="account-view-item px-4 d-flex justify-content-between align-items-center"
+				>
 					{
 						props?.renderItemsKey?.map?.(( key, index ) => (
 							props?.statusSwitchOn && key === 'status'
-								? <div key={uniqid()} className="qams-row col-sm d-flex justify-content-center text-capitalize"> 
+								? <div key={uniqid()}className="qams-row col-sm d-flex justify-content-center text-capitalize"> 
 									<FormGroup>
 										<FormControlLabel 
 											control={
@@ -404,34 +408,40 @@ const AccountView = props => {
 
 	const filtering = items => {
 		const tempFilteredItems = [];
-		const tempSelectedFiler = selectedFilter.map( reformatText );
+		const tempSelectedFilters = selectedFilter.map( reformatText );
 
 		items?.forEach?.(( item, index ) => {
-			const keys = Object.keys(props?.items?.[ index ]);
+			const keys = Object.values(props?.items?.[ index ]).map( reformatText );
 
-			if(reformatText(item[keys[ props?.searchIndex ?? 0 ]]).includes(reformatText( searchText ))){
-				if( tempSelectedFiler.length ){
+			for( let key of keys ){
+				if( typeof key === 'string' ){
+					if( !searchText.length || (searchText.length && key.includes(reformatText( searchText )))){
+						if( tempSelectedFilters.length ){
+							const applyFilter = () => {
+								for( let section of item.section ){
+									if( tempSelectedFilters.includes(reformatText( section )) ){
+										tempFilteredItems.push( item );
+										return;
+									}
+								}
 
-					const applyFilter = () => {
-						for( let section of item.section ){
-							if( tempSelectedFiler.includes(reformatText( section )) ){
-								tempFilteredItems.push( item );
-								return;
+								for( let strand of item.strand ){
+									if( tempSelectedFilters.includes(reformatText( strand )) ){
+										tempFilteredItems.push( item );
+										return;
+									}
+								}
 							}
+
+							applyFilter();
+						}
+						else{
+							tempFilteredItems.push( item );
+							break;
 						}
 
-						for( let strand of item.strand ){
-							if( tempSelectedFiler.includes(reformatText( strand )) ){
-								tempFilteredItems.push( item );
-								return;
-							}
-						}
+						break;
 					}
-
-					applyFilter();
-				}
-				else{
-					tempFilteredItems.push( item );
 				}
 			}
 		});
@@ -577,6 +587,8 @@ const AccountView = props => {
 				</Paper>
 			</Menu>
 			<DialogForm 
+				titleOn
+				contextTextOn
 				open={openDialogForm} 
 				close={() => handleDialogFormClose()}
 				{ ...addFormGenerator( formType ) }
@@ -649,7 +661,7 @@ const IconAutocomplete = ({ list, multiple, Icon, label, placeholder, defaultVal
 	);
 }
 
-const reformatText = text => text?.toLowerCase()?.replaceAll?.(' ', '');
+const reformatText = text => typeof text === 'string' ? text?.toLowerCase()?.replaceAll?.(' ', '') : text;
 
 
 export default AccountView;

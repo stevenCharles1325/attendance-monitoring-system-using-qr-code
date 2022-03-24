@@ -1,4 +1,5 @@
 import React from 'react';
+import uniqid from 'uniqid';
 
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
@@ -7,6 +8,7 @@ import Button from '@mui/material/Button';
 import AppRegistrationIcon from '@mui/icons-material/AppRegistration';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
+import Switch from '@mui/material/Switch';
 
 import Calendar from 'react-calendar';
 import Clock from '../../components/Clock';
@@ -39,6 +41,99 @@ ChartJS.register(
 const Dashboard = props => {
 	const [settingOpen, setSettingOpen] = React.useState( false );
 	const [tabIndex, setTabIndex] = React.useState( 0 );
+	const semesterSwitch = [
+		{
+			name: '1st Semester',
+			onSwitch: null
+		},
+		{
+			name: '2nd Semester',
+			onSwitch: null
+		},
+		{
+			name: '3rd Semester',
+			onSwitch: null
+		},
+	];
+	
+	const schoolYears = [
+		{
+			from: '2020',
+			to: '2021',
+			active: true,
+			involveSections: []
+		}
+	];
+
+	const handleTabChange = (_, index) => setTabIndex( index );
+
+	const SemesterTab = () => {
+		return(
+			<div 
+				style={{
+					width: '100%',
+					height: '100%'
+				}}
+				className="d-flex flex-column justify-content-center align-items-center"
+			>
+				{
+					semesterSwitch.map( semSwitch => (
+						<div key={uniqid()} className="semester-tab-semester my-4 col-12 d-flex flex-row justify-content-start align-items-center">
+							<div className="col-6 text-center">
+								<b>{ semSwitch.name }</b>
+							</div>
+							<div style={{ width: '200px' }} className="semester-switch row">
+								<div className="col-3 d-flex justify-content-center align-items-center">
+									Off
+								</div>
+								<div className="col-5 d-flex justify-content-center align-items-center">
+									<Switch onChange={semSwitch.onSwitch}/>
+								</div>
+								<div className="col-3 d-flex justify-content-center align-items-center">
+									On
+								</div>
+							</div>
+
+						</div>
+						))
+				}
+			</div>
+		);
+	}
+
+	const SchoolYearTab = () => {
+		return(
+			<div
+				style={{
+					width: '100%',
+					height: '100%'
+				}}
+			>
+				{
+					schoolYears.map( sc => (
+						<div className="sc-item">
+						</div>
+						))
+				}
+			</div>
+		);
+	}
+
+	const TabSettings = props => {
+		return(
+				<div style={{ width: '100%', height: '100%' }}>
+					<div className="border-bottom">
+						<Tabs value={tabIndex} onChange={handleTabChange} aria-label="basic tabs example">
+			        <Tab label="Semester Settings"/>
+			        <Tab label="School Year Settings"/>
+			      </Tabs>
+		      </div>
+		    	<div className="sem-sy-tabs">
+		    		{ [<SemesterTab/>, <SchoolYearTab/>][ tabIndex ] }
+		    	</div>  
+	      </div>
+		);
+	}
 
 	return(
 		<div className="sysadmin-dashboard row d-flex justify-content-center align-items-center">
@@ -69,16 +164,15 @@ const Dashboard = props => {
 				</div>
 			</div>
 			<DialogForm 
+				fullWidth
 				open={settingOpen} 
+				content={<TabSettings/>}
 				close={() => setSettingOpen( false )}
 			/>
 		</div>
 	);
 }
 
-// const TabSettings = props => {
-// 	return()
-// }
 
 const PieGraph = props => {
 	const data = {

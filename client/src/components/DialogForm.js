@@ -20,16 +20,26 @@ const DialogForm = props => {
 
 	return(
 		<Dialog 
+			fullWidth={props?.fullWidth}
 			open={props?.open} 
+			maxWidth="md"
 			onClose={props?.close}
 			fullScreen={fullScreen}
 		>
-	        <DialogTitle>{ props?.formTitle ?? '' }</DialogTitle>
+	        {
+	        	props?.titleOn
+	        		? <DialogTitle>{ props?.formTitle ?? '' }</DialogTitle>
+	        		: null
+	        }
 	        <DialogContent>
-				<DialogContentText>
-					{ props?.infoMessage ?? '' }
-				</DialogContentText>
-				{ props?.fields }
+	        	{
+	        		props?.contextTextOn
+	        			? <DialogContentText>
+							{ props?.infoMessage ?? '' }
+						</DialogContentText>
+						: null
+	        	}
+				{ props?.content }
 		    </DialogContent>
 	        <DialogActions>
 				<Button onClick={props?.close}>Cancel</Button>
