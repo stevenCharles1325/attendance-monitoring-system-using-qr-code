@@ -396,7 +396,7 @@ body{
 
 /*=======================
 
-			Semester Switch
+	Semester & School-year tabs
 
 ========================*/
 .sem-sy-tabs{
@@ -407,15 +407,91 @@ body{
 	color: var(--text-color);
 }
 
+.sem-sy-tab{
+	height: 400px;
+}
+
+
 
 /*=======================
 
-			Semester Switch
+				School-year
 
 ========================*/
-.sc-item{
-	
+.sy-left-panel{
+	background-color: transparent;
 }
+
+.sy-right-panel{
+	background-color: white;
+}
+
+.sy-item-panel{
+	height: 100px;
+	overflow: auto;
+	position: relative;
+}
+
+.sy-item{
+	height: 250px;
+	position: relative;
+	transition: .3s ease-in-out;
+}
+
+.sy-selected-item{
+	position: absolute !important;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+
+	width: 90%;
+	height: 90%;
+}
+
+.sy-item-hover-btns{
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+
+	display: none;
+}
+
+.sy-item:hover{
+	background-color: rgba(0, 0, 0, 0.1);
+}
+
+.sy-item:hover .sy-item-hover-btns{
+	display: flex;
+	flex-direction: row;
+}
+
+.sy-item::before{
+	content: " ";
+	width: 100%;
+	height: 100%;
+
+	position: absolute;
+	top: 0;
+	left: 50%;
+	transform: translate(-50%, 0%);
+	display: none;
+
+	border-top: 1px dashed rgba(0, 0, 0, 0.6);
+	border-radius: 4px;
+	/*animation-name: select-sc-item 1s infinit;*/
+}
+
+.sy-item:hover::before{
+	display: unset;
+	animation: select-sc-item .3s ease-in-out forwards;
+}
+
+@keyframes select-sc-item{
+	from { width: 10px; },
+	to { width: 100%; }
+}
+
 
 /*
 		MOBILE AND TABLETS RESPONSE

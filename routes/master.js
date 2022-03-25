@@ -17,7 +17,8 @@ var Token = require('../models/Token');
 var User = require('../models/User');
 var Student = require('../models/StudentRecord');
 var Teacher = require('../models/TeacherRecord');
-var SectionStrand = require('../models/SectionStrand');
+var Semester = require('../models/Semester');
+var SchoolYear = require('../models/SchoolYear');
 
 
 const authentication = (req, res, next) => {
@@ -79,11 +80,35 @@ router.get('/get-users/type/:type', async ( req, res ) => {
 router.get('/get-items/type/:type', async ( req, res ) => {
   const { type } = req.params;
 
-  SectionStrand.find({ type }).sort({ name: 1 }).exec(( err, doc ) => {
-    if( err ) return res.sendStatus( 500 );
+  switch( type ){
+    case 'semester':
+      Semester.find({ type }).sort({ name: 1 }).exec(( err, doc ) => {
+        if( err ) return res.sendStatus( 500 );
 
-    return res.json( doc );
-  });      
+        return res.json( doc );
+      });   
+      break;
+
+    case 'schoolyear':
+      SchoolYear.find({ type }).sort({ name: 1 }).exec(( err, doc ) => {
+        if( err ) return res.sendStatus( 500 );
+
+        return res.json( doc );
+      });   
+      break;
+
+    case 'section':
+    case 'strand':
+      SectionStrand.find({ type }).sort({ name: 1 }).exec(( err, doc ) => {
+        if( err ) return res.sendStatus( 500 );
+
+        return res.json( doc );
+      });      
+      break;
+
+    default:
+      return res.sendStatus( 200 );
+  }
 });
 
 

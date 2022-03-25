@@ -1,18 +1,26 @@
 import React from 'react';
 import uniqid from 'uniqid';
 
+import Autocomplete from '@mui/material/Autocomplete';
+import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
+import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
 import AppRegistrationIcon from '@mui/icons-material/AppRegistration';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Switch from '@mui/material/Switch';
+import TextField from '@mui/material/TextField';
 
 import Calendar from 'react-calendar';
 import Clock from '../../components/Clock';
 import DialogForm from '../../components/DialogForm';
+
+import SearchIcon from '@mui/icons-material/Search';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 
 import {
   Chart as ChartJS,
@@ -40,7 +48,10 @@ ChartJS.register(
 
 const Dashboard = props => {
 	const [settingOpen, setSettingOpen] = React.useState( false );
+	const [sections, setSections] = React.useState( [] );
 	const [tabIndex, setTabIndex] = React.useState( 0 );
+	const [schoolYears, setSchoolYears] = React.useState( [] );
+
 	const semesterSwitch = [
 		{
 			name: '1st Semester',
@@ -55,15 +66,6 @@ const Dashboard = props => {
 			onSwitch: null
 		},
 	];
-	
-	const schoolYears = [
-		{
-			from: '2020',
-			to: '2021',
-			active: true,
-			involveSections: []
-		}
-	];
 
 	const handleTabChange = (_, index) => setTabIndex( index );
 
@@ -72,9 +74,8 @@ const Dashboard = props => {
 			<div 
 				style={{
 					width: '100%',
-					height: '100%'
 				}}
-				className="d-flex flex-column justify-content-center align-items-center"
+				className="sem-sy-tab d-flex flex-column justify-content-center align-items-center"
 			>
 				{
 					semesterSwitch.map( semSwitch => (
@@ -93,7 +94,6 @@ const Dashboard = props => {
 									On
 								</div>
 							</div>
-
 						</div>
 						))
 				}
@@ -102,19 +102,72 @@ const Dashboard = props => {
 	}
 
 	const SchoolYearTab = () => {
+		const [select, setSelect] = React.useState( false );
+
 		return(
 			<div
 				style={{
 					width: '100%',
-					height: '100%'
 				}}
+				className="sem-sy-tab row p-0 m-0"
 			>
-				{
-					schoolYears.map( sc => (
-						<div className="sc-item">
-						</div>
-						))
-				}
+				<div className="sy-left-panel p-0 m-0 col-6 d-flex flex-column justify-content-center align-items-center">
+					<TextField sx={{ width: '60%' }} type="number" variant="standard" label="From" helperText="When will this school-year start?"/>
+					<br/>
+					<TextField sx={{ width: '60%' }} type="number" variant="standard" label="To" helperText="When will this school-year end?"/>
+					<br/>
+					<Autocomplete sx={{ width: '60%' }} multiple options={sections} renderInput={params => (
+							<TextField {...params} label="Select sections" variant="standard"/>
+						)}/>
+					<br/>
+					<br/>
+					<Button variant="outlined">Add school-year</Button>
+					<br/>
+				</div>
+				<div className="sy-right-panel col-6 p-0 m-0 row d-flex flex-column">
+					<div style={{ height: '50px' }} className="col-12 d-flex justify-content-start align-items-center">
+						<Box sx={{ display: 'flex', alignItems: 'center' }}>
+							<SearchIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
+							<TextField 
+								id="input-with-sx" 
+								variant="standard"
+								// onChange={e => setSearchText( e.target.value )}
+							/>
+						</Box>
+					</div>
+					<div className="sy-item-panel row d-flex flex-grow-1 justify-content-center align-items-center">
+						{
+							schoolYears.map( sc => (
+								<div key={uniqid()} className={`sy-item col-10 m-2 p-3 border rounded shadow ${select ? 'sy-selected-item' : ''}`}>
+									<h6>{ sc.from } - { sc.to }</h6>
+									<Divider/>
+									<p style={{ color: 'rgba(0, 0, 0, 0.4)'}}>Sections:</p>
+									<div style={{ height: '65%' }} className="d-flex flex-wrap flex-grow-1 overflow-auto">
+										{
+											sc.involveSections.map( is => (
+													<Chip key={uniqid()} label={is} size="small" sx={{ color: 'var( --text-color )', margin: '3px'}}/>
+												))
+										}
+									</div>
+									{
+										!select
+											? <div className="sy-item-hover-btns">
+													<IconButton onClick={() => setSelect( true )}>
+														<EditIcon/>
+													</IconButton>
+
+													<IconButton>
+														<DeleteIcon/>
+													</IconButton>
+												</div>
+											: null
+									}
+									
+								</div>
+								))
+						}
+					</div>
+				</div>
 			</div>
 		);
 	}
