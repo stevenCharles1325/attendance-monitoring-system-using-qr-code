@@ -435,6 +435,8 @@ body{
 .sy-item{
 	height: 250px;
 	position: relative;
+	background-color: white;
+
 	transition: .3s ease-in-out;
 }
 
@@ -443,6 +445,7 @@ body{
 	top: 50%;
 	left: 50%;
 	transform: translate(-50%, -50%);
+	z-index: 10;
 
 	width: 90%;
 	height: 90%;
@@ -450,6 +453,7 @@ body{
 
 .sy-item-hover-btns{
 	position: absolute;
+
 	top: 50%;
 	left: 50%;
 	transform: translate(-50%, -50%);
@@ -458,7 +462,7 @@ body{
 }
 
 .sy-item:hover{
-	background-color: rgba(0, 0, 0, 0.1);
+	background-color: #e4e4e4;
 }
 
 .sy-item:hover .sy-item-hover-btns{

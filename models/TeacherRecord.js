@@ -10,6 +10,8 @@ const teacherRecordScheme = new Schema({
 	birthDate: { type: String, required: true },
 	section: { type: [ String ], required: true },
 	strand: { type: [ String ], required: true },
+	state: { type: String, default: 'unverified' },
+	status: { type: String, default: 'activated' }
 });
 
 

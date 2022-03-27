@@ -12,6 +12,11 @@ import Pagination from '@mui/material/Pagination';
 import Divider from '@mui/material/Divider';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
+import MuiList from '@mui/material/List';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import Collapse from '@mui/material/Collapse';
 
 import Chip from '@mui/material/Chip';
 import Menu from '@mui/material/Menu';
@@ -28,6 +33,8 @@ import SearchIcon from '@mui/icons-material/Search';
 import KeyIcon from '@mui/icons-material/Key';
 import CakeIcon from '@mui/icons-material/Cake';
 import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
+import ExpandLess from '@mui/icons-material/ExpandLess';
+import ExpandMore from '@mui/icons-material/ExpandMore';
 
 import Autocomplete from '@mui/material/Autocomplete';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
@@ -37,6 +44,7 @@ import AddBusinessIcon from '@mui/icons-material/AddBusiness';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
 import StoreIcon from '@mui/icons-material/Store';
+import SettingsIcon from '@mui/icons-material/Settings';
 
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
@@ -53,7 +61,32 @@ import DialogForm from './DialogForm';
 	@param { array } item
 */
 
+const requestHeader = {
+  'headers': {
+    'authorization': `Bearer ${Cookies.get('token')}`
+  }
+}
+
 const AccountView = props => {
+	const [semesterSwitch, setSemesterSwitch] = React.useState( [] );
+
+	const [filter, setFilter] = React.useState( [] );
+	const [filteredItems, setFilteredItems] = React.useState( [] );
+	const [filterAnchorEl, setFilterAnchorEl] = React.useState( null );
+	const [settingsAnchorEl, setSettingsAnchorEl] = React.useState( null );
+	const [selectedFilter, setSelectedFilter] = React.useState( [] );
+	const [filterIndexes, setFilterIndexes] = React.useState( {} );
+	const [searchText, setSearchText] = React.useState( '' );
+	const [section, setSection] = React.useState( null );
+	const [strand, setStrand] = React.useState( null );
+
+	const [openDialogForm, setOpenDialogForm] = React.useState( false );
+	const [formType, setFormType] = React.useState( null );
+
+	const { enqueueSnackbar } = useSnackbar();
+	const filterOpen = Boolean( filterAnchorEl );
+	const settingOpen = Boolean( settingsAnchorEl );
+
 	const initState = {
 		id: '',
 		role: '',
@@ -61,10 +94,33 @@ const AccountView = props => {
 		middleName: '',
 		lastName: '',
 		birthDate: '',
-		section: [],
-		strand: [],
+		section: props?.userType === 'student' ? '' : [],
+		strand: props?.userType === 'student' ? '' : [],
 		strandName: '',
-		sectionName: ''
+		sectionName: {
+			name: null,
+			parent: null
+		}
+	}
+
+	const initSemester = activeSemester => {
+		return [
+			{
+				name: '1st Semester',
+				isActive: activeSemester === 1,
+				onSwitch: () => handleSwitchSemester( 1 )
+			},
+			{
+				name: '2nd Semester',
+				isActive: activeSemester === 2,
+				onSwitch: () => handleSwitchSemester( 2 )
+			},
+			{
+				name: '3rd Semester',
+				isActive: activeSemester === 3,
+				onSwitch: () => handleSwitchSemester( 3 )
+			}
+		];
 	}
 
 	const reducer = ( state, { type, payload }) => {
@@ -93,12 +149,12 @@ const AccountView = props => {
 				state.birthDate = payload;
 				return state;
 
-			case 'section':
-				state.section = [ ...state.section, payload ];
+			case 'strand':
+				state.strand = payload;
 				return state;
 
-			case 'strand':
-				state.strand = [ ...state.strand, payload ];
+			case 'section':
+				state.section = payload;
 				return state;
 
 			case 'strandName':
@@ -106,7 +162,11 @@ const AccountView = props => {
 				return state;
 
 			case 'sectionName':
-				state.sectionName = payload;
+				state.sectionName.name = payload;
+				return state;
+
+			case 'sectionParent':
+				state.sectionName.parent = payload;
 				return state;
 
 			case 'clear':
@@ -119,25 +179,48 @@ const AccountView = props => {
 
 	const [state, dispatch] = React.useReducer( reducer, initState );
 
-	const [filteredItems, setFilteredItems] = React.useState( [] );
-	const [anchorEl, setAnchorEl] = React.useState( null );
-	const [selectedFilter, setSelectedFilter] = React.useState( [] );
-	const [searchText, setSearchText] = React.useState( '' );
+	const handleFilterExpand = index => {
+		const tempFilter = filter;
 
-	const [openDialogForm, setOpenDialogForm] = React.useState( false );
-	const [formType, setFormType] = React.useState( null );
+		tempFilter[ index ].isOpen = !tempFilter[ index ].isOpen;
+		setFilter([ ...tempFilter ]);
+	}
 
-	const { enqueueSnackbar } = useSnackbar();
-	const filterOpen = Boolean( anchorEl );
+	const getSemesters = () => {
+		Axios.get(`${window.API_BASE_ADDRESS}/master/get-items/type/semester`)
+		.then( res => setSemesterSwitch([ ...initSemester( res.data.activeSemester ) ]))
+		.catch( err => {
+			enqueueSnackbar('Error while getting semester', { variant: 'error' });
+			console.error( err );
+		});
+	}
+
+	const handleSettingsOpen = e => {
+		setSettingsAnchorEl( e.currentTarget );
+	}
+
+	const handleSettingsClose = () => {
+		setSettingsAnchorEl( null );
+	}	
 
 	const handleFilterOpen = e => {
-		setAnchorEl( e.currentTarget );
+		setFilterAnchorEl( e.currentTarget );
 	}
 
 	const handleFilterClose = () => {
-		setAnchorEl( null );
+		setFilterAnchorEl( null );
 	}
 
+	const handleSwitchSemester = semesterNumber => {
+		Axios.put(`${window.API_BASE_ADDRESS}/master/activate/semester/${semesterNumber}`, null, requestHeader)
+		.then(() => {
+			setSemesterSwitch(() => [ ...initSemester( semesterNumber ) ]);
+		})
+		.catch( err => {
+			enqueueSnackbar('Error while switching semester', { variant: 'error' });
+			console.error( err );
+		});
+	}
 
 	const handleSelectFilter = text => {
 		let tempSelectedFilter = [ ...selectedFilter ];
@@ -164,10 +247,93 @@ const AccountView = props => {
 		setOpenDialogForm( false );
 	}
 
+	const findChildrenIndexOf = ( name, list, isChildren = false ) => {
+		let returnedIndex = -1;
+
+		if( !list || !list?.length || !name ) return returnedIndex;
+
+		list.forEach(( item, index ) => {
+			if( isChildren ){
+				if( item.sections.includes( name ) ){
+					returnedIndex = index;
+					return;
+				}
+			}
+			else{
+				if( item.name === name ){
+					returnedIndex = index;
+					return;
+				}
+			}
+		});
+
+		return returnedIndex;
+	}
+
+	const generateSectionList = () => {
+		if( !props?.filter ) return [];
+
+		if( strand instanceof Array ){
+			const tempSections = [];
+
+			if( strand.length ){
+				strand.forEach( strnd => {
+					tempSections.push( ...props.filter[findChildrenIndexOf( strnd, props.filter )].sections );
+				});
+
+				return tempSections;
+			}
+			else{
+				return props.filter.map( fltr => fltr.sections ).reduce(( prev, curr ) => [ ...prev, ...curr ], []);
+			}
+		}
+		else{
+			return strand && strand?.length
+				? props?.filter?.[ findChildrenIndexOf( strand, props.filter ) ]?.sections ?? []
+				: props.filter.map( fltr => fltr.sections ).reduce(( prev, curr ) => [ ...prev, ...curr ], []) ?? []
+		}
+	}
+
+	const generateStrandList = () => {
+		if( !props?.filter ) return [];
+		
+		if( section instanceof Array ){
+			const tempStrands = [];
+
+			if( section.length ){
+				section.forEach( sctn => {
+					tempStrands.push( ...props.filter[findChildrenIndexOf( sctn, props.filter )].name );
+				});
+
+				return tempStrands;
+			}
+			else{
+				return props.filter.map( fltr => fltr.name );
+			}
+		}
+		else{
+			return section && section?.length 
+				? [ props?.filter?.[ findChildrenIndexOf( section, props.filter, true ) ]?.name ] ?? [] 
+				: props.filter.map( fltr => fltr.name ) ?? []
+		}
+	}
+
+	const memoizedStrandGenerator = React.useCallback(() => generateStrandList(), [ section, props ]);
+	const memoizedSectionGenerator = React.useCallback(() => generateSectionList(), [ strand, props ]);
+
+	const handleSectionAndStrandChanges = ( type, value ) => {
+		dispatch({ type: type, payload: value });
+
+		type === 'section' 
+			? setSection(() => value )
+			: setStrand(() => value );
+	}
+
 	const addFormGenerator = type => {
 		const idLabel = type === 'student' ? 'Student' : 'Employee';
 		const infoMessageFor = type;
 
+		// const memoizedFieldsGenerator = React.useCallback(, [ state ]);
 		const generateFields = () => [
 			<IconField 
 				Icon={KeyIcon} 
@@ -201,30 +367,26 @@ const AccountView = props => {
 				onChange={e => dispatch({ type: 'birthDate', payload: e.target.value })}
 			/>,
 			<IconAutocomplete 
+				defaultValue={section}
 				multiple={type !== 'student' ? true : false}
 				key={uniqid()}
-				list={props?.sections ?? []}
+				list={memoizedSectionGenerator()}
 				Icon={CreditCardIcon}
 				label="Section"
 				placeholder="Add section"
-				onChange={(_, newValue) => dispatch({ type: 'section', payload: newValue })}
+				onChange={(_, newValue) => handleSectionAndStrandChanges( 'section', newValue )}
 			/>,
 			<IconAutocomplete 
+				defaultValue={strand}
 				multiple={type !== 'student' ? true : false}
 				key={uniqid()}
-				list={props?.strands ?? []}
+				list={memoizedStrandGenerator()}
 				Icon={StoreIcon}
 				label="Strand"
 				placeholder="Add strand"
-				onChange={(_, newValue) => dispatch({ type: 'strand', payload: newValue })}
+				onChange={(_, newValue) => handleSectionAndStrandChanges( 'strand', newValue )}
 			/>
 		];
-
-		const requestHeader = {
-			'headers': {
-				'authorization': `Bearer ${Cookies.get('token')}`
-			}
-		}
 
 		const handleAddStudent = () => {
 			Axios.post(`${window.API_BASE_ADDRESS}/master/add/type/student`,  
@@ -241,13 +403,13 @@ const AccountView = props => {
 			)
 			.then( res => {
 				enqueueSnackbar( res.data.message, { variant: 'success', preventDuplicate: true });
+				handleDialogFormClose();
+
 				props?.refresh?.();
 			})
 			.catch( err => {
 				enqueueSnackbar( err?.response?.data?.message ?? 'Please try again!', { variant: 'error', preventDuplicate: true });
 			});
-
-			handleDialogFormClose();
 		}
 
 		const handleAddTeacher = () => {
@@ -265,13 +427,13 @@ const AccountView = props => {
 			)
 			.then( res => {
 				enqueueSnackbar( res.data.message, { variant: 'success', preventDuplicate: true });
+				handleDialogFormClose();
+	
 				props?.refresh?.();
 			})
 			.catch( err => {
 				enqueueSnackbar( err?.response?.data?.message ?? 'Please try again!', { variant: 'error', preventDuplicate: true });
 			});
-
-			handleDialogFormClose();
 		}
 
 		const handleAddStrand = () => {
@@ -283,31 +445,29 @@ const AccountView = props => {
 			)
 			.then( res => {
 				enqueueSnackbar( res.data.message, { variant: 'success', preventDuplicate: true });
+				handleDialogFormClose();
+
 				props?.refresh?.();
 			})
 			.catch( err => {
 				enqueueSnackbar( err?.response?.data?.message ?? 'Please try again!', { variant: 'error', preventDuplicate: true });
 			});
-
-			handleDialogFormClose();
 		}
 
 		const handleAddSection = () => {
 			Axios.post(`${window.API_BASE_ADDRESS}/master/add/type/section`,  
-				{
-					name: state.sectionName,
-				},
+				{ ...state.sectionName },
 				requestHeader
 			)
 			.then( res => {
 				enqueueSnackbar( res.data.message, { variant: 'success', preventDuplicate: true });
+				handleDialogFormClose();
+
 				props?.refresh?.();
 			})
 			.catch( err => {
 				enqueueSnackbar( err?.response?.data?.message ?? 'Please try again!', { variant: 'error', preventDuplicate: true });
 			});
-
-			handleDialogFormClose();
 		}
 
 		switch( type ){
@@ -336,8 +496,15 @@ const AccountView = props => {
 							label="Section name"
 							Icon={DriveFileRenameOutlineIcon} 
 							onChange={e => dispatch({ type: 'sectionName', payload: e.target.value })}
-						/>
-					],
+						/>,
+						<IconAutocomplete 
+							key={uniqid()}
+							list={props?.filter?.map?.( fltr => fltr.name ) ?? []}
+							Icon={StoreIcon}
+							label="Member of Strand"
+							placeholder="Strand"
+							onChange={(_, newValue) => dispatch({ type: 'sectionParent', payload: newValue })}
+						/>					],
 					onProcess: handleAddSection
 				};	
 
@@ -450,7 +617,23 @@ const AccountView = props => {
 	}
 
 	const memoizedFiltering = React.useCallback(() => filtering( props?.items ), [ props?.items, selectedFilter, searchText ]);
+	React.useEffect(() => {
+		if( props?.filter?.length ){
+			const tempFilterIndexes = {};
+
+			const tempFilterKeys = props.filter.map(( fltr, index ) => {
+				tempFilterIndexes[ fltr.name ] = index;
+				fltr["isOpen"] = false;
+				return fltr;
+			});
+
+			setFilterIndexes({ ...tempFilterIndexes });			
+			setFilter([ ...tempFilterKeys ]);
+		}
+	}, [props.filter]);
+
 	React.useEffect(() => memoizedFiltering(), [props?.items, selectedFilter, searchText]);
+	React.useEffect(() => getSemesters(), []);
 
 	return(
 		<div className="account-view border rounded d-flex flex-column">
@@ -459,6 +642,7 @@ const AccountView = props => {
 					<Box sx={{ display: 'flex', alignItems: 'center' }}>
 						<SearchIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
 						<TextField 
+							label=""
 							id="input-with-sx" 
 							variant="standard"
 							onChange={e => setSearchText( e.target.value )}
@@ -481,7 +665,15 @@ const AccountView = props => {
 					<IconButton	id="filter-btn" onClick={handleFilterOpen}>
 						<FilterAltIcon/>
 					</IconButton>
+					{
+					props?.semSettingsOn
+						? <IconButton id="semswitch-btn" onClick={handleSettingsOpen}>
+							<SettingsIcon/>
+						</IconButton>
+						: null
+					}
 				</div>
+				
 			</div>
 			<div className="account-view-content-box flex-grow-1 d-flex flex-column">
 				{/*All accounts go here*/}
@@ -547,17 +739,51 @@ const AccountView = props => {
 					}
 				</div>
 			</div>
+
+			{/*FILTER*/}
 			<Menu
 				open={filterOpen}
-				anchorEl={anchorEl}
+				anchorEl={filterAnchorEl}
 				onClose={handleFilterClose}
 				MenuListProps={{
 					'aria-labelledby': 'filter-btn',
 				}}
 			>
-				<Paper sx={{ width: 300, height: 'fit-content', maxHeight: 300, overflow: 'auto' }} elevation={0}>
-					<MenuList dense>
+				<Paper sx={{ width: 400, height: 'fit-content', maxHeight: 300, overflow: 'auto' }} elevation={0}>
+					<MuiList sx={{ width: '100%', minWidth: '100%'}} dense>
 						{
+							filter?.map?.(( fltr, index ) => (
+								<React.Fragment key={uniqid()}>
+									<ListItemButton onClick={() => handleFilterExpand( index )}>
+										<Checkbox checked={selectedFilter.includes( fltr.name )} onChange={() => handleSelectFilter( fltr.name )}/>
+										<ListItemText primary={fltr.name}/>
+										{
+											fltr.sections.length
+												? filter[ index ].isOpen ? <ExpandMore/> : <ExpandLess/>
+												: null
+										}
+									</ListItemButton>
+									{
+										fltr.sections.length 
+											? <Collapse in={filter[ index ].isOpen} timeout="auto" unmountOnExit>
+										        <MuiList component="div" disablePadding>
+										          {
+										          	fltr?.sections?.map?.( sctn => (
+										          		<ListItemButton key={uniqid()} sx={{ pl: 4 }}>
+															<Checkbox onChange={() => handleSelectFilter( sctn )}/>
+												            <ListItemText primary={sctn}/>
+														</ListItemButton>
+										          		))
+										          }
+										        </MuiList>
+											</Collapse>
+											: null
+									}
+								</React.Fragment>
+								))
+						}
+
+						{/*{
 							props?.filter?.map(({ name, isSectionName }, index ) => (
 								isSectionName
 									? <Divider 
@@ -582,10 +808,53 @@ const AccountView = props => {
 										</FormGroup>
 									</MenuItem> 
 							))
-						}
-					</MenuList>
+						}*/}
+					</MuiList>
 				</Paper>
 			</Menu>
+
+			{/*SEMESTER SETTINGS*/}
+			<Menu
+				open={settingOpen}
+				anchorEl={settingsAnchorEl}
+				onClose={handleSettingsClose}
+				MenuListProps={{
+					'aria-labelledby': 'filter-btn',
+				}}
+			>
+				<Paper 
+					sx={{ 
+						width: 400, 
+						height: 'fit-content', 
+						maxHeight: 300, 
+						overflow: 'auto', 
+						color: 'var( --text-color )'
+					}} 
+					elevation={0}
+				>
+					{
+						semesterSwitch.map( semSwitch => (
+							<div key={uniqid()} className="semester-tab-semester my-4 col-12 d-flex flex-row justify-content-start align-items-center">
+								<div className="col-6 text-center">
+									<b>{ semSwitch.name }</b>
+								</div>
+								<div style={{ width: '200px' }} className="semester-switch row">
+									<div className="col-3 d-flex justify-content-center align-items-center">
+										Off
+									</div>
+									<div className="col-5 d-flex justify-content-center align-items-center">
+										<Switch checked={semSwitch.isActive} onChange={semSwitch.onSwitch}/>
+									</div>
+									<div className="col-3 d-flex justify-content-center align-items-center">
+										On
+									</div>
+								</div>
+							</div>
+							))
+					}
+				</Paper>
+			</Menu>
+
 			<DialogForm 
 				titleOn
 				contextTextOn
@@ -618,7 +887,6 @@ const AccountHeader = props => {
 }
 
 
-
 const IconField = ({ Icon, label, type, onChange, params, placeholder, defaultValue }) => {
 	return(
 		<Box sx={{ display: 'flex', alignItems: 'flex-end', margin: '30px 0 30px 0'}}>
@@ -641,8 +909,9 @@ const IconField = ({ Icon, label, type, onChange, params, placeholder, defaultVa
 const IconAutocomplete = ({ list, multiple, Icon, label, placeholder, defaultValue, onChange }) => {
 	return(
 		<Autocomplete
+			value={defaultValue}
 			multiple={multiple}
-	        options={list.map( item => item.name )}
+	        options={list}
 	        renderTags={(value, getTagProps) =>
 				value.map((option, index) => (
 					<Chip variant="outlined" label={option} {...getTagProps({ index })} />

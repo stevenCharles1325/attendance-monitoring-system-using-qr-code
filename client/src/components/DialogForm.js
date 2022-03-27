@@ -42,8 +42,12 @@ const DialogForm = props => {
 				{ props?.content }
 		    </DialogContent>
 	        <DialogActions>
-				<Button onClick={props?.close}>Cancel</Button>
-				<Button onClick={() => handleFormProcess(props?.close)}>Process</Button>
+				<Button onClick={props?.close}>{ props?.closeLabel ?? 'Cancel' }</Button>
+				{
+					props?.processBtnOff
+						? null
+						: <Button onClick={() => handleFormProcess(props?.close)}>Process</Button>
+				}
 	        </DialogActions>
 		</Dialog>
 	);

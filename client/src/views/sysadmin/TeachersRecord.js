@@ -3,8 +3,9 @@ import Axios from 'axios';
 
 import AccountView from '../../components/AccountView';
 
-const StudentsRecord = props => {
+const TeachersRecord = props => {
 	const [items, setItems] = React.useState( [] );
+	const [sections, setSections] = React.useState( [] );
 	const [strands, setStrands] = React.useState( [] );
 
 	const getItems = async () => {
@@ -17,10 +18,20 @@ const StudentsRecord = props => {
 		});
 	}
 
-	const getStrand = async () => {
+	const getSections = async () => {
+		Axios.get(`${window.API_BASE_ADDRESS}/master/get-items/type/section`)
+		.then( res => {
+			setSections(() => [ ...res.data ]);			
+		})
+		.catch( err => {
+			console.error( err );
+		});
+	}
+
+	const getStrands = async () => {
 		Axios.get(`${window.API_BASE_ADDRESS}/master/get-items/type/strand`)
 		.then( res => {
-			setStrands(() => [ ...res.data ]);			
+			setStrands(() => [ ...res.data ]);
 		})
 		.catch( err => {
 			console.error( err );
@@ -29,12 +40,14 @@ const StudentsRecord = props => {
 
 	const refresh = () => {
 		getItems();
-		getStrand();
+		getSections();
+		getStrands();
 	}
 
 	React.useEffect(() => {
 		getItems();
-		getStrand();
+		getSections();
+		getStrands();
 	}, []);
 
 
@@ -45,13 +58,24 @@ const StudentsRecord = props => {
 				addStrandOn
 				addSectionOn
 				statusSwitchOn
-				semSettingsOn
 				userType="student"
 				header={['Student No', 'First name', 'Middle Name', 'Last name', 'Section', 'Strand']}
 				renderItemsKey={['studentNo', 'firstName', 'middleName', 'lastName', 'section', 'strand']}
 				searchIndex={1}
-				filter={strands}
+				filter={[
+					{
+						name: 'Sections',
+						isSectionName: true
+					},
+					...sections,
+					{
+						name: 'Strands',
+						isSectionName: true	
+					},
+					...strands
+				]}
 				items={items}
+				sections={sections}
 				strands={strands}
 				refresh={() => refresh()}
 			/>
@@ -59,4 +83,4 @@ const StudentsRecord = props => {
 	);
 }
 
-export default StudentsRecord;
+export default TeachersRecord;

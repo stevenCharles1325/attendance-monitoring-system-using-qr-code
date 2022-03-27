@@ -1,7 +1,7 @@
 import React from 'react';
 import AccountView from '../../components/AccountView';
 
-const StudentsAccount = props => {
+const TeacherAccount = props => {
 	return(
 		<div className="students-account d-flex justify-content-center align-items-center">
 			<AccountView 
@@ -9,7 +9,6 @@ const StudentsAccount = props => {
 				// addStrandOn
 				// addSectionOn
 				statusSwitchOn
-				semSettingsOn
 				userType="student"
 				header={['ID', 'Full name', 'Section', 'Status']}
 				searchIndex={1}

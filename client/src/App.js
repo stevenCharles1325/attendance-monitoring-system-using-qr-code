@@ -1,4 +1,5 @@
 import React from 'react';
+import Axios from 'axios';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { 
   useSelector, 
@@ -7,6 +8,7 @@ import {
 
 import { handleUserRole } from './features/form/formSlice';
 import { handleNavigateTo } from './features/navigation/navigationSlice';
+import { useSnackbar } from 'notistack';
 
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import AccountBox from '@mui/icons-material/AccountBox';
@@ -64,9 +66,18 @@ function App() {
   const { userRole } = useSelector( state => state.form );
   const navigateTo = useSelector( state => state.navigation.to );
   const dispatch = useDispatch();
+  const { enqueueSnackbar } = useSnackbar();
 
   const handleNavigation = route => {
     dispatch(handleNavigateTo( route ));
+  }
+
+  const checkIfSemesterExists = () => {
+    Axios.get(`${window.API_BASE_ADDRESS}/master/check-semester`)
+    .catch( err => {
+      enqueueSnackbar('Error while checking semester, please restart the page.', { variant: 'error' });
+      console.error( err );
+    });
   }
 
   /* =====================
@@ -280,6 +291,7 @@ function App() {
     }
   }
 
+  React.useEffect(() => checkIfSemesterExists(), []);
   React.useEffect(() => dispatch(handleNavigateTo( null )), [navigateTo]);
 
   return (
