@@ -40,6 +40,7 @@ const DialogForm = props => {
 						: null
 	        	}
 				{ props?.content }
+				{ props?.children }
 		    </DialogContent>
 	        <DialogActions>
 				<Button onClick={props?.close}>{ props?.closeLabel ?? 'Cancel' }</Button>

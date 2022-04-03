@@ -12,7 +12,6 @@ const Dashboard = props => {
 
 	return(
 		<div className="student-dashboard">
-			<Menu/>
 			<div style={{ width: '100%' }} className="row d-flex m-0 p-0 flex-row justify-content-center align-items-start">
 				<div className="col-md-4">
 					<div ref={studentQr} className="qr-box shadow-right">

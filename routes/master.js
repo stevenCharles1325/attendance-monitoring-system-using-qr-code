@@ -43,8 +43,8 @@ router.get('/verify-me', authentication, async (req, res, next) => {
 });
 
 
-router.delete('/sign-out', authentication, async ( req, res ) => {
-  Token.deleteOne({ code: req.body.token }, (err) => {
+router.delete('/sign-out/token/:token', authentication, async ( req, res ) => {
+  Token.deleteOne({ code: req.params.token }, (err) => {
     if( err ) return res.sendStatus( 500 );
 
     return res.sendStatus( 200 );
@@ -70,6 +70,60 @@ router.get('/check-semester', async ( req, res ) => {
   });
 });
 
+
+router.put('/user-status-switch/status/:status/id/:id', authentication, async ( req, res ) => {
+  const { id, status } = req.params;
+
+  Student.findOne({ _id: id }, ( err, doc ) => {
+    if( err ) return res.sendStatus( 500 );
+
+    if( doc ){
+      if( doc.state === 'verified' ){
+        doc.status = status;
+
+        doc.save( err => {
+          if( err ) return res.sendStatus( 500 );
+
+          return res.sendStatus( 200 );
+        });
+      }
+      else{
+        return res
+          .status( 405 )
+          .json({
+            message: 'Account has not been verified yet'
+          });
+      }
+    }
+    else{
+      Teacher.findOne({ _id: id }, ( doc, err ) => {
+        if( err ) return res.sendStatus( 500 );
+
+        if( doc ){
+          if( doc.state === 'verified' ){
+            doc.status = status;
+
+            doc.save( err => {
+              if( err ) return res.sendStatus( 500 );
+
+              return res.sendStatus( 200 );
+            });
+          }
+          else{
+            return res
+              .status( 405 )
+              .json({
+                message: 'Account has not been verified yet'
+              });
+          }
+        }
+        else{
+          return res.sendStatus( 404 );
+        }
+      });
+    }
+  });
+});
 
 router.put('/activate/semester/:semesterNumber', authentication, async ( req, res ) => {
   const { semesterNumber } = req.params;

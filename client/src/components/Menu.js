@@ -1,8 +1,10 @@
 import React from 'react';
+import Axios from 'axios';
 import uniqid from 'uniqid';
-import Cookie from 'js-cookie';
+import Cookies from 'js-cookie';
 import { useLocation } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { handleNavigateTo } from '../features/navigation/navigationSlice';
 
 import Collapse from '@mui/material/Collapse';
 import Drawer from '@mui/material/Drawer';
@@ -26,14 +28,50 @@ import PowerSettingsNew from '@mui/icons-material/PowerSettingsNew';
 
 import AccountCircle from '@mui/icons-material/AccountCircle';
 
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 
-const Menu = props => {
+const requestHeader = {
+  'headers': {
+    'authorization': `Bearer ${Cookies.get('token')}`
+  }
+}
+
+const QamsMenu = props => {
 	const { userRole } = useSelector( state => state.form );
+	const navigateTo = useSelector( state => state.navigation.to );
+	const dispatch = useDispatch();
 
 	const [drawer, setDrawer] = React.useState( false );
 	const [dropDowns, setDropDowns] = React.useState( {} );
-	const [active, setActive] = React.useState( Cookie.get('active-menu') ?? props?.items?.[ userRole ]?.[0]?.text );
+	const [active, setActive] = React.useState( Cookies.get('active-menu') ?? props?.items?.[ userRole ]?.[0]?.text );
 	const location = useLocation();
+
+	const [accElement, setAccElement] = React.useState( null );
+	const openAccMenu = Boolean( accElement );
+
+	const handleAccMenuClick = event => {
+		setAccElement( event.currentTarget );
+	}
+
+	const handleAccMenuClose = () => {
+		setAccElement( null );
+	}
+
+	const handleLogOut = async () => {
+		const token = Cookies.get('token');
+
+		Axios.delete(`${window.API_BASE_ADDRESS}/master/sign-out/token/${token}`, requestHeader)
+		.then(() => {
+			Cookies.remove('token');
+			Cookies.remove('rtoken');
+
+			window.location.href = '/app/gate';
+		})
+		.catch( err => console.error( err ));
+	}
+
+	const handleOpenProfile = () => console.log('profile open');
 
 	const toggleDrawer = (open) => (event) => {
 		if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
@@ -57,7 +95,7 @@ const Menu = props => {
 		: { backgroundColor: 'white', color: 'black' };
 
 	const handleActiveItem = title => fn => () => {
-		Cookie.set('active-menu', title);
+		Cookies.set('active-menu', title);
 		setActive( title );
 		
 		return fn?.();
@@ -157,7 +195,7 @@ const Menu = props => {
 	return(
 		<div className="view-box d-flex flex-column">
 			{
-				location.pathname === '/app/gate'
+				location.pathname === props?.hideOn
 					? null
 					: (
 						<div className="menu d-flex justify-content-start align-items-center">
@@ -179,7 +217,7 @@ const Menu = props => {
 								</Typography>
 							</div>
 							<div style={{ width: '100%' }} className="mx-3 d-flex justify-content-end">
-								<IconButton>
+								<IconButton onClick={handleAccMenuClick}>
 									<PowerSettingsNew sx={{ color: 'white' }}/>
 								</IconButton>
 							</div>
@@ -189,8 +227,20 @@ const Menu = props => {
 			<div className="view-content flex-grow-1">
 				{ props?.children }
 			</div>
+			<Menu
+				id="menu-account-menu"
+				anchorEl={accElement}
+				open={openAccMenu}
+				onClose={handleAccMenuClose}
+				MenuListProps={{
+					'aria-labelledby': 'basic-button',
+				}}
+			>
+				<MenuItem onClick={handleOpenProfile}>Profile</MenuItem>
+				<MenuItem onClick={handleLogOut}>Logout</MenuItem>
+			</Menu>
 		</div>
 	);	
 }
 
-export default Menu;
+export default QamsMenu;

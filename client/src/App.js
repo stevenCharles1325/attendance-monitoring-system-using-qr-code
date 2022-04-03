@@ -312,7 +312,7 @@ function App() {
         setRole={val => dispatch(handleUserRole( val ))}
         setRedirectTo={val => dispatch(handleNavigateTo( val ))}
       >
-        <Menu items={items}>
+        <Menu items={items} hideOn='/app/gate'>
           <Routes>
             <Route path="/app/gate" element={<Gate />}/>
           

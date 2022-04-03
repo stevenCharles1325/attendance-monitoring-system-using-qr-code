@@ -62,30 +62,17 @@ const Form = props => {
 
 	const signin = (
 		<SigninForm 
-			userId={userId} 
-			userPass={userPass} 
-			userBday={userBday}
-			userRole={userRole}
 			setMessage={val => setMessage( val )}
 			handleSignin={() => handleSignin()}
-			handleUserId={e => dispatch(handleUserId( e.target.value ))}
-			handleUserPass={e => dispatch(handleUserPass( e.target.value ))}
-			handleUserBday={e => dispatch(handleUserBday( e.target.value ))}
 			setFormType={val => props?.setFormType?.( val )}
 		/> 
 	);
 
 	const signup = (
 		<SignupForm 
-			userId={userId} 
-			userPass={userPass} 
-			userBday={userBday}
-			userRole={userRole}
 			setMessage={val => setMessage( val )}
-			handleUserId={e => dispatch(handleUserId( e.target.value ))}
-			handleUserPass={e => dispatch(handleUserPass( e.target.value ))}
-			handleUserBday={e => dispatch(handleUserBday( e.target.value ))}
 			// handleVerification={() => handleVerification()}
+			handleSignup={() => handleSignup()}
 			setFormType={val => props?.setFormType?.( val )}
 		/>
 	);	
@@ -108,7 +95,6 @@ const Form = props => {
 	React.useEffect(() => {
 		switch( action ){
 			case 'signin':
-				// do this
 				Axios.post(`${window.API_BASE_ADDRESS}/auth/sign-in`, {
 					username: userId,
 					password: userPass
@@ -118,7 +104,7 @@ const Form = props => {
 					Cookies.set('rtoken', res.data.refreshToken);
 
 					dispatch(handleUserRole( res.data.role ));
-					dispatch(handleNavigateTo( `app/${res?.data?.role}/dashboard` ));
+					window.location.href = `/app/${res?.data?.role}/dashboard`;
 				})
 				.catch( err => {
 					if( err?.response?.status === 403 && err?.response?.data?.message ){
@@ -131,12 +117,33 @@ const Form = props => {
 				break;
 
 			case 'signup':
+				console.log( userRole );
+				Axios.post(`${window.API_BASE_ADDRESS}/auth/sign-up`, {
+					username: userId,
+					password: userPass,
+					role: userRole
+				})
+				.then( res => {
+					Cookies.set('token', res.data.accessToken);
+					Cookies.set('rtoken', res.data.refreshToken);
+
+					dispatch(handleUserRole( res.data.role ));
+					window.location.href = `/app/${res?.data?.role}/dashboard`;
+				})
+				.catch( err => {
+					if( err?.response?.status === 403 && err?.response?.data?.message ){
+						setMessage({
+							text: err.response.data.message,
+							variant: 'error'
+						});
+					}
+				});
 				break;
 
 			default:
 				return;
 		}
-		
+
 		setAction( null );
 	}, [userId, userPass, userBday, userRole, action]);
 
@@ -166,7 +173,13 @@ const FormLoading = () => (
 
 
 const SigninForm = props => {
-	const { userId, userPass, handleUserId, handleUserPass } = props;
+	const { 
+		userId, 
+		userPass, 
+		userBday, 
+		userRole 
+	} = useSelector( state => state.form );
+	const dispatch = useDispatch();
 
 	const password = React.useRef();
 
@@ -205,7 +218,7 @@ const SigninForm = props => {
 			>
 				<TextField
 					defaultValue={userId}
-					onChange={e => handleUserId( e )}
+					onChange={e => dispatch(handleUserId( e.target.value ))}
 					sx={{ width: '90%' }} 
 					label="Username" 
 					variant="filled"
@@ -215,7 +228,7 @@ const SigninForm = props => {
 					ref={password}
 					type="password"
 					defaultValue={userPass}
-					onChange={e => handleUserPass( e )}
+					onChange={e =>  dispatch(handleUserPass( e.target.value ))}
 					sx={{ width: '90%' }} 
 					label="Password" 
 					variant="filled"
@@ -246,7 +259,10 @@ const SigninForm = props => {
 
 // Signing-up users are prompted with a verification form first.
 const SignupForm = props => {
-	const { userId, userPass, handleUserId, handleUserPass } = props;
+	const { 
+		userId, 
+		userRole 
+	} = useSelector( state => state.form );
 
 	const [content, setContent] = React.useState( null );
 	const [activeStep, setActiveStep] = React.useState( 0 );
@@ -257,9 +273,12 @@ const SignupForm = props => {
 	const dispatch = useDispatch();
 
 	const handleVerification = async id => {
+
 		try{
-			const { role } = await Axios.post(`${window.API_BASE_ADDRESS}/verify/user/${id}`) 
-			dispatch(props.handleUserRole( role ));
+			const res = await Axios.post(`${window.API_BASE_ADDRESS}/auth/verify/user/${id}`);
+			const { role } = res.data;
+
+			dispatch(handleUserRole( role ));
 
 			props?.setMessage({
 				text: 'Account has been verified!',
@@ -271,8 +290,9 @@ const SignupForm = props => {
 			setAction( null );
 		}
 		catch( err ){
+			console.error( err );
 			props?.setMessage({
-				text: 'Account does not exist!',
+				text: 'Account does note exist or it has been verified!',
 				variant: 'error'
 			});
 
@@ -280,78 +300,12 @@ const SignupForm = props => {
 			setActiveStep( 0 );
 			setAction( null );
 		}
-		// return await Axios.post(`${window.API_BASE_ADDRESS}/verify/user/${userId}`)
-		// .then( res => {
-		// 	dispatch(handleUserRole( res.role ));
-		// 	// setMessage({ text: res.message, variant: 'success' });
-
-		// 	return 1;
-		// })
-		// .catch( err => {
-		// 	// if( err?.response?.data?.message ){
-		// 	// 	setMessage({ text: err.response.data.message, variant: 'error' });
-		// 	// }
-		// 	// else{
-		// 	// 	setMessage({ text: 'Please try again!', variant: 'error' });
-		// 	// }
-
-		// 	return 0;
-		// });
 	}
-
-	const TrueSignup = () => (
-		<div 
-			style={{ height: '20%', color: 'white' }} 
-			className="d-flex flex-column justify-content-between align-items-center"
-		>
-			<TextField
-				defaultValue={userId}
-				onChange={e => handleUserId( e )}
-				sx={{ width: '90%' }} 
-				label="Username" 
-				variant="filled"
-			/>
-			<br/>
-			<TextField 
-				type="password"
-				defaultValue={userPass}
-				onChange={e => handleUserPass( e )}
-				sx={{ width: '90%' }} 
-				label="Password" 
-				variant="filled"
-			/>
-		</div>
-	);
-
-	const Verification = () => (
-		<div 
-			style={{ height: '20%', color: 'white' }} 
-			className="d-flex flex-column justify-content-between align-items-center"
-		>
-			<TextField
-				defaultValue={userId}
-				onChange={e => handleUserId( e )}
-				sx={{ width: '90%' }} 
-				label="School Number" 
-				variant="filled"
-				helperText="Employee or Student Number"
-			/>
-			<br/>
-			<TextField 
-				type="date"
-				defaultValue={userPass}
-				onChange={e => handleUserPass( e )}
-				sx={{ width: '90%' }} 
-				helperText="Birth-date" 
-				variant="filled"
-			/>
-		</div>	
-	);
 
 	const handleEnter = approval => e => {
 		if( e.key === 'Enter' ){
 			if( approval ){
-				// In progress...
+				props?.handleSignup?.();
 			}
 			else{
 				setAction('verify');
@@ -366,7 +320,7 @@ const SignupForm = props => {
 	}, [isApproved]);
 
 	React.useEffect(() => {
-		if( action === 'verify' ){
+		if( action === 'verify' && userId ){
 			handleVerification( userId );
 		}
 	}, [userId, action]);
@@ -402,7 +356,7 @@ const SignupForm = props => {
 				</QamsButton>
 				{
 					isApproved
-						? <QamsButton size="small" variant="contained">
+						? <QamsButton size="small" variant="contained" onClick={() => props?.handleSignup?.()}>
 							Sign-up
 						</QamsButton>
 						: <QamsButton size="small" variant="contained" onClick={() => setAction('verify')}>
@@ -414,6 +368,71 @@ const SignupForm = props => {
 	);
 }
 
+
+const TrueSignup = () => {
+	const { 
+		userId, 
+		userPass
+	} = useSelector( state => state.form );
+	const dispatch = useDispatch();
+
+	return (
+		<div 
+			style={{ height: '20%', color: 'white' }} 
+			className="d-flex flex-column justify-content-between align-items-center"
+		>
+			<TextField
+				defaultValue={userId}
+				onChange={e => dispatch(handleUserId( e.target.value ))}
+				sx={{ width: '90%' }} 
+				label="Username" 
+				variant="filled"
+			/>
+			<br/>
+			<TextField 
+				type="password"
+				defaultValue={userPass}
+				onChange={e => dispatch(handleUserPass( e.target.value ))}
+				sx={{ width: '90%' }} 
+				label="Password" 
+				variant="filled"
+			/>
+		</div>
+	);
+}
+
+const Verification = () => {
+	const { 
+		userId, 
+		userBday
+	} = useSelector( state => state.form );
+	const dispatch = useDispatch();
+
+	return(
+		<div 
+			style={{ height: '20%', color: 'white' }} 
+			className="d-flex flex-column justify-content-between align-items-center"
+		>
+			<TextField
+				defaultValue={userId}
+				onChange={e => dispatch(handleUserId( e.target.value ))}
+				sx={{ width: '90%' }} 
+				label="School Number" 
+				variant="filled"
+				helperText="Employee or Student Number"
+			/>
+			<br/>
+			<TextField 
+				type="date"
+				defaultValue={userBday}
+				onChange={e => handleUserBday( e )}
+				sx={{ width: '90%' }} 
+				helperText="Birth-date" 
+				variant="filled"
+			/>
+		</div>	
+	);
+};
 
 const SignUpSteps = props => {
 	return(
