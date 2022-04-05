@@ -178,8 +178,10 @@ const AccountView = props => {
 			const tempStrands = [];
 
 			if( section.length ){
+				console.log( section );
 				section.forEach( sctn => {
-					tempStrands.push( ...props.filter[findChildrenIndexOf( sctn, props.filter )].name );
+					if( props?.filter?.[findChildrenIndexOf( sctn, props.filter, true )]?.name )
+						tempStrands.push( props.filter[findChildrenIndexOf( sctn, props.filter, true )].name );
 				});
 
 				return tempStrands;
@@ -420,7 +422,11 @@ const AccountView = props => {
 							    	id={filteredItems[ index1 ][ key ]} 
 							    	className={`qams-row text-capitalize d-flex justify-content-${index === 0 ? 'start' : 'center'} col-sm`}
 							    >
-									{ filteredItems[ index1 ][ key ] }
+									{ 
+										filteredItems[ index1 ][ key ] instanceof Array 
+											? filteredItems[ index1 ][ key ].join(', ') 
+											: filteredItems[ index1 ][ key ] 
+									}
 								</div>
 						))
 					}
@@ -513,7 +519,7 @@ const AccountView = props => {
 					onChange={e => dispatch(handleBirthDate( e.target.value ))}
 				/>,
 				<IconAutocomplete 
-					defaultValue={section}
+					defaultValue={section ?? []}
 					multiple={formType !== 'student' ? true : false}
 					key={uniqid()}
 					list={memoizedSectionGenerator()}
@@ -523,7 +529,7 @@ const AccountView = props => {
 					onChange={(_, newValue) => dispatch(handleSection( newValue ))}
 				/>,
 				<IconAutocomplete 
-					defaultValue={strand}
+					defaultValue={strand ?? []}
 					multiple={formType !== 'student' ? true : false}
 					key={uniqid()}
 					list={memoizedStrandGenerator()}

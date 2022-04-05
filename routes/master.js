@@ -96,7 +96,7 @@ router.put('/user-status-switch/status/:status/id/:id', authentication, async ( 
       }
     }
     else{
-      Teacher.findOne({ _id: id }, ( doc, err ) => {
+      Teacher.findOne({ _id: id }, ( err, doc ) => {
         if( err ) return res.sendStatus( 500 );
 
         if( doc ){

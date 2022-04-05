@@ -30,7 +30,9 @@ import DashboardStudent from './views/student/Dashboard';
 
 import DashboardSysadmin from './views/sysadmin/Dashboard';
 import StudentsAccount from './views/sysadmin/StudentsAccount';
+import TeachersAccount from './views/sysadmin/TeachersAccount';
 import StudentsRecord from './views/sysadmin/StudentsRecord';
+import TeachersRecord from './views/sysadmin/TeachersRecord';
 
 
 import PageLoading from './components/PageLoading';
@@ -103,7 +105,8 @@ function App() {
         },
         {
           text: 'Teachers Account',
-          icon: <AccountCircle/>
+          icon: <AccountCircle/>,
+          onClick: () => handleNavigation('/app/sysadmin/teachers-account')
         }
       ]
     },
@@ -119,7 +122,8 @@ function App() {
         },
         {
           text: 'Teachers Record',
-          icon: <ListAlt/>
+          icon: <ListAlt/>,
+          onClick: () => handleNavigation('/app/sysadmin/teachers-record')
         },
         {
           text: 'Attendance Record',
@@ -314,13 +318,20 @@ function App() {
       >
         <Menu items={items} hideOn='/app/gate'>
           <Routes>
+            {/* Gate */}
             <Route path="/app/gate" element={<Gate />}/>
-          
+            
+            {/* Admin's route */}
             <Route path="/app/sysadmin/dashboard" element={<DashboardSysadmin/>}/>
             <Route path="/app/sysadmin/students-record" element={<StudentsRecord/>}/>
             <Route path="/app/sysadmin/students-account" element={<StudentsAccount/>}/>
+            <Route path="/app/sysadmin/teachers-account" element={<TeachersAccount/>}/>
+            <Route path="/app/sysadmin/teachers-record" element={<TeachersRecord/>}/>
             
+            {/* Students' route */}
             <Route path="/app/student/dashboard" element={<DashboardStudent/>}/>
+
+            {/* Teachers' route */}
           </Routes>
         </Menu>      
       </Authentication>

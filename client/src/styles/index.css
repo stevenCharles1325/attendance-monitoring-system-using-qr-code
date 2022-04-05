@@ -215,6 +215,30 @@ body{
 }
 
 
+/*====================
+
+			FIELD BOX
+
+======================*/
+.field-box{
+	width: 100%;
+}
+
+.field-box b{
+	color: var( --text-color );
+}
+
+.field-box b::after{
+	content: ":";
+}
+
+.field-box p{
+	text-align: center;
+	flex-grow: 1;
+	margin: 0;
+}
+
+
 /*=====================
 	
 	STUDENT DASHBOARD
@@ -231,6 +255,21 @@ body{
 	width: 60%;
 
 	border-radius: 5px;
+}
+
+.student-dashboard-item, .student-dashboard-item-full{
+	overflow: auto;
+	background-color: white;
+	box-shadow: -5px 5px 4px 0 rgba(0, 0, 0, 0.25);
+	border-radius: 5px;
+}
+
+.student-dashboard-item-full{
+	height: 90%;
+}
+
+.student-dashboard-item{
+	height: 250px;
 }
 
 /*====================
