@@ -31,11 +31,6 @@ import AccountCircle from '@mui/icons-material/AccountCircle';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 
-const requestHeader = {
-  'headers': {
-    'authorization': `Bearer ${Cookies.get('token')}`
-  }
-}
 
 const QamsMenu = props => {
 	const { userRole } = useSelector( state => state.form );
@@ -61,7 +56,7 @@ const QamsMenu = props => {
 	const handleLogOut = async () => {
 		const token = Cookies.get('token');
 
-		Axios.delete(`${window.API_BASE_ADDRESS}/master/sign-out/token/${token}`, requestHeader)
+		Axios.delete(`${window.API_BASE_ADDRESS}/master/sign-out/token/${token}`, window.requestHeader)
 		.then(() => {
 			Cookies.remove('token');
 			Cookies.remove('rtoken');

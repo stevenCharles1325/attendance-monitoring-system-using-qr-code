@@ -6,8 +6,6 @@ import { useSnackbar } from 'notistack';
 
 import Autocomplete from '@mui/material/Autocomplete';
 import Chip from '@mui/material/Chip';
-import Typography from '@mui/material/Typography';
-import Divider from '@mui/material/Divider';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
@@ -18,9 +16,8 @@ import Switch from '@mui/material/Switch';
 import TextField from '@mui/material/TextField';
 
 import Calendar from 'react-calendar';
-import Clock from '../../components/Clock';
 import DialogForm from '../../components/DialogForm';
-
+import QamsHeader from '../../components/QamsHeader';
 import SearchIcon from '@mui/icons-material/Search';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -417,19 +414,7 @@ const Dashboard = props => {
 
 	return(
 		<div className="sysadmin-dashboard row d-flex justify-content-center align-items-center">
-			<div className="px-5 d-flex justify-content-between align-items-center">
-				<Clock/>
-				{/*<IconButton onClick={() => setSettingOpen( true )}> 
-					<AppRegistrationIcon/>
-				</IconButton>*/}
-			</div>
-			<div style={{ width: '100%' }} className="p-0 m-0">
-				<Divider textAlign="right">
-					<Typography variant="h6" sx={{ color: 'var(--text-color)' }}>
-						Dasboard
-					</Typography>
-				</Divider>
-			</div>
+			<QamsHeader title="Dashboard"/>
 			<div style={{ width: '100%'}} className="p-0 m-0 my-5 row ">
 				<div className="p-0 m-0 my-3 col-lg-4 d-flex justify-content-center">
 					<PieGraph/>

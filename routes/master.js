@@ -148,6 +148,32 @@ router.put('/activate/semester/:semesterNumber', authentication, async ( req, re
   });
 });
 
+router.get('/get-single-user/type/:type/id/:id', async ( req, res ) => {
+  const { type, id } = req.params;
+
+  if( !type || !id ) return res.sendStatus( 404 );
+
+  switch( type ){
+    case 'student':
+      Student.findOne({ username: id }, ( err, doc ) => {
+        if( err ) return res.sendStatus( 500 );
+
+        return res.json( doc );
+      });
+      break;
+
+    case 'teacher':
+      Teacher.findOne({ username: id }, ( err, doc ) => {
+        if( err ) return res.sendStatus( 500 );
+
+        return res.json( doc );
+      });   
+      break;   
+
+    default:
+      return res.sendStatus( 200 );  
+  }
+});
 
 router.get('/get-users/type/:type', async ( req, res ) => {
   const { type } = req.params;

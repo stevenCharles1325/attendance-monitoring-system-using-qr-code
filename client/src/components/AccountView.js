@@ -19,7 +19,10 @@ import {
 	handleSectionName,
 	handleSectionParent,
 	handleUserType,
-	handleClear
+	handleClear,
+	handleLrn,
+	handleEmail,
+	handleGender
 } from '../features/account/accountSlice';
 
 import Box from '@mui/material/Box';
@@ -52,7 +55,7 @@ import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutli
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 
-import Autocomplete from '@mui/material/Autocomplete';
+import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import AddCardIcon from '@mui/icons-material/AddCard';
@@ -61,6 +64,9 @@ import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
 import StoreIcon from '@mui/icons-material/Store';
 import SettingsIcon from '@mui/icons-material/Settings';
+import FemaleIcon from '@mui/icons-material/Female';
+import NumbersIcon from '@mui/icons-material/Numbers';
+import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
 
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
@@ -77,11 +83,20 @@ import DialogForm from './DialogForm';
 	@param { array } item
 */
 
-const requestHeader = {
-  'headers': {
-    'authorization': `Bearer ${Cookies.get('token')}`
-  }
-}
+const filterer = createFilterOptions();
+const genderOptions = [
+	'I prefer not to say',
+	'Male',
+	'Female',
+	'Non-binary',
+	'Transgender',
+	'Intersex',
+];
+
+const validEmailAddress = [
+	'gmail.com',
+	// Add valid email address here
+];
 
 const AccountView = props => {
 	const {
@@ -91,6 +106,9 @@ const AccountView = props => {
 		middleName,
 		lastName,
 		birthDate,
+		email,
+		gender,
+		lrn,
 		section,
 		strand,
 		strandName,
@@ -178,7 +196,6 @@ const AccountView = props => {
 			const tempStrands = [];
 
 			if( section.length ){
-				console.log( section );
 				section.forEach( sctn => {
 					if( props?.filter?.[findChildrenIndexOf( sctn, props.filter, true )]?.name )
 						tempStrands.push( props.filter[findChildrenIndexOf( sctn, props.filter, true )].name );
@@ -200,18 +217,37 @@ const AccountView = props => {
 	const memoizedStrandGenerator = React.useCallback(() => generateStrandList(), [ section, props ]);
 	const memoizedSectionGenerator = React.useCallback(() => generateSectionList(), [ strand, props ]);
 
+	const isEmailValid = email => {
+		for( let eadd of validEmailAddress ){
+			const splittedEmail = email.split( '@' );
+
+			if( splittedEmail.length > 2 ) return false;
+			if( splittedEmail[ 0 ] === eadd ) return false;
+
+			if( splittedEmail[ 1 ] === eadd ) return true;
+		}
+
+		return false;
+	}
+
 	const handleAddStudent = () => {
+		if(!isEmailValid( email )) 
+			return enqueueSnackbar('Email is invalid', { variant: 'error', preventDuplicate: true });
+
 		Axios.post(`${window.API_BASE_ADDRESS}/master/add/type/student`,  
 			{
 				studentNo: id,
-				firstName: firstName,
-				middleName: middleName,
-				lastName: lastName,
-				birthDate: birthDate,
-				section: section,
-				strand: strand
+				firstName,
+				middleName,
+				lastName,
+				birthDate,
+				section,
+				strand,
+				lrn,
+				email,
+				gender
 			},
-			requestHeader
+			window.requestHeader
 		)
 		.then( res => {
 			enqueueSnackbar( res.data.message, { variant: 'success', preventDuplicate: true });
@@ -225,17 +261,23 @@ const AccountView = props => {
 	}
 
 	const handleAddTeacher = () => {
+		if(!isEmailValid( email )) 
+			return enqueueSnackbar('Email is invalid', { variant: 'error', preventDuplicate: true });
+
 		Axios.post(`${window.API_BASE_ADDRESS}/master/add/type/teacher`,  
 			{
 				employeeNo: id,
-				firstName: firstName,
-				middleName: middleName,
-				lastName: lastName,
-				birthDate: birthDate,
-				section: section,
-				strand: strand
+				firstName,
+				middleName,
+				lastName,
+				birthDate,
+				section,
+				strand,
+				lrn,
+				email,
+				gender
 			},
-			requestHeader
+			window.requestHeader
 		)
 		.then( res => {
 			enqueueSnackbar( res.data.message, { variant: 'success', preventDuplicate: true });
@@ -253,7 +295,7 @@ const AccountView = props => {
 			{
 				name: strandName,
 			},
-			requestHeader
+			window.requestHeader
 		)
 		.then( res => {
 			enqueueSnackbar( res.data.message, { variant: 'success', preventDuplicate: true });
@@ -269,7 +311,7 @@ const AccountView = props => {
 	const handleAddSection = () => {
 		Axios.post(`${window.API_BASE_ADDRESS}/master/add/type/section`,  
 			{ ...sectionName },
-			requestHeader
+			window.requestHeader
 		)
 		.then( res => {
 			enqueueSnackbar( res.data.message, { variant: 'success', preventDuplicate: true });
@@ -293,11 +335,6 @@ const AccountView = props => {
 				name: '2nd Semester',
 				isActive: activeSemester === 2,
 				onSwitch: () => handleSwitchSemester( 2 )
-			},
-			{
-				name: '3rd Semester',
-				isActive: activeSemester === 3,
-				onSwitch: () => handleSwitchSemester( 3 )
 			}
 		];
 	}
@@ -335,7 +372,7 @@ const AccountView = props => {
 	}
 
 	const handleSwitchSemester = semesterNumber => {
-		Axios.put(`${window.API_BASE_ADDRESS}/master/activate/semester/${semesterNumber}`, null, requestHeader)
+		Axios.put(`${window.API_BASE_ADDRESS}/master/activate/semester/${semesterNumber}`, null, window.requestHeader)
 		.then(() => {
 			setSemesterSwitch(() => [ ...initSemester( semesterNumber ) ]);
 		})
@@ -373,7 +410,7 @@ const AccountView = props => {
 	const handleRowSwitch = async ( e, id ) => {
 		const status = e.target.checked ? 'activated' : 'deactivated';
 
-		Axios.put(`${window.API_BASE_ADDRESS}/master/user-status-switch/status/${status}/id/${id}`, null, requestHeader)
+		Axios.put(`${window.API_BASE_ADDRESS}/master/user-status-switch/status/${status}/id/${id}`, null, window.requestHeader)
 		.then(() => props?.refresh?.())
 		.catch( err => {
 			enqueueSnackbar( 
@@ -490,6 +527,13 @@ const AccountView = props => {
 					onChange={e => dispatch(handleId( e.target.value ))}
 				/>,
 				<IconField 
+					Icon={NumbersIcon}
+					key={uniqid()}
+					defaultValue={lrn}
+					label="LRN"
+					onChange={e => dispatch(handleLrn( e.target.value ))}
+				/>,
+				<IconField 
 					Icon={DriveFileRenameOutlineIcon} 
 					key={uniqid()}
 					defaultValue={firstName} 
@@ -511,6 +555,14 @@ const AccountView = props => {
 					onChange={e => dispatch(handleLastName( e.target.value ))}
 				/>,
 				<IconField 
+					Icon={AlternateEmailIcon} 
+					key={uniqid()}
+					defaultValue={email} 
+					label="Email"
+					type="email"
+					onChange={e => dispatch(handleEmail( e.target.value ))}
+				/>,
+				<IconField 
 					Icon={CakeIcon} 
 					key={uniqid()}
 					defaultValue={birthDate} 
@@ -518,8 +570,69 @@ const AccountView = props => {
 					type="date"
 					onChange={e => dispatch(handleBirthDate( e.target.value ))}
 				/>,
+				<Box key={uniqid()} sx={{ display: 'flex', alignItems: 'flex-end', margin: '30px 0 30px 0'}}>
+					<FemaleIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
+					<Autocomplete
+						value={gender}
+						freeSolo
+						selectOnFocus
+						handleHomeEndKeys
+						options={genderOptions}
+						renderOption={(props, option) => <li {...props}>{ option }</li>}
+						getOptionLabel={(option) => {
+					        // Value selected with enter, right from the input
+					        if( typeof option === 'string' ) {
+					          return option;
+					        }
+					      
+					        // Add "xxx" option created dynamically
+					        if( option.inputValue ) {
+					          return option.inputValue;
+					        }
+					      
+					        // Regular option
+					        return option.title;
+						}}
+						filterOptions={(options, params) => {
+					        const filtered = filterer(options, params);
+
+					        const { inputValue } = params;
+
+					        // console.log( options );
+					        // Suggest the creation of a new value
+					        const isExisting = options.some((option) => inputValue === option);
+					        if (inputValue !== '' && !isExisting) {
+								filtered.push( inputValue );
+					        }
+
+					        return filtered;
+						}}
+						renderInput={(params) => 
+							<TextField 
+								{...params} 
+								label="Gender"
+								placeholder="Select or Type Gender"
+								variant="standard"
+								fullWidth
+								sx={{ width: 500 }}
+							/>
+						}
+						onChange={(_, newValue) => {
+							// console.log( newValue );
+							if (typeof newValue === 'string') {
+								dispatch(handleGender( newValue ));
+							} else if (newValue && newValue.inputValue) {
+								// Create a new value from the user input
+								dispatch(handleGender( newValue.inputValue ));
+							} else {
+								console.log( newValue );
+								dispatch(handleGender( newValue ));
+							}
+						}}
+					/>
+				</Box>,
 				<IconAutocomplete 
-					defaultValue={section ?? []}
+					defaultValue={section}
 					multiple={formType !== 'student' ? true : false}
 					key={uniqid()}
 					list={memoizedSectionGenerator()}
@@ -529,7 +642,7 @@ const AccountView = props => {
 					onChange={(_, newValue) => dispatch(handleSection( newValue ))}
 				/>,
 				<IconAutocomplete 
-					defaultValue={strand ?? []}
+					defaultValue={strand}
 					multiple={formType !== 'student' ? true : false}
 					key={uniqid()}
 					list={memoizedStrandGenerator()}
@@ -868,35 +981,36 @@ const IconField = ({ Icon, label, type, onChange, params, placeholder, defaultVa
 				variant="standard" 
 				type={type ?? 'text'} 
 				helperText={type === 'date' ? label : ''}
-        placeholder={placeholder ?? ''}
-        onChange={onChange}
+		        placeholder={placeholder ?? ''}
+		        onChange={onChange}
 				defaultValue={defaultValue}
 			/>
 		</Box>
 	);
 }
 
-const IconAutocomplete = ({ list, multiple, Icon, label, placeholder, defaultValue, onChange }) => {
+const IconAutocomplete = ({ list, multiple, Icon, label, placeholder, defaultValue, onChange, freeSolo }) => {
 	return(
 		<Autocomplete
 			value={defaultValue}
 			multiple={multiple}
-      options={list}
-      renderTags={(value, getTagProps) =>
+			freeSolo={freeSolo ?? false}
+			options={list}
+			renderTags={(value, getTagProps) =>
 				value.map((option, index) => (
 					<Chip variant="outlined" label={option} {...getTagProps({ index })} />
 				))
-      }
-      onChange={onChange}
-      renderInput={(params) => (
-        <IconField
-          params={params}
-          Icon={Icon}
-          label={label}
-          placeholder={placeholder}
-        />
-      )}
-    />
+			}
+			onChange={onChange}
+			renderInput={(params) => (
+				<IconField
+				  params={params}
+				  Icon={Icon}
+				  label={label}
+				  placeholder={placeholder}
+				/>
+			)}
+	    />
 	);
 }
 

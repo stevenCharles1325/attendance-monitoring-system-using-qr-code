@@ -102,7 +102,8 @@ const Form = props => {
 				.then( res => {
 					Cookies.set('token', res.data.accessToken);
 					Cookies.set('rtoken', res.data.refreshToken);
-
+					Cookies.set('userId', userId);
+					
 					dispatch(handleUserRole( res.data.role ));
 					window.location.href = `/app/${res?.data?.role}/dashboard`;
 				})
@@ -126,6 +127,7 @@ const Form = props => {
 				.then( res => {
 					Cookies.set('token', res.data.accessToken);
 					Cookies.set('rtoken', res.data.refreshToken);
+					Cookies.set('userId', userId);
 
 					dispatch(handleUserRole( res.data.role ));
 					window.location.href = `/app/${res?.data?.role}/dashboard`;

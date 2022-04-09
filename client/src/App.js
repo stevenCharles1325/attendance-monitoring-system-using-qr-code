@@ -1,5 +1,6 @@
 import React from 'react';
 import Axios from 'axios';
+import Cookies from 'js-cookie';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { 
   useSelector, 
@@ -10,6 +11,8 @@ import { handleUserRole } from './features/form/formSlice';
 import { handleNavigateTo } from './features/navigation/navigationSlice';
 import { useSnackbar } from 'notistack';
 
+import FactCheckIcon from '@mui/icons-material/FactCheck';
+import KeyIcon from '@mui/icons-material/Key';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import AccountBox from '@mui/icons-material/AccountBox';
 import Folder from '@mui/icons-material/Folder';
@@ -26,14 +29,16 @@ import ViewsPath from './modules/ViewsPath';
 import Gate from './views/Gate';
 import PageNotFound from './views/PageNotFound';
 
+// Students components
 import DashboardStudent from './views/student/Dashboard';
+import StudentProfile from './views/student/StudentProfile';
 
+// System-administrator components
 import DashboardSysadmin from './views/sysadmin/Dashboard';
 import StudentsAccount from './views/sysadmin/StudentsAccount';
 import TeachersAccount from './views/sysadmin/TeachersAccount';
 import StudentsRecord from './views/sysadmin/StudentsRecord';
 import TeachersRecord from './views/sysadmin/TeachersRecord';
-
 
 import PageLoading from './components/PageLoading';
 
@@ -42,7 +47,8 @@ const views = new ViewsPath(
   'app', // ROOT
   
   'student/dashboard',
-  'student/account',
+  'student/account/profile',
+  'student/account/change-password',
   'student/attendance',
 
   'teacher/dashboard',
@@ -63,6 +69,11 @@ const views = new ViewsPath(
   'gate', // 16th index
 );
 
+window.requestHeader = {
+  'headers': {
+    'authorization': `Bearer ${Cookies.get('token')}`
+  }
+}
 
 function App() {
   const { userRole } = useSelector( state => state.form );
@@ -167,6 +178,7 @@ function App() {
         {
           text: 'Students Account',
           icon: <AccountCircle/>
+
         },
         {
           text: 'Teachers Account',
@@ -219,7 +231,8 @@ function App() {
   const studentItems = [
     {
       text: 'Dashboard',
-      icon: <DashboardIcon/>
+      icon: <DashboardIcon/>,
+      onClick: () => handleNavigation('/app/student/dashboard')
     },
     {
       text: 'Account',
@@ -227,48 +240,19 @@ function App() {
       collapsable: true,
       subList: [
         {
-          text: 'Students Account',
-          icon: <AccountCircle/>
+          text: 'Profile',
+          icon: <AccountCircle/>,
+          onClick: () => handleNavigation('/app/student/account/profile')
         },
         {
-          text: 'Teachers Account',
-          icon: <AccountCircle/>
+          text: 'Change Password',
+          icon: <KeyIcon/>
         }
       ]
     },
     {
-      text: 'Records',
-      icon: <Folder/>,
-      collapsable: true,
-      subList: [
-        {
-          text: 'Students Record',
-          icon: <ListAlt/>
-        },
-        {
-          text: 'Teachers Record',
-          icon: <ListAlt/>
-        },
-        {
-          text: 'Attendance Record',
-          icon: <ListAlt/>
-        }
-      ]
-    },
-    {
-      text: 'Reports',
-      icon: <Assessment/>,
-      collapsable: true,
-      subList: [
-        {
-          text: 'Graph',
-          icon: <SsidChart/>
-        },
-        {
-          text: 'School Form 2',
-          icon: <Feed/>
-        }
-      ]
+      text: 'Attendance Record',
+      icon: <FactCheckIcon/>
     }
   ];
 
@@ -309,6 +293,7 @@ function App() {
         gatePaths={views.getPaths().slice( 16, views.getPaths().length )}
         root={views.getRoot()}
         userLevels={{
+          // Slicing routes for each user type
           student: [0, 3],
           teacher: [3, 7],
           sysadmin: [7, 16]
@@ -321,17 +306,18 @@ function App() {
             {/* Gate */}
             <Route path="/app/gate" element={<Gate />}/>
             
-            {/* Admin's route */}
+            {/* System-administrator's routes */}
             <Route path="/app/sysadmin/dashboard" element={<DashboardSysadmin/>}/>
             <Route path="/app/sysadmin/students-record" element={<StudentsRecord/>}/>
             <Route path="/app/sysadmin/students-account" element={<StudentsAccount/>}/>
             <Route path="/app/sysadmin/teachers-account" element={<TeachersAccount/>}/>
             <Route path="/app/sysadmin/teachers-record" element={<TeachersRecord/>}/>
             
-            {/* Students' route */}
+            {/* Students' routes */}
             <Route path="/app/student/dashboard" element={<DashboardStudent/>}/>
+            <Route path="/app/student/account/profile" element={<StudentProfile/>}/>
 
-            {/* Teachers' route */}
+            {/* Teachers' routes */}
           </Routes>
         </Menu>      
       </Authentication>

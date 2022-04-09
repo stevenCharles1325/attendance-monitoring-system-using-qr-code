@@ -9,6 +9,9 @@ export const accountSlice = createSlice({
 		middleName: '',
 		lastName: '',
 		birthDate: '',
+		lrn: '',
+		email: '',
+		gender: '',
 		section: null,
 		strand: null,
 		strandName: '',
@@ -55,6 +58,15 @@ export const accountSlice = createSlice({
 		handleUserType: (state, action) => {
 			state.userType = action.payload
 		},
+		handleLrn: (state, action) => {
+			state.lrn = action.payload
+		},
+		handleEmail: (state, action) => {
+			state.email = action.payload
+		},
+		handleGender: (state, action) => {
+			state.gender = action.payload
+		},
 		handleClear: state => {
 			state.id = '';
 			state.role = '';
@@ -65,6 +77,9 @@ export const accountSlice = createSlice({
 			state.section = null;
 			state.strand = null;
 			state.strandName = '';
+			state.lrn = '';
+			state.email = '';
+			state.gender = '';
 			state.sectionName = {
 				name: null,
 				parent: null
@@ -87,7 +102,10 @@ export const {
 	handleSectionName,
 	handleSectionParent,
 	handleUserType,
-	handleClear
+	handleClear,
+	handleLrn,
+	handleEmail,
+	handleGender,
 } = accountSlice.actions;
 
 export default accountSlice.reducer;
