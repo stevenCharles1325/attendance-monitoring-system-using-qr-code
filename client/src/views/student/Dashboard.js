@@ -59,8 +59,8 @@ const Dashboard = props => {
 						className="col-md-6 p-4"
 					>
 						<h2 className="mb-4">QR CODE</h2>
-						<p className="m-0">{ userData?.lastName + ',' } { userData?.firstName } { userData?.middleName?.[0] ? userData?.middleName?.[0] + '.' : '' }</p>
-						<p>{ userData?.studentNo}</p>
+						<p className="m-0 text-capitalize">{ userData?.lastName + ',' } { userData?.firstName } { userData?.middleName?.[0] ? userData?.middleName?.[0] + '.' : '' }</p>
+						<p>{ userData?.studentNo }</p>
 
 						<Stack direction="row" spacing={1}>
 							<Chip icon={<StoreIcon fontSize="small"/>} label={userData?.strand[ 0 ]}/>

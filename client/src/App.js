@@ -29,16 +29,22 @@ import ViewsPath from './modules/ViewsPath';
 import Gate from './views/Gate';
 import PageNotFound from './views/PageNotFound';
 
-// Students components
-import DashboardStudent from './views/student/Dashboard';
-import StudentProfile from './views/student/StudentProfile';
-
 // System-administrator components
 import DashboardSysadmin from './views/sysadmin/Dashboard';
 import StudentsAccount from './views/sysadmin/StudentsAccount';
 import TeachersAccount from './views/sysadmin/TeachersAccount';
 import StudentsRecord from './views/sysadmin/StudentsRecord';
 import TeachersRecord from './views/sysadmin/TeachersRecord';
+
+// Students and Teachers merged components
+import Profile from './views/Profile';
+import ChangePassword from './views/ChangePasswordForm';
+
+// Students components
+import DashboardStudent from './views/student/Dashboard';
+
+// Students components
+import DashboardTeacher from './views/instructor/Dashboard';
 
 import PageLoading from './components/PageLoading';
 
@@ -52,7 +58,8 @@ const views = new ViewsPath(
   'student/attendance',
 
   'teacher/dashboard',
-  'teacher/account',
+  'teacher/account/profile',
+  'teacher/account/change-password',
   'teacher/schedule',
   'teacher/students-attendance-record',
 
@@ -73,6 +80,15 @@ window.requestHeader = {
   'headers': {
     'authorization': `Bearer ${Cookies.get('token')}`
   }
+}
+
+window.availableStrandNames = {
+  STEM: 'science, technology, engineering and mathematics',
+  HE: 'home economics strand',
+  GAS: 'general academic strand',
+  HUMSS: 'humanities and social sciences',
+  ICT: 'information and communication technology',
+  ABM: 'accountacy, business and management strand',
 }
 
 function App() {
@@ -168,7 +184,8 @@ function App() {
   const teacherItems = [
     {
       text: 'Dashboard',
-      icon: <DashboardIcon/>
+      icon: <DashboardIcon/>,
+      onClick: () => handleNavigation('/app/teacher/dashboard')
     },
     {
       text: 'Account',
@@ -176,49 +193,26 @@ function App() {
       collapsable: true,
       subList: [
         {
-          text: 'Students Account',
-          icon: <AccountCircle/>
-
+          text: 'Profile',
+          icon: <AccountCircle/>,
+          onClick: () => handleNavigation('/app/teacher/account/profile')
         },
         {
-          text: 'Teachers Account',
-          icon: <AccountCircle/>
+          text: 'Change Password',
+          icon: <KeyIcon/>,
+          onClick: () => handleNavigation('/app/teacher/account/change-password')
         }
       ]
     },
     {
-      text: 'Records',
+      text: 'Schedule',
       icon: <Folder/>,
-      collapsable: true,
-      subList: [
-        {
-          text: 'Students Record',
-          icon: <ListAlt/>
-        },
-        {
-          text: 'Teachers Record',
-          icon: <ListAlt/>
-        },
-        {
-          text: 'Attendance Record',
-          icon: <ListAlt/>
-        }
-      ]
+      onClick: () => handleNavigation('/app/teacher/schedule')
     },
     {
-      text: 'Reports',
-      icon: <Assessment/>,
-      collapsable: true,
-      subList: [
-        {
-          text: 'Graph',
-          icon: <SsidChart/>
-        },
-        {
-          text: 'School Form 2',
-          icon: <Feed/>
-        }
-      ]
+      text: 'Students Attendance Record',
+      icon: <Folder/>,
+      onClick: () => handleNavigation('/app/teacher/students-attendance-record')
     }
   ];
 
@@ -246,7 +240,8 @@ function App() {
         },
         {
           text: 'Change Password',
-          icon: <KeyIcon/>
+          icon: <KeyIcon/>,
+          onClick: () => handleNavigation('/app/student/account/change-password')
         }
       ]
     },
@@ -290,13 +285,13 @@ function App() {
         pageNotFound={<PageNotFound/>}
         verificationEndpoint={`${window.API_BASE_ADDRESS}/master/verify-me`}
         viewPaths={views.getPaths().slice( 0, views.getPaths().length - 1 )}
-        gatePaths={views.getPaths().slice( 16, views.getPaths().length )}
+        gatePaths={views.getPaths().slice( 18, views.getPaths().length )}
         root={views.getRoot()}
         userLevels={{
           // Slicing routes for each user type
-          student: [0, 3],
-          teacher: [3, 7],
-          sysadmin: [7, 16]
+          student: [0, 4],
+          teacher: [4, 9],
+          sysadmin: [9, 18]
         }}
         setRole={val => dispatch(handleUserRole( val ))}
         setRedirectTo={val => dispatch(handleNavigateTo( val ))}
@@ -315,9 +310,13 @@ function App() {
             
             {/* Students' routes */}
             <Route path="/app/student/dashboard" element={<DashboardStudent/>}/>
-            <Route path="/app/student/account/profile" element={<StudentProfile/>}/>
+            <Route path="/app/student/account/profile" element={<Profile userType="student"/>}/>
+            <Route path="/app/student/account/change-password" element={<ChangePassword/>}/>
 
             {/* Teachers' routes */}
+            <Route path="/app/teacher/dashboard" element={<DashboardTeacher/>}/>
+            <Route path="/app/teacher/account/profile" element={<Profile userType="teacher"/>}/>
+            <Route path="/app/teacher/account/change-password" element={<ChangePassword/>}/>
           </Routes>
         </Menu>      
       </Authentication>

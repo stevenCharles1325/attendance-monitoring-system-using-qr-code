@@ -10,6 +10,7 @@ var fs = require('fs');
 var path = require('path');
 var jwt = require('jsonwebtoken');
 var express = require('express');
+var nodemailer = require('nodemailer');
 var router = express.Router();
 
 // MODELS
@@ -20,6 +21,36 @@ var Teacher = require('../models/TeacherRecord');
 var Semester = require('../models/Semester');
 // var SchoolYear = require('../models/SchoolYear');
 var Strand = require('../models/Strand');
+
+
+const transporter = nodemailer.createTransport({
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
+  requireTLS: true,
+  auth: {
+    user: 'noreply.shs.cct@gmail.com',
+    pass: '(N2V<"uPj=xTN7YV'
+  }
+})
+
+const generateCode = () => `${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}`; 
+
+
+/* ________________________________
+|
+|   Generated code values
+|__________________________________
+| 
+|   By default, every code inside of
+|   this hashmap is not verified.
+|
+| 
+|   <school_id | username>: <code> 
+|
+*/
+const generatedCode = {};
+
 
 
 const authentication = (req, res, next) => {
@@ -70,6 +101,133 @@ router.get('/check-semester', async ( req, res ) => {
   });
 });
 
+
+router.get('/user-forgot-password/get-code/id/:id', async ( req, res ) => {
+  // email: noreply.shs.cct@gmail.com
+  // password: (N2V<"uPj=xTN7YV
+  const { id } = req.params;
+
+  if( !id ) return res.sendStatus( 404 );
+
+  const generateMailOptions = otherEmail => {
+    const code = generateCode();
+
+    generatedCode[ id ] = code;
+
+    return {
+      from: 'noreply.shs.cct@gmail.com',
+      to: otherEmail,
+      subject: 'Change password code',
+      text: `Your code is: ${code}`
+    }
+  }
+
+  Student.findOne({ studentNo: id }, async ( err, doc ) => {
+    if( err ) return res.sendStatus( 500 );
+
+    if( doc ){
+      const mailOptions = generateMailOptions( doc.email );
+
+      try{
+        await transporter.sendMail( mailOptions );
+        return res.status( 200 ).json({ message: 'A confirmation code has been sent to your email address' });
+      }
+      catch( err ){
+        console.log( err );
+        return res.sendStatus( 500 );
+      }
+    }
+    else{
+      Teacher.findOne({ employeeNo: id }, async ( err, doc ) => {
+        if( err ) return res.sendStatus( 500 );
+
+        if( doc ){
+          const mailOptions = generateMailOptions( doc.email );
+
+          try{
+            await transporter.sendMail( mailOptions );
+            return res.status( 200 ).json({ message: 'A confirmation code has been sent to your email address' });
+          }
+          catch( err ){
+            console.log( err );
+            return res.sendStatus( 500 );
+          }
+        }
+        else{
+          return res.sendStatus( 404 );
+        }
+      });
+    }
+  });
+});
+
+
+router.post('/user-forgot-password/code-verification/id/:id', async( req, res ) => {
+  const { id } = req.params;
+  const { code } = req.body;
+
+  if( !id || !code ) return res.sendStatus( 404 );
+
+  if( generatedCode[ id ] && generatedCode[ id ] === code ){
+    delete generatedCode[ id ];
+
+    return res.sendStatus( 200 );
+  }
+  else{
+    return res
+    .status( 406 )
+    .json({
+      message: 'Incorrect code'
+    });
+  }
+});
+
+router.post('/change-user-password-from-forgot-password/id/:id', async( req, res ) => {
+  const { id } = req.params;
+  const { newPass } = req.body;
+
+  if( !id || !newPass ) return res.sendStatus( 404 );
+
+  User.findOne({ username: id }, ( err, doc ) => {
+    if( err ) return res.sendStatus( 500 );
+
+    if( doc ){
+      doc.password = newPass;
+
+      doc.save( err => {
+        if( err ) return res.sendStatus( 500 );
+
+        return res.sendStatus( 200 );
+      });
+    }
+  });
+});
+
+router.put('/change-user-password/id/:id', authentication, async ( req, res ) => {
+  const { id } = req.params;
+  const { currPass, newPass } = req.body;
+
+  if( !id || !currPass || !newPass ) return res.sendStatus( 404 );
+
+  User.findOne({ username: id }, ( err, doc ) => {
+    if( err ) return res.sendStatus( 500 );
+
+    if( doc ){
+      if( doc.password === currPass ){
+        doc.password = newPass;
+
+        doc.save( err => {
+          if( err ) return res.sendStatus( 500 );
+
+          return res.sendStatus( 200 );
+        });
+      }
+      else{
+        return res.status( 406 ).json({ message: 'Current password is incorrect!' });
+      }
+    }
+  });
+});
 
 router.put('/user-status-switch/status/:status/id/:id', authentication, async ( req, res ) => {
   const { id, status } = req.params;
@@ -148,14 +306,14 @@ router.put('/activate/semester/:semesterNumber', authentication, async ( req, re
   });
 });
 
-router.get('/get-single-user/type/:type/id/:id', async ( req, res ) => {
+router.get('/get-single-user/type/:type/id/:id', authentication, async ( req, res ) => {
   const { type, id } = req.params;
 
   if( !type || !id ) return res.sendStatus( 404 );
 
   switch( type ){
     case 'student':
-      Student.findOne({ username: id }, ( err, doc ) => {
+      Student.findOne({ studentNo: id }, ( err, doc ) => {
         if( err ) return res.sendStatus( 500 );
 
         return res.json( doc );
@@ -163,7 +321,7 @@ router.get('/get-single-user/type/:type/id/:id', async ( req, res ) => {
       break;
 
     case 'teacher':
-      Teacher.findOne({ username: id }, ( err, doc ) => {
+      Teacher.findOne({ employeeNo: id }, ( err, doc ) => {
         if( err ) return res.sendStatus( 500 );
 
         return res.json( doc );

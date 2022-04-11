@@ -4,7 +4,7 @@ import Form from '../components/Form';
 import Typography from '@mui/material/Typography';
 
 const Gate = () => {
-	const [formType, setFormType] = React.useState('signin')
+	const [formType, setFormType] = React.useState('signin');
 
 	return(
 		<div className="gate d-flex">

@@ -28,14 +28,14 @@ import CircularProgress from '@mui/material/CircularProgress';
 
 import { styled } from '@mui/styles';
 
-const QamsButton = styled( Button )({
-	backgroundColor: 'rgba(0, 0, 0, 0.6)',
-	borderRadius: '24px',
-	color: 'white',
-	'&:hover': {
-		backgroundColor: 'rgba(255, 0, 0, 0.4)'
-	}
-});
+// const Button = styled( Button )({
+// 	backgroundColor: 'rgba(0, 0, 0, 0.6)',
+// 	borderRadius: '24px',
+// 	color: 'white',
+// 	'&:hover': {
+// 		backgroundColor: 'rgba(255, 0, 0, 0.4)'
+// 	}
+// });
 
 const steps = ['Verification', 'Create account'];
 let stepCount = 0;
@@ -50,9 +50,13 @@ const Form = props => {
 
 	const initMessage = { text: null, variant: null };
 
+
 	const [message, setMessage] = React.useState( initMessage );
 	const [navigate, setNavigateTo] = React.useState( null );
 	const [content, setContent] = React.useState( null );
+
+	const [code, setCode] = React.useState( '' );
+	const [newPass, setNewPass] = React.useState( '' );
 
 	const dispatch = useDispatch();
 	const [action, setAction] = React.useState( null );
@@ -60,34 +64,94 @@ const Form = props => {
 	const handleSignin = () => setAction('signin');
 	const handleSignup = () => setAction('signup');
 
-	const signin = (
-		<SigninForm 
-			setMessage={val => setMessage( val )}
-			handleSignin={() => handleSignin()}
-			setFormType={val => props?.setFormType?.( val )}
-		/> 
-	);
+	
+	const sendVerificationCode = async () => {
+		if( !userId ) return;
 
-	const signup = (
-		<SignupForm 
-			setMessage={val => setMessage( val )}
-			// handleVerification={() => handleVerification()}
-			handleSignup={() => handleSignup()}
-			setFormType={val => props?.setFormType?.( val )}
-		/>
-	);	
+		Axios.get(`${window.API_BASE_ADDRESS}/master/user-forgot-password/get-code/id/${userId}`)
+		.then( res => setMessage({ variant: 'success', text: res.data.message }))
+		.catch( err => {
+			console.log( err );			
+			props.setFormType('signin');
+		});
+	}
+
+	const handleVerification = () => {
+		if( !userId ) return;
+
+		Axios.post(
+			`${window.API_BASE_ADDRESS}/master/user-forgot-password/code-verification/id/${userId}`,
+			{ code }
+		)
+		.then(() => props.setFormType('forgotpass'))
+		.catch( err => {
+			setMessage(() => ({
+				variant: 'error',
+				text: err.response.data.message ?? 'Your code might be incorrect!'
+			}));
+		});
+	}
+
+	const handleUpdatePasswordV2 = async () => {
+		Axios.post(
+			`${window.API_BASE_ADDRESS}/master/change-user-password-from-forgot-password/id/${userId}`, 
+			{ newPass }
+		)
+		.then(() => {
+			// clearAllFields();
+			// setSuccessMsg('Successfully changed the password!');
+			props.setFormType('signin');
+		})
+		.catch( err => {
+			setMessage(() => ({
+				variant: 'error',
+				text: err.response.data.message ?? 'Error occured. Please try again later.'
+			}));
+		});
+	}
+
+	const form = {
+		signin: (
+			<SigninForm 
+				setMessage={val => setMessage( val )}
+				handleSignin={() => handleSignin()}
+				setFormType={val => props?.setFormType?.( val )}
+			/> 
+		),
+		signup: (
+			<SignupForm 
+				setMessage={val => setMessage( val )}
+				// handleVerification={() => handleVerification()}
+				handleSignup={() => handleSignup()}
+				setFormType={val => props?.setFormType?.( val )}
+			/>
+		),
+		verification: (
+			<VerificationForm
+				code={code}
+				setCode={val => setCode( val )}
+				setFormType={props.setFormType}
+				setAction={setAction}
+				sendVerificationCode={sendVerificationCode}
+				setFormType={props.setFormType}
+			/>
+		),
+		forgotpass: (
+			<ForgotPasswordForm
+				newPass={newPass}
+				setNewPass={setNewPass}
+				setAction={setAction}
+				setFormType={props.setFormType}
+			/>
+		)
+	}
 
 	React.useEffect(() => {
 		if( message.text ) setTimeout(() => setMessage( initMessage ), 2000);
 	}, [message]);
 
 	React.useEffect(() => {
-		if( props?.formType === 'signin' ){
-			setTimeout(() => setContent( signin ), 1000);	
-		}
-		else if( props?.formType === 'signup' ){
-			setTimeout(() => setContent( signup ), 1000);	
-		}
+		setTimeout(() => setContent( form[ props?.formType ] ), 1000);	
 
 		setContent( <FormLoading/> );
 	}, [props?.formType]);
@@ -142,12 +206,29 @@ const Form = props => {
 				});
 				break;
 
+			case 'verify':
+				handleVerification();
+				break;
+
+			case 'change-pass':
+				handleUpdatePasswordV2();
+				break;
+
 			default:
 				return;
 		}
 
 		setAction( null );
-	}, [userId, userPass, userBday, userRole, action]);
+	}, [userId, userPass, userBday, userRole, action, code]);
+
+	React.useEffect(() => {
+		if( props.formType === 'verification' && !userId ){
+			setMessage({
+				variant: 'error',
+				text: 'Username must have a value first'
+			});
+		}
+	}, [props.formType, userId]);
 
 	return(
 		<div className="form pt-3">
@@ -159,6 +240,11 @@ const Form = props => {
 			}
 			{ navigate }
 			{ content }
+			{/*{
+				props.formType !== 'forgotpass' && props?.formType !== 'verification'
+					? <Button onClick={() => props.setFormType('verification')}>forgot password?</Button>
+					: null
+			}*/}
 		</div>
 	);
 }
@@ -181,6 +267,7 @@ const SigninForm = props => {
 		userBday, 
 		userRole 
 	} = useSelector( state => state.form );
+
 	const dispatch = useDispatch();
 
 	const password = React.useRef();
@@ -240,15 +327,15 @@ const SigninForm = props => {
 				style={{ width: '100%' }}
 				className="my-3 d-flex flex-row justify-content-around align-items-center"
 			>			
-				<QamsButton size="small" variant="contained" onClick={() => props?.setFormType?.( 'signup' )}>
+				<Button variant="standard" size="small" onClick={() => props?.setFormType?.( 'signup' )}>
 					Sign-up
-				</QamsButton>
+				</Button>
 
-				<QamsButton size="small" variant="contained" onClick={() => props?.handleSignin?.()}>
+				<Button size="small" variant="contained" onClick={() => props?.handleSignin?.()}>
 					Sign-in
-				</QamsButton>
+				</Button>
 			</div>		
-
+			<Button onClick={() => props.setFormType('verification')}>forgot password?</Button>
 			{/*<div className="text-center">	
 				<Typography variant="caption" color="inherit" component="div">
 					Forgot password?
@@ -275,7 +362,6 @@ const SignupForm = props => {
 	const dispatch = useDispatch();
 
 	const handleVerification = async id => {
-
 		try{
 			const res = await Axios.post(`${window.API_BASE_ADDRESS}/auth/verify/user/${id}`);
 			const { role } = res.data;
@@ -353,17 +439,17 @@ const SignupForm = props => {
 				style={{ width: '100%' }}
 				className="my-3 d-flex flex-row justify-content-around align-items-center"
 			>			
-				<QamsButton size="small" variant="contained" onClick={() => props?.setFormType?.( 'signin' )}>
+				<Button size="small" variant="standard" onClick={() => props?.setFormType?.( 'signin' )}>
 					Sign-in
-				</QamsButton>
+				</Button>
 				{
 					isApproved
-						? <QamsButton size="small" variant="contained" onClick={() => props?.handleSignup?.()}>
+						? <Button size="small" variant="contained" onClick={() => props?.handleSignup?.()}>
 							Sign-up
-						</QamsButton>
-						: <QamsButton size="small" variant="contained" onClick={() => setAction('verify')}>
+						</Button>
+						: <Button size="small" variant="contained" onClick={() => setAction('verify')}>
 							Verify
-						</QamsButton>
+						</Button>
 				}
 			</div>
 		</div>
@@ -376,6 +462,7 @@ const TrueSignup = () => {
 		userId, 
 		userPass
 	} = useSelector( state => state.form );
+
 	const dispatch = useDispatch();
 
 	return (
@@ -384,6 +471,7 @@ const TrueSignup = () => {
 			className="d-flex flex-column justify-content-between align-items-center"
 		>
 			<TextField
+				disabled
 				defaultValue={userId}
 				onChange={e => dispatch(handleUserId( e.target.value ))}
 				sx={{ width: '90%' }} 
@@ -449,6 +537,73 @@ const SignUpSteps = props => {
 				))
 			}
 		</Stepper>
+	);
+}
+
+const ForgotPasswordForm = props => {
+	return (
+		<div style={{ width: '100%', height: '100%' }} className="d-flex p-3 flex-column justify-content-around align-items-center">	
+			<div 
+				style={{ 
+					width: 'fit-content', 
+					borderLeft: '4px solid #D9B5B5',
+				}} 
+				className="text-center px-2"
+			>
+				<Typography variant="h5" color="var(--text-color)" component="div">
+					Change Password
+				</Typography>
+			</div>
+			<TextField 
+				type="password"
+				sx={{ width: '60%' }} 
+				label="Enter your new password" 
+				variant="standard"
+				onChange={e => props.setNewPass( e.target.value )}
+			/>
+			<Button variant="contained" size="small" onClick={() => props.setAction('change-pass')}>Change password</Button>
+		</div>
+	);
+}
+
+
+const VerificationForm = props => {
+	const { userId } = useSelector( state => state.form );
+
+	React.useEffect(() => {
+		if( !userId )
+			return props?.setFormType('signin');
+
+		props.sendVerificationCode();
+	}, [userId]);
+
+	return (
+		<div style={{ width: '100%', height: '100%' }} className="d-flex p-3 flex-column justify-content-around align-items-center">	
+			<div 
+				style={{ 
+					width: 'fit-content', 
+					borderLeft: '4px solid #D9B5B5',
+				}} 
+				className="text-center px-2"
+			>
+				<Typography variant="h3" color="var(--text-color)" component="div">
+					Verification
+				</Typography>
+			</div>
+			<p 
+				style={{ color: 'var( --text-color )' }} 
+				className="px-2"
+			>
+				Please wait. A success message will appear if the vericiation code has been sent to your email address.
+			</p>
+			<TextField 
+				sx={{ width: '60%' }} 
+				label="Verification code" 
+				variant="standard"
+				onChange={e => props.setCode( e.target.value )}
+			/>
+			<Button variant="contained" size="small" onClick={() => props.setAction('verify')}>Verified</Button>
+		</div>
 	);
 }
 

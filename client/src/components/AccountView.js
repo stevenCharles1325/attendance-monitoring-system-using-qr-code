@@ -526,13 +526,15 @@ const AccountView = props => {
 					label={`${idLabel} ID`}
 					onChange={e => dispatch(handleId( e.target.value ))}
 				/>,
-				<IconField 
-					Icon={NumbersIcon}
-					key={uniqid()}
-					defaultValue={lrn}
-					label="LRN"
-					onChange={e => dispatch(handleLrn( e.target.value ))}
-				/>,
+				props?.userType === 'student'
+					? <IconField 
+							Icon={NumbersIcon}
+							key={uniqid()}
+							defaultValue={lrn}
+							label="LRN"
+							onChange={e => dispatch(handleLrn( e.target.value ))}
+						/>
+					: null,
 				<IconField 
 					Icon={DriveFileRenameOutlineIcon} 
 					key={uniqid()}
@@ -632,7 +634,7 @@ const AccountView = props => {
 					/>
 				</Box>,
 				<IconAutocomplete 
-					defaultValue={section}
+					defaultValue={formType === 'student' ? section : section ?? []}
 					multiple={formType !== 'student' ? true : false}
 					key={uniqid()}
 					list={memoizedSectionGenerator()}
@@ -642,7 +644,7 @@ const AccountView = props => {
 					onChange={(_, newValue) => dispatch(handleSection( newValue ))}
 				/>,
 				<IconAutocomplete 
-					defaultValue={strand}
+					defaultValue={formType === 'student' ? strand : strand ?? []}
 					multiple={formType !== 'student' ? true : false}
 					key={uniqid()}
 					list={memoizedStrandGenerator()}
