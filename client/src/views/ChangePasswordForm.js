@@ -147,6 +147,7 @@ const ChangePasswordForm = props => {
 				newPassHlprTxt={newPassHlprTxt}
 				rptPassHlprTxt={rptPassHlprTxt}
 				handleOnChange={handleOnChange}
+				handleUpdatePassword={handleUpdatePassword}
 				setFormType={setFormType}
 			/>
 		),

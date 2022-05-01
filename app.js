@@ -10,6 +10,17 @@ var masterRouter = require('./routes/master');
 
 var app = express();
 
+app.all('*', async( req, res, next ) => {
+	console.log('here');
+	console.log( req.url );
+	if( req.secure ){
+		return next();
+	}
+	else{
+		res.redirect(301, `https://${req.hostname}:${app.get('portSec')}${req.url}`);
+	}
+});
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');

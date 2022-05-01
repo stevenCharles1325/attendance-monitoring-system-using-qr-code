@@ -5,25 +5,37 @@
  */
 
 var app = require('../app');
-var debug = require('debug')('qams:server');
-var http = require('http');
+var debug = require('debug')('qams:serverSecure');
+// var http = require('http');
+var https = require('https');
+var fs = require('fs');
 var mongoose = require('mongoose');
 
-const dbURI = 'mongodb://localhost:27017/qamsDB';
+const options = {
+  key: fs.readFileSync( __dirname + '/private.key' ), 
+  cert: fs.readFileSync( __dirname + '/cert.pem' )
+}
 
+const dbURI = 'mongodb://localhost:27017/qamsDB';
 
 /**
  * Get port from environment and store in Express.
  */
 
-var port = normalizePort(process.env.PORT || '3500');
-app.set('port', port);
+var portSecure = normalizePort(process.env.PORT || '443');
+
+// var port = normalizePort(process.env.PORT || '3500');
+// var portSecure = '3443';
+
+// app.set('port', port);
+app.set('portSec', portSecure);
 
 /**
  * Create HTTP server.
  */
 
-var server = http.createServer(app);
+// var server = http.createServer(app);
+var serverSecure = https.createServer(options, app);
 
 /**
  * Listen on provided port, on all network interfaces.
@@ -31,19 +43,31 @@ var server = http.createServer(app);
 
 mongoose.connect( dbURI, { useUnifiedTopology: true, useNewUrlParser: true })
 .then( res => {
-  server.listen( port, () => {
+  // server.listen( port, () => {
+  //   console.log('Unsecured serverSecure:');
+  //   console.log(`DB_NAME: ${res.connections[0].name}`);
+  //   console.log(`DB_HOST: ${res.connections[0].host}`);
+  //   console.log(`DB_PORT: ${res.connections[0].port}`);
+  //   console.log(`serverSecure is now listening on port: ${port}`);
+  // });
+
+  serverSecure.listen( app.get('portSec'), () => {
+    console.log('\nSecured serverSecure:');
     console.log(`DB_NAME: ${res.connections[0].name}`);
     console.log(`DB_HOST: ${res.connections[0].host}`);
     console.log(`DB_PORT: ${res.connections[0].port}`);
-    console.log(`Server is now listening on port: ${port}`);
+    console.log(`serverSecure is now listening on port: ${app.get('portSec')}`);
   });
 })
 .catch( err => {
   throw err;
 });
 
-server.on('error', onError);
-server.on('listening', onListening);
+// server.on('error', onError);
+// server.on('listening', onListening);
+
+serverSecure.on('error', onError);
+serverSecure.on('listening', onListening);
 
 /**
  * Normalize a port into a number, string, or false.
@@ -74,9 +98,9 @@ function onError(error) {
     throw error;
   }
 
-  var bind = typeof port === 'string'
-    ? 'Pipe ' + port
-    : 'Port ' + port;
+  var bind = typeof portSecure === 'string'
+    ? 'Pipe ' + portSecure
+    : 'Port ' + portSecure;
 
   // handle specific listen errors with friendly messages
   switch (error.code) {
@@ -98,7 +122,7 @@ function onError(error) {
  */
 
 function onListening() {
-  var addr = server.address();
+  var addr = serverSecure.address();
   var bind = typeof addr === 'string'
     ? 'pipe ' + addr
     : 'port ' + addr.port;

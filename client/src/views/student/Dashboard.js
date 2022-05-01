@@ -2,7 +2,7 @@ import React from 'react';
 import Axios from 'axios';
 import Cookies from 'js-cookie';
 
-import { QRCode } from 'react-qrcode-logo';
+import { QR } from '../../components/QR';
 import { useSelector, useDispatch } from 'react-redux';
 
 import Menu from '../../components/Menu';
@@ -44,15 +44,8 @@ const Dashboard = props => {
 
 			<div className="flex-grow-1 d-flex flex-column justify-content-around align-items-center">
 				<div className="student-dashboard-info-box row d-flex justify-content-center align-items-center border">
-					<div className="col-md-6 p-3 d-flex justify-content-center align-items-center">
-						<QRCode
-							qrStyle="dots"
-							eyeRadius={10}
-							logoWidth={80}
-							logoOpacity={0.5}
-							value={props.id ?? '1801201'}
-							logoImage="/images/logo/cctLogo_new.png" 
-						/>	
+					<div style={{ height: 'fit-content' }} className="col-md-6 p-3 d-flex justify-content-center align-items-center">
+						<QR.Generator value={userData?.studentNo}/>	
 					</div>
 					<div 
 						style={{ height: 'fit-content' }} 

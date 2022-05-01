@@ -41,6 +41,7 @@ import Profile from './views/Profile';
 import ChangePassword from './views/ChangePasswordForm';
 
 // Students components
+import Attendance from './views/student/Attendance';
 import DashboardStudent from './views/student/Dashboard';
 
 // Students components
@@ -247,7 +248,8 @@ function App() {
     },
     {
       text: 'Attendance Record',
-      icon: <FactCheckIcon/>
+      icon: <FactCheckIcon/>,
+      onClick: () => handleNavigation('/app/student/attendance')
     }
   ];
 
@@ -312,6 +314,7 @@ function App() {
             <Route path="/app/student/dashboard" element={<DashboardStudent/>}/>
             <Route path="/app/student/account/profile" element={<Profile userType="student"/>}/>
             <Route path="/app/student/account/change-password" element={<ChangePassword/>}/>
+            <Route path="/app/student/attendance" element={<Attendance/>}/>
 
             {/* Teachers' routes */}
             <Route path="/app/teacher/dashboard" element={<DashboardTeacher/>}/>

@@ -9,7 +9,7 @@ const Gate = () => {
 	return(
 		<div className="gate d-flex">
 			<div 
-				style={{ height: '100%' }} 
+				style={{ height: '100%', minHeight: '570px' }} 
 				className="gate-side d-flex justify-content-center align-items-center"
 			>
 				<div className="gate-card">

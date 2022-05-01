@@ -10,7 +10,7 @@ import { Provider } from 'react-redux';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles/index.css';
 
-window.API_BASE_ADDRESS = `http://${process.env.REACT_APP_HOST}:${process.env.REACT_APP_PORT}`;
+window.API_BASE_ADDRESS = `https://${process.env.REACT_APP_HOST}:${process.env.REACT_APP_PORT}`;
 
 ReactDOM.render(
   <React.StrictMode>
