@@ -15,6 +15,7 @@ export const accountSlice = createSlice({
 		section: null,
 		strand: null,
 		strandName: '',
+		subjects: [],
 		sectionName: {
 			name: null,
 			parent: null
@@ -45,6 +46,9 @@ export const accountSlice = createSlice({
 		},
 		handleStrand: (state, action) => {
 			state.strand = action.payload
+		},
+		handleSubjects: (state, action) => {
+			state.subjects = action.payload
 		},
 		handleStrandName: (state, action) => {
 			state.strandName = action.payload
@@ -80,6 +84,7 @@ export const accountSlice = createSlice({
 			state.lrn = '';
 			state.email = '';
 			state.gender = '';
+			state.subjects = [];
 			state.sectionName = {
 				name: null,
 				parent: null
@@ -101,6 +106,7 @@ export const {
 	handleStrandName,
 	handleSectionName,
 	handleSectionParent,
+	handleSubjects,
 	handleUserType,
 	handleClear,
 	handleLrn,

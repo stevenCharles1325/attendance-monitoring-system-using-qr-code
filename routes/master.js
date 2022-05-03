@@ -333,6 +333,10 @@ router.get('/get-single-user/type/:type/id/:id', authentication, async ( req, re
   }
 });
 
+// router.get('/get-teachers/strand/:strand/section/:section', async ( req, res ) => {
+  
+// });
+
 router.get('/get-users/type/:type', async ( req, res ) => {
   const { type } = req.params;
 
@@ -359,6 +363,27 @@ router.get('/get-users/type/:type', async ( req, res ) => {
 });
 
 
+router.get('/get-subject-from-strand/strands/:strands', async ( req, res ) => {
+  if( !req.params.strands ) return res.sendStatus( 406 );
+
+  const strands = req.params.strands.split(',');
+
+  Strand.find().where('name').in( strands ).exec(( err, doc ) => {
+    if( err ) return res.sendStatus( 500 );
+
+    if( doc.length ){
+      return res.json(doc.reduce(( prev, accum ) => {
+        prev = [ ...prev, ...accum.subjects ];
+        return prev;    
+      }, []));
+    }
+    else{
+      return res.sendStatus( 200 );
+    }
+  }); 
+});
+
+
 router.get('/get-items/type/:type', async ( req, res ) => {
   const { type } = req.params;
 
@@ -380,7 +405,7 @@ router.get('/get-items/type/:type', async ( req, res ) => {
     //   break;
 
     case 'strand':
-      Strand.find({}).sort({ name: 1 }).exec(( err, doc ) => {
+      Strand.find().sort({ name: 1 }).exec(( err, doc ) => {
         if( err ) return res.sendStatus( 500 );
 
         return res.json( doc );
@@ -508,7 +533,7 @@ router.post('/add/type/:type', authentication, async ( req, res ) => {
 
   switch( type ){
     case 'strand':
-      Strand.create({ name: req.body.name.toUpperCase() }, err => {
+      Strand.create({ name: req.body.name.toUpperCase(), subjects: req.body.subjects }, err => {
         if( err ) return res.sendStatus( 500 );
 
         return res.json({ message: 'Successfully added a new Strand' });
@@ -548,7 +573,10 @@ router.post('/add/type/:type', authentication, async ( req, res ) => {
 
     case 'teacher':
       Teacher.create({ ...req.body }, err => {
-        if( err ) return res.sendStatus( 500 );
+        if( err ){
+          console.log( err );
+          return res.sendStatus( 500 );
+        }
 
         return res.json({ message: 'Successfully added a new Teacher' });
       });

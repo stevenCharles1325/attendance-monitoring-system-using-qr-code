@@ -2,11 +2,17 @@ import React from 'react';
 import Axios from 'axios';
 import uniqid from 'uniqid';
 
-import CircularProgress from '@mui/material/CircularProgress';
 import IconButton from '@mui/material/IconButton';
+import Dialog from '@mui/material/Dialog';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { styled } from '@mui/styles';
+import { useTheme } from '@mui/material/styles';
+
+import CircularProgress from '@mui/material/CircularProgress';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import CheckIcon from '@mui/icons-material/Check';
+
 
 const monthTable = [
 	'january',
@@ -21,7 +27,16 @@ const monthTable = [
 	'october',
 	'november',
 	'december'
-]
+];
+
+const ScheduleDialog = styled( Dialog )({
+	backgroundColor: 'white',
+	borderRadius: '24px',
+	color: 'white',
+	'&:hover': {
+		backgroundColor: 'rgba(255, 0, 0, 0.4)'
+	}
+});
 
 const Attendance = props => {
 	const [date, setDate] = React.useState( new Date() );	
@@ -37,6 +52,7 @@ const Attendance = props => {
 
 	const renderDate = () => {
 		const tempDays = [];
+		date.setDate(1);
 
 		const lastDay = new Date(
 		    date.getFullYear(),
@@ -79,7 +95,7 @@ const Attendance = props => {
 		for (let currDay = 1; currDay <= lastDay; currDay++) {
 			const isToday = currDay === new Date().getDate() && date.getMonth() === new Date().getMonth();
 
-			createDay( currDay, false, isToday )( 80 );
+			createDay( currDay, false, isToday )();
 		}
 
 		for (let nextDay = 1; nextDay <= nextDays; nextDay++) {
@@ -141,6 +157,18 @@ const Attendance = props => {
 	);
 }
 
+const DayScheduleDialog = props => {
+	const theme = useTheme();
+	const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
+
+
+	return(
+		<ScheduleDialog>
+			
+		</ScheduleDialog>
+	);
+}
+
 const Day = ({ dayNumber, notInMonth, isToday, attendanceVal }) => {
 	return (
 		<div className={`position-relative attendance-box-day border d-flex justify-content-center align-items-center ${ notInMonth ? 'attendance-box-past-next-day' : null } ${isToday ? 'attendance-box-day-today' : null}`}>
@@ -157,5 +185,6 @@ const Day = ({ dayNumber, notInMonth, isToday, attendanceVal }) => {
 		</div>
 	);
 }
+
 
 export default Attendance;

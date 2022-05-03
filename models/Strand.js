@@ -3,8 +3,9 @@ const { Schema } = mongoose;
 
 
 const strandsScheme = new Schema({
-	name: { type: String, required: true }, // The name of strand or section
-	sections: { type: [ String ], default: [] } // If it is a strand or a section.
+	name: { type: String, required: true },
+	sections: { type: [ String ], default: [] },
+	subjects: { type: [ String ], required: true }
 });
 
 

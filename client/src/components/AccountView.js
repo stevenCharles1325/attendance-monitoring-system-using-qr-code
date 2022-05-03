@@ -22,7 +22,8 @@ import {
 	handleClear,
 	handleLrn,
 	handleEmail,
-	handleGender
+	handleGender,
+	handleSubjects
 } from '../features/account/accountSlice';
 
 import Box from '@mui/material/Box';
@@ -30,12 +31,14 @@ import IconButton from '@mui/material/IconButton';
 import Pagination from '@mui/material/Pagination';
 import Divider from '@mui/material/Divider';
 import Button from '@mui/material/Button';
+import ButtonGroup from '@mui/material/ButtonGroup';
 import TextField from '@mui/material/TextField';
 import MuiList from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Collapse from '@mui/material/Collapse';
+
 
 import Chip from '@mui/material/Chip';
 import Menu from '@mui/material/Menu';
@@ -67,6 +70,9 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import FemaleIcon from '@mui/icons-material/Female';
 import NumbersIcon from '@mui/icons-material/Numbers';
 import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
@@ -95,8 +101,10 @@ const genderOptions = [
 
 const validEmailAddress = [
 	'gmail.com',
+	'citycollegeoftagaytay.edu.ph',
 	// Add valid email address here
 ];
+
 
 const AccountView = props => {
 	const {
@@ -113,7 +121,8 @@ const AccountView = props => {
 		strand,
 		strandName,
 		sectionName,
-		userType
+		userType,
+		subjects
 	} = useSelector( state => state.account );
 
 	const [semesterSwitch, setSemesterSwitch] = React.useState( [] );
@@ -141,6 +150,7 @@ const AccountView = props => {
 	const [formTitle, setFormTitle] = React.useState( null );
 	const [infoMessage, setInfoMessage] = React.useState( null );
 	const [content, setContent] = React.useState( [] );
+	const [instructorSubject, setInstructorSubject] = React.useState( [] );
 
 	const findChildrenIndexOf = ( name, list, isChildren = false ) => {
 		let returnedIndex = -1;
@@ -264,6 +274,10 @@ const AccountView = props => {
 		if(!isEmailValid( email )) 
 			return enqueueSnackbar('Email is invalid', { variant: 'error', preventDuplicate: true });
 
+		if( !instructorSubject.length ){
+			return enqueueSnackbar('At least 1 subject is required', { variant: 'error', preventDuplicate: true });
+		}
+
 		Axios.post(`${window.API_BASE_ADDRESS}/master/add/type/teacher`,  
 			{
 				employeeNo: id,
@@ -275,7 +289,8 @@ const AccountView = props => {
 				strand,
 				lrn,
 				email,
-				gender
+				gender,
+				subjects: instructorSubject.map( sbjct => ({ name: sbjct.name, start: sbjct.start, end: sbjct.end }))
 			},
 			window.requestHeader
 		)
@@ -294,6 +309,7 @@ const AccountView = props => {
 		Axios.post(`${window.API_BASE_ADDRESS}/master/add/type/strand`,  
 			{
 				name: strandName,
+				subjects: subjects
 			},
 			window.requestHeader
 		)
@@ -652,7 +668,10 @@ const AccountView = props => {
 					label="Strand"
 					placeholder="Add strand"
 					onChange={(_, newValue) => dispatch(handleStrand( newValue ))}
-				/>
+				/>,
+				formType === 'student'
+					? null
+					: <SubjectBox key={uniqid()} strand={strand} setInstructorSubject={setInstructorSubject}/>
 			];
 
 			const sectionForm = [
@@ -672,14 +691,24 @@ const AccountView = props => {
 				/>
 			];
 
-			const strandForm = (
+			const strandForm = [
 				<IconField 
 					key={uniqid()} 
 					label="Section strand"
 					Icon={DriveFileRenameOutlineIcon} 
 					onChange={e => dispatch(handleStrandName( e.target.value ))}
+				/>,
+				<IconAutocomplete 
+					multiple={true}
+					key={uniqid()}
+					Icon={MenuBookIcon}
+					freeSolo={true}
+					list={[]}
+					label="Subjects"
+					placeholder="Add a subject"
+					onChange={(_, newValue) => dispatch(handleSubjects(newValue.map( val => val.toUpperCase() )))}
 				/>
-			);
+			];
 
 			setFormTitle( `Add a ${formType}` );
 			setInfoMessage( `Adding a ${infoMessageFor} requires you to fill all fields` );
@@ -723,6 +752,7 @@ const AccountView = props => {
 	React.useEffect(() => {
 		getSemesters();
 	}, []);
+
 
 	return(
 		<div className="account-view border rounded d-flex flex-column">
@@ -799,7 +829,20 @@ const AccountView = props => {
 				</div>*/}
 				
 				<div className="col-5 d-flex justify-content-end">
-					{
+					<ButtonGroup  size="small" sx={{ color: 'black' }}>
+						<Button onClick={() => handleUserAddFormType( props?.userType )(setOpenDialogForm( true ))}>
+							Add { props?.userType }
+						</Button>
+
+						<Button onClick={() => handleUserAddFormType( 'section' )(setOpenDialogForm( true ))}>
+							Add Section
+						</Button>
+
+						<Button onClick={() => handleUserAddFormType( 'strand' )(setOpenDialogForm( true ))}>
+							Add Strand
+						</Button>
+					</ButtonGroup>
+					{/*{
 						props?.addUserOn
 							? <div className="account-view-add-user" onClick={() => handleUserAddFormType( props?.userType )(setOpenDialogForm( true ))}>
 								<IconButton>
@@ -825,7 +868,7 @@ const AccountView = props => {
 								</IconButton>
 							</div>
 							: null
-					}
+					}*/}
 				</div>
 			</div>
 
@@ -1015,6 +1058,127 @@ const IconAutocomplete = ({ list, multiple, Icon, label, placeholder, defaultVal
 	    />
 	);
 }
+
+
+const SubjectBox = props => {
+	const [renderedSubjects, setRenderedSubjects] = React.useState( [] );
+	const [subjects, setSubjects] = React.useState( [] );
+	const [selected, setSelected] = React.useState( [] );
+
+	const handleAddSubject = ( name, index ) => {
+		setSelected( selected => [ ...selected, { name, index, start: '07:00', end: '18:00' }]);
+	}
+
+	const handleRemoveSubject = ( name, index ) => {
+		const tempSubjects = selected.filter( slctd => slctd.index !== index );
+		setSelected([ ...tempSubjects ]);
+	}
+
+	const handleClock = ( value, index, isStart = true ) => {
+		const tempSubjects = selected.map( slctd => {
+			if( slctd.index === index ){
+				if( isStart ){
+					slctd.start = value.lenght ? '7:00' : value;
+				}
+				else{
+					slctd.end = value.lenght ? '18:00' : value;
+				}
+			}
+
+			return slctd;
+		});
+
+		setSelected(() => [ ...tempSubjects ]);
+	}
+
+	const handleStrandSubjects = async () => {
+		Axios.get(
+			`${window.API_BASE_ADDRESS}/master/get-subject-from-strand/strands/${props?.strand?.join?.(',')}`, 
+			window.requestHeader
+		)
+		.then( res => setSubjects([ ...res.data ]))
+		.catch( err => {
+			throw err;
+		});
+	}
+
+	React.useEffect(() => {
+		if( props?.strand?.length )
+			handleStrandSubjects();
+	}, [props]);
+
+	React.useEffect(() => {
+		if( subjects?.length ){
+			const tempRenderedSubjects = [];
+
+			subjects.forEach(( subject, index ) => {
+				tempRenderedSubjects.push(
+					<div 
+						key={uniqid()} 
+						className={`col-12 border ${selected?.map?.( item => item?.index )?.includes?.( index ) ? 'border-success' : null} d-flex justify-content-between align-items-center p-3 my-2 rounded`}
+					>
+						<div className="col-6">
+							<p>
+								{ subject }
+							</p>
+						</div>
+						<div className="col-4">
+							<div className="mb-3">
+								<TextField 
+									disabled={!selected?.map?.( item => item?.index )?.includes?.( index )}
+									type="time" 
+									label="Start" 
+									defaultValue={selected?.filter?.( slctd => slctd.index === index )?.[ 0 ]?.start ?? '07:00'}
+									onChange={e => handleClock( e.target.value, index )}
+								/>
+							</div>
+							<div className="mt-3">
+								<TextField 
+									disabled={!selected?.map?.( item => item?.index )?.includes?.( index )}
+									type="time" 
+									label="End" 
+									defaultValue={selected?.filter?.( slctd => slctd.index === index )?.[ 0 ]?.end ?? '18:00'}
+									onChange={e => handleClock( e.target.value, index, false )}
+								/>
+							</div>
+						</div>
+						<div className="col-1">
+							{
+								!selected?.map?.( item => item?.index )?.includes?.( index )
+									? <IconButton onClick={() => handleAddSubject( subject, index )}>
+										<AddIcon/>
+									</IconButton>
+									: <IconButton onClick={() => handleRemoveSubject( subject, index )}>
+										<DeleteIcon/>
+									</IconButton>
+							}
+						</div>
+					</div>	
+				);
+			});
+
+			setRenderedSubjects([ ...tempRenderedSubjects ]);
+		}
+	}, [subjects, selected]);
+
+	React.useEffect(() => props?.setInstructorSubject?.([ ...selected ]), [selected]);
+
+	return(
+		<div style={{ width: '100%', maxWidth: '530px', height: 'fit-content' }}>
+			{
+				renderedSubjects.length
+					? <>
+						<Divider/>
+						<br/>
+						<h5>Subjects:</h5>
+					</>
+					: null
+			}
+			{ renderedSubjects }
+		</div>
+	);
+} 
+
 
 const reformatText = text => typeof text === 'string' ? text?.toLowerCase()?.replaceAll?.(' ', '') : text;
 
