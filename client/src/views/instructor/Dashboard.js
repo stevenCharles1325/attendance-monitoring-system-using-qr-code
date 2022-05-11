@@ -40,7 +40,7 @@ const Dashboard = props => {
 			window.requestHeader
 		)
 		.then( res => {
-			const studentName = res?.data?.studentName ??= studentNo;
+			const studentName = res?.data?.studentName ?? studentNo;
 
 			enqueueSnackbar( `${studentName} now has attendance.`, { variant: 'success' });
 		})	
