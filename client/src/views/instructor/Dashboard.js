@@ -1,6 +1,7 @@
 import React from 'react';
 import Axios from 'axios';
 import Cookies from 'js-cookie';
+import debounce from 'lodash.debounce';
 
 // import { QrReader } from 'react-qr-reader';
 import { QR } from '../../components/QR';
@@ -22,11 +23,36 @@ import AddBusinessIcon from '@mui/icons-material/AddBusiness';
 
 import CreditCardIcon from '@mui/icons-material/CreditCard';
 import StoreIcon from '@mui/icons-material/Store';
+import { useSnackbar } from 'notistack';
+
 
 const Dashboard = props => {
 	const [userData, setUserData] = React.useState( null );
 	const [qrData, setQrData] = React.useState( null );
 	const [isCameraDenied, setIsCameraDenied] = React.useState( null );
+
+	const { enqueueSnackbar } = useSnackbar();
+
+	const handleAttendancing = async studentNo => {
+		console.log('here: ', studentNo);
+		Axios.put(
+			`${window.API_BASE_ADDRESS}/master/student/update-attendance/id/${studentNo}`,
+			window.requestHeader
+		)
+		.then( res => {
+			const studentName = res?.data?.studentName ??= studentNo;
+
+			enqueueSnackbar( `${studentName} now has attendance.`, { variant: 'success' });
+		})	
+		.catch( err => {
+			throw err;
+		});
+	}
+	const memoizedAttendancing = React.useCallback(() => {
+		if( qrData )
+			handleUserDataFetching( qrData );
+	}, [qrData]);
+	const debouncedAttendancing = debounce(() => memoizedAttendancing(), 1000);
 
 	const handleUserDataFetching = () => {
 		Axios.get(
@@ -42,16 +68,9 @@ const Dashboard = props => {
 	React.useEffect(() => {
 		navigator.permissions.query({name: 'microphone'})
 		.then((permissionObj) => {
-			console.log(permissionObj.state);
-			switch( permissionObj.state ){
-				case 'denied':
-					setIsCameraDenied( true );
-					break;
+			const isPermissionDenied = permissionObj.state === 'denied'; 
 
-				default:
-					setIsCameraDenied( false );
-					break;
-			}
+			setIsCameraDenied( isPermissionDenied );
 		})
 		.catch((error) => {
 			console.log('Got error :', error);
@@ -61,7 +80,7 @@ const Dashboard = props => {
 		handleUserDataFetching()
 	}, []);
 
-	React.useEffect(() => console.log( qrData ), [qrData]);
+	React.useEffect(() => debouncedAttendancing(), [qrData]);
 
 	return(
 		<div className="student-dashboard row d-flex flex-column">
@@ -84,7 +103,7 @@ const Dashboard = props => {
 						/>*/}
 						{
 							!isCameraDenied
-								? <QR.Scanner getData={val => setQrData( val )}/>
+								? <QR.Scanner onScan={val => setQrData( val )}/>
 								: <h5 className="p-3 rounded bg-danger text-white">
 									Camera permission denied
 								</h5>

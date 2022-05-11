@@ -16,6 +16,7 @@ export const accountSlice = createSlice({
 		strand: null,
 		strandName: '',
 		subjects: [],
+		teachers: [],
 		sectionName: {
 			name: null,
 			parent: null
@@ -49,6 +50,9 @@ export const accountSlice = createSlice({
 		},
 		handleSubjects: (state, action) => {
 			state.subjects = action.payload
+		},
+		handleTeachers: (state, action) => {
+			state.teachers = action.payload
 		},
 		handleStrandName: (state, action) => {
 			state.strandName = action.payload
@@ -85,6 +89,7 @@ export const accountSlice = createSlice({
 			state.email = '';
 			state.gender = '';
 			state.subjects = [];
+			state.teachers = [];
 			state.sectionName = {
 				name: null,
 				parent: null
@@ -112,6 +117,7 @@ export const {
 	handleLrn,
 	handleEmail,
 	handleGender,
+	handleTeachers
 } = accountSlice.actions;
 
 export default accountSlice.reducer;

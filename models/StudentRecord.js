@@ -10,6 +10,7 @@ const studentRecordScheme = new Schema({
 	lrn: { type: String, required: true },
 	email: { type: String, required: true },
 	gender: { type: String, default: 'I prefer not to say' },
+	teachers: { type: [ Object ], required: true },
 	birthDate: { type: String, required: true },
 	section: { type: [ String ], required: true },
 	strand: { type: [ String ], required: true },

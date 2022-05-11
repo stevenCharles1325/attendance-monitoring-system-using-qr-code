@@ -2,6 +2,7 @@ import React from 'react';
 import Axios from 'axios';
 import uniqid from 'uniqid';
 import Cookies from 'js-cookie';
+import debounce from 'lodash/debounce';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { useSnackbar } from 'notistack';
 import { FixedSizeList as List } from 'react-window';
@@ -23,7 +24,8 @@ import {
 	handleLrn,
 	handleEmail,
 	handleGender,
-	handleSubjects
+	handleSubjects,
+	handleTeachers
 } from '../features/account/accountSlice';
 
 import Box from '@mui/material/Box';
@@ -73,6 +75,10 @@ import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import Typography from '@mui/material/Typography';
+import Dialog from '@mui/material/Dialog';
+import Avatar from '@mui/material/Avatar';
+import Grow from '@mui/material/Grow';
 
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
@@ -122,7 +128,8 @@ const AccountView = props => {
 		strandName,
 		sectionName,
 		userType,
-		subjects
+		subjects,
+		teachers
 	} = useSelector( state => state.account );
 
 	const [semesterSwitch, setSemesterSwitch] = React.useState( [] );
@@ -151,6 +158,27 @@ const AccountView = props => {
 	const [infoMessage, setInfoMessage] = React.useState( null );
 	const [content, setContent] = React.useState( [] );
 	const [instructorSubject, setInstructorSubject] = React.useState( [] );
+
+	const [userData, setUserData] = React.useState( null );
+	const isOpenProfileView = React.useMemo(() => !!userData, [ userData ]);
+	const handleClearUserDataContent = () => setUserData( null );
+
+	const [teacherList, setTeacherList] = React.useState( [] );
+	const [selectedTeachers, setSelectedTeachers] = React.useState( [] );
+
+	const handleGetTeachers = async() => {
+		Axios.get(`${window.API_BASE_ADDRESS}/master/get-users/type/teacher`)
+		.then( res => {
+			setTeacherList( res.data );
+		})
+		.catch( err => {
+			throw err;
+		});
+	}
+
+	const handleChangeSelectedTeacher = selected => {
+		setSelectedTeachers([ ...selected ]);
+	}
 
 	const findChildrenIndexOf = ( name, list, isChildren = false ) => {
 		let returnedIndex = -1;
@@ -244,6 +272,9 @@ const AccountView = props => {
 		if(!isEmailValid( email )) 
 			return enqueueSnackbar('Email is invalid', { variant: 'error', preventDuplicate: true });
 
+		if( !teachers?.length )
+			return enqueueSnackbar('Teacher list is empty', { variant: 'error', preventDuplicate: true });
+
 		Axios.post(`${window.API_BASE_ADDRESS}/master/add/type/student`,  
 			{
 				studentNo: id,
@@ -255,7 +286,8 @@ const AccountView = props => {
 				strand,
 				lrn,
 				email,
-				gender
+				gender,
+				teachers
 			},
 			window.requestHeader
 		)
@@ -446,7 +478,8 @@ const AccountView = props => {
 				<div 
 					id={uniqid()} 
 					style={{...style, backgroundColor: index % 2 === 0 ? 'white' : '#f6f6f6'}} 
-					className="account-view-item px-4 d-flex justify-content-between align-items-center"
+					className="cursor-pointer account-view-item px-4 d-flex justify-content-between align-items-center"
+					onDoubleClick={() => setUserData( filteredItems[ index1 ] )}
 				>
 					{
 						props?.renderItemsKey?.map?.(( key, index ) => (
@@ -670,7 +703,7 @@ const AccountView = props => {
 					onChange={(_, newValue) => dispatch(handleStrand( newValue ))}
 				/>,
 				formType === 'student'
-					? null
+					? <TeacherBox key={uniqid()} teachers={teacherList} onChange={handleChangeSelectedTeacher}/>
 					: <SubjectBox key={uniqid()} strand={strand} setInstructorSubject={setInstructorSubject}/>
 			];
 
@@ -751,8 +784,11 @@ const AccountView = props => {
 
 	React.useEffect(() => {
 		getSemesters();
+		handleGetTeachers();
 	}, []);
 
+	React.useEffect(() => dispatch(handleTeachers([ ...selectedTeachers ])), [selectedTeachers]);
+	React.useEffect(() => console.log( teachers ), [teachers]);
 
 	return(
 		<div className="account-view border rounded d-flex flex-column">
@@ -989,6 +1025,12 @@ const AccountView = props => {
 			>
 				{ content }
 			</DialogForm>
+			<ProfileView 
+				userType={props?.userType} 
+				open={isOpenProfileView} 
+				onClose={handleClearUserDataContent} 
+				profileData={userData}
+			/>
 		</div>
 	);
 }
@@ -1178,6 +1220,267 @@ const SubjectBox = props => {
 		</div>
 	);
 } 
+
+
+const TeacherBox = props => {
+	const [searchText, setSearchText] = React.useState( '' );
+	const [searchedTeachers, setSearchedTeachers] = React.useState( [] );
+	const [selectedTeachers, setSelectedTeachers] = React.useState( [] );
+	// const [selectedSubjects, setSelectedSubjects] = React.useState( [] );
+
+	const isNotTeachersEmpty = !!props?.teachers?.length;
+
+	const checkIfSubjectAlreadyExist = (id, subjectIndex) => {
+		for( let teacher of selectedTeachers ){
+			if( teacher.teacherId === id && teacher.subjectIndex === subjectIndex )
+				return true;
+		}
+
+		return false;
+	}
+
+	const checkIfSubjectMatched = ( subjects, searchTxt ) => {
+		for( let subject of subjects ){
+			if( subject.toLowerCase().includes( searchTxt.toLowerCase() ) )
+				return true;
+		}
+
+		return false;
+	}
+
+	const handleSelectSubjectAndTeacher = (teacher, subjectIndex) => {
+		const isSubjectAlreadySelected = checkIfSubjectAlreadyExist( teacher._id, subjectIndex );
+		// const isSubjectAlreadySelected = selectedSubjects.includes( teacher.subjects[ subjectIndex ].name );
+
+		// console.log( isSubjectAlreadySelected );
+
+		if( !isSubjectAlreadySelected /*&& !isSubjectAlreadySelected*/ ){
+			setSelectedTeachers( selectedTeachers => 
+				[ 
+					...selectedTeachers, 
+					{
+						teacherId: teacher._id,
+						subjectIndex
+					}
+				]);
+
+			// setSelectedSubjects( selectedSubjects => [ ...selectedSubjects, teacher.subjects[ subjectIndex ].name ])
+		}
+		else{
+			const filteredSelectedTeachers = selectedTeachers
+				.filter( tchr => 
+					( tchr.teacherId !== teacher._id && tchr.subjectIndex === subjectIndex ) ||
+					( tchr.teacherId === teacher._id && tchr.subjectIndex !== subjectIndex )
+				);
+
+			// const filteredSelectedSubjects = selectedSubjects.filter( subjectName => subjectName !== teacher.subjects[ subjectIndex ].name )
+
+			setSelectedTeachers([ ...filteredSelectedTeachers ]);
+			// setSelectedSubjects([ ...filteredSelectedSubjects ]);
+		}
+	}
+
+	React.useEffect(() => {
+		const tempSearchedTeachers = [];
+
+		props?.teachers?.forEach( teacher => {
+			const { firstName, lastName, middleName, subjects } = teacher;
+			const fullName = `${lastName}${firstName}${middleName}`;
+
+			const isFirstNameMatched = firstName.includes( searchText );
+			const isLastNameMatched = lastName.includes( searchText );
+			const isMiddleNameMatched = middleName.includes( searchText );
+
+			const isFullNameMatched = fullName.includes( searchText );
+			const isSubjectMathced = checkIfSubjectMatched(teacher.subjects.map( subject => subject.name ), searchText);
+
+			if( isFirstNameMatched || isLastNameMatched || 
+				isMiddleNameMatched || isSubjectMathced ||
+				isFullNameMatched
+			 ){
+				tempSearchedTeachers.push( teacher );
+			}
+		});
+
+		setSearchedTeachers([ ...tempSearchedTeachers ]);
+	}, [searchText, props]);
+
+	const memoizedOnChangeHandler = React.useCallback(() => {
+		const selectedTeacherWithProperSubjects = [];
+
+		selectedTeachers?.forEach(({ teacherId, subjectIndex}) => {
+			props.teachers.forEach(({ _id, firstName, lastName, middleName, subjects }) => {
+				if( teacherId === _id ){
+					selectedTeacherWithProperSubjects.push({
+						teacherId,
+						firstName,
+						lastName,
+						middleName,
+						subject: subjects[ subjectIndex ]
+					});
+				}
+			});
+		});
+
+		props?.onChange?.( selectedTeacherWithProperSubjects ); 
+	}, [selectedTeachers, props]);
+
+	const debouncedOnChangeHandler = debounce(memoizedOnChangeHandler, 500);
+
+	React.useEffect(() => debouncedOnChangeHandler(), [selectedTeachers, props]);
+
+	return(
+		<>
+			<Divider/>
+			<div className="mt-3 p-5 w-full max-w-[530px] h-fit border shadow">
+				<h5>Teachers:</h5>
+				<div className="w-full">
+					<Box sx={{ display: 'flex', alignItems: 'center' }}>
+						<SearchIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
+						<TextField 
+							label=""
+							variant="standard"
+							value={searchText}
+							onChange={e => setSearchText( e.target.value )}
+						/>
+					</Box>
+					<br/>
+					{ 
+						searchedTeachers.map((teacher, index) => (
+							<div key={uniqid()} style={{ color: 'var( --text-color )'}} className="w-full my-3 p-2 px-3 w-full h-fit border rounded">
+								<p className="mb-2 text-capitalize"><b>{ `${teacher.lastName} ${teacher.firstName}` }</b></p>
+								<Divider variant="middle"/>
+								<p className="mt-2">subjects:</p>
+								{
+									teacher?.subjects?.map?.(( subject, index ) => (
+										<div key={uniqid()} className="m-1">
+											<Chip 
+												variant="outlined"
+												label={subject.name} 
+												color={
+													selectedTeachers
+														.filter(({ teacherId }) => teacherId === teacher._id )
+														.reduce(( prev, curr ) => [ ...prev, curr.subjectIndex ], [])
+														.includes( index ) 
+															? 'success' 
+															: 'primary'
+												}
+												onClick={() => handleSelectSubjectAndTeacher( teacher, index )}
+											/>
+										</div>
+									))
+								}
+							</div>
+						)) 
+					}
+				</div>
+			</div>	
+		</>
+	);
+}
+
+const ProfileView = props => {
+	const theme = useTheme();
+	const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
+	const { 
+		_id,
+		lrn,
+		email,
+		state,
+		status,
+		gender,
+		strand,
+		section,
+		teachers,
+		subjects,
+		lastName,
+		studentNo,
+		employeeNo,
+		firstName,
+		middleName,
+	} = React.useMemo(() => props?.profileData ?? {}, [ props ]);
+	
+	return(
+		<Dialog fullScreen={fullScreen} open={props?.open} onClose={props?.onClose}>
+			<Box sx={{ width: '100%', minWidth: '500px', height: '550px' }}>
+				<div className="w-full h-full p-5 overflow-auto">
+					<div className="w-full d-flex justify-content-center align-items-center">
+						<Avatar sx={{ width: '100px', height: '100px' }}/>
+					</div>
+					<br/>
+					<Divider variant="middle"/>
+					<br/>
+					<div className="border shadow p-5">
+						{
+							props?.userType === 'teacher'
+								? <>
+									<p><b className="text-uppercase text-[#656565] mr-4 text-ellipsis">Employee No:</b> { employeeNo }</p>
+								</>
+								: <>
+									<p><b className="text-uppercase text-[#656565] mr-4 text-ellipsis">student No:</b> { studentNo }</p>
+									<p><b className="text-uppercase text-[#656565] mr-4 text-ellipsis">lrn:</b> { lrn }</p>
+								</>
+						}
+					</div>
+					<br/>
+					<Divider variant="middle"/>
+					<br/>
+					<div className="border shadow p-5">
+						<p><b className="text-uppercase text-[#656565] mr-4 text-ellipsis">first name:</b> { firstName }</p>
+						<p><b className="text-uppercase text-[#656565] mr-4 text-ellipsis">last name:</b> { lastName }</p>
+						<p><b className="text-uppercase text-[#656565] mr-4 text-ellipsis">middle name:</b> { middleName }</p>
+					</div>
+					<br/>
+					<Divider variant="middle"/>
+					<br/>
+					<div className="border shadow p-5">
+						<p><b className="text-uppercase text-[#656565] mr-4 text-ellipsis">email:</b> { email }</p>
+						<p><b className="text-uppercase text-[#656565] mr-4 text-ellipsis">gender:</b> { gender }</p>
+						<p><b className="text-uppercase text-[#656565] mr-4 text-ellipsis">strand:</b> { strand }</p>
+						<p><b className="text-uppercase text-[#656565] mr-4 text-ellipsis">section:</b> { section }</p>
+						{
+							props?.userType === 'teacher'
+								? <div>
+									<p><b className="text-uppercase text-[#656565] mr-4 text-ellipsis">subjects:</b></p>
+									 { 
+									 	subjects?.map?.(({ name }) => (
+									 		<div key={uniqid()} className="m-1">
+										 		<Chip label={name}/>
+									 		</div>
+									 	)) 
+									 }
+								</div>
+								: <div>
+									<p><b className="text-uppercase text-[#656565] mr-4 text-ellipsis">teachers:</b></p>
+									 { 
+									 	teachers?.map?.(({ firstName, lastName, middleName }) => (
+									 		<div key={uniqid()} className="m-1">
+										 		<Chip key={uniqid()} label={`${lastName} ${firstName} ${middleName ?? ''}`}/>
+									 		</div>
+									 	)) 
+									 }
+								</div>
+						}
+						
+					</div>
+					<br/>
+					<Divider variant="middle"/>
+					<br/>
+					<div className="border shadow p-5">
+						<p><b className="text-uppercase text-[#656565] mr-4 text-ellipsis">state:</b> { state }</p>
+						<p><b className="text-uppercase text-[#656565] mr-4 text-ellipsis">status:</b> { status }</p>
+					</div>
+					<br/>
+					<Divider variant="middle"/>
+					<br/>
+					<div className="d-flex justify-content-end align-items-center">
+						<Button onClick={props?.onClose}>Close</Button>
+					</div>
+				</div>
+			</Box>
+		</Dialog>
+	);
+}
 
 
 const reformatText = text => typeof text === 'string' ? text?.toLowerCase()?.replaceAll?.(' ', '') : text;

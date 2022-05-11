@@ -63,7 +63,7 @@ const Scanner = props => {
 							height: '100%'
 						}}
 					    onResult={(result, error) => {
-				        	if( result ) props?.getData?.( result.text );
+				        	if( result ) props?.onScan?.( result.text );
 						}}
 					/>
 					<div className="position-absolute top-0 end-0">

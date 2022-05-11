@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root{
 	--text-color: #656565;
 	--bg-color: #c6c7c6;
