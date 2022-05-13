@@ -12,6 +12,7 @@ var jwt = require('jsonwebtoken');
 var express = require('express');
 var nodemailer = require('nodemailer');
 var router = express.Router();
+var uniqid = require('uniqid');
 
 // MODELS
 var Token = require('../models/Token');
@@ -19,6 +20,7 @@ var User = require('../models/User');
 var Student = require('../models/StudentRecord');
 var Teacher = require('../models/TeacherRecord');
 var Semester = require('../models/Semester');
+var Attendance = require('../models/Attendance');
 // var SchoolYear = require('../models/SchoolYear');
 var Strand = require('../models/Strand');
 
@@ -607,6 +609,145 @@ router.post('/add/type/:type', authentication, async ( req, res ) => {
     default:
       return res.sendStatus( 404 );
   }
+});
+
+
+
+
+/*-------------------------------
+          Attendancing
+-------------------------------*/
+router.get('/students-attendance/id/:id', async ( req, res, next ) => {
+  const { id } = req.params;
+
+  Attendance.findOne({ studentNo: id }, ( err, doc ) => {
+    if( err ) return res.sendStatus( 500 );
+
+    if( doc ){
+      return res.json( doc );
+    }
+    else{
+      return res.sendStatus( 404 );
+    }
+  });
+});
+
+router.put('/student/update-attendance/id/:id/teacherId/:teacherId', async ( req, res, next ) => {
+  const { id, teacherId } = req.params;
+
+  const graceTime = 30; // 30minute grace time or period
+
+  const getRemark = async ( time, teachers ) => {
+    for( let teacher of teachers ){
+      const teacherDBId = await Teacher.findOne({ employeeNo: teacherId }).exec();
+
+      if( teacher.teacherId === teacherDBId._id.toString() ){
+        const teacherSubjectTimeHour = Number(teacher.subject.start.split(':')[ 0 ]);
+        const teacherSubjectTimeMinutes = Number(teacher.subject.start.split(':')[ 1 ]);
+
+        const timeHours = Number(time.split(' ')[ 0 ].split(':')[ 0 ]);
+        const timeMinutes = Number(time.split(' ')[ 0 ].split(':')[ 1 ]);
+
+        const minute = teacherSubjectTimeMinutes + graceTime;
+        const isMinutesOver = timeMinutes > (minute > 60 ? minute : minute - 60);
+        const isHourOver = timeHours > teacherSubjectTimeHour;
+
+        const isLate = !isHourOver && isMinutesOver;
+        const isAbsent = isHourOver;
+        const isPresent = !isHourOver && !isMinutesOver;
+
+        const remark = 
+          isLate 
+            ? 'late' 
+            : isAbsent 
+              ? 'absent' 
+              : isPresent
+                ? 'present'
+                : 'error';
+
+        return remark;
+      }
+    }
+
+    return null;
+  }
+
+  Student.findOne({ studentNo: id }, async ( err, doc ) => {
+    if( err ) return res.sendStatus( 500 );
+
+      if( doc ){
+        if( doc.status === 'deactivated' ){
+          return res
+            .status( 403 )
+            .json({
+              message: 'Student is deactivated'
+            });
+        }
+        else{
+          const studentAttendance = await Attendance.findOne({ studentNo: id }).exec();
+          const doesStudentHavePrevAttendance = !!studentAttendance;
+          const dateToday = new Date().toDateString();
+          const timeToday = new Date().toTimeString();
+
+          const remark = await getRemark( timeToday, doc.teachers );
+          const attendance = { date: dateToday, remark };
+
+          if( !remark ) 
+            return res
+              .status( 403 )
+              .json({
+                message: 'You are not a teacher of this student'
+              });
+
+          if( doesStudentHavePrevAttendance ){
+            const attendanceRecord = [ ...studentAttendance.attendance ]; 
+
+            attendanceRecord.push( attendance );
+
+            studentAttendance.attendance = attendanceRecord;
+
+            studentAttendance.save( err => {
+              if( err ) return res.sendStatus( 500 );
+
+              return res
+                .json({
+                  studentName: doc.firstName + ' ' + doc.lastName 
+                });
+            });
+          }
+          else{
+            const {
+              studentNo,
+              firstName,
+              middleName,
+              lastName,
+            } = doc;
+
+            Attendance.create({ 
+              studentNo, 
+              firstName, 
+              middleName, 
+              lastName,
+              attendance, 
+            }, err => {
+              if( err ) return res.sendStatus( 500 );
+
+              return res
+                .json({
+                  studentName: doc.firstName + ' ' + doc.lastName 
+                });
+            });
+          }          
+        }
+      }
+      else{
+        return res
+          .status( 404 )
+          .json({
+            message: 'Student does not exist'
+          });
+      }
+  });
 });
 
 

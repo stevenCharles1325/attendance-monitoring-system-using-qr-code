@@ -788,7 +788,7 @@ const AccountView = props => {
 	}, []);
 
 	React.useEffect(() => dispatch(handleTeachers([ ...selectedTeachers ])), [selectedTeachers]);
-	React.useEffect(() => console.log( teachers ), [teachers]);
+	// React.useEffect(() => console.log( teachers ), [teachers]);
 
 	return(
 		<div className="account-view border rounded d-flex flex-column">
@@ -1108,7 +1108,7 @@ const SubjectBox = props => {
 	const [selected, setSelected] = React.useState( [] );
 
 	const handleAddSubject = ( name, index ) => {
-		setSelected( selected => [ ...selected, { name, index, start: '07:00', end: '18:00' }]);
+		setSelected( selected => [ ...selected, { id: uniqid(), name, index, start: '07:00', end: '18:00' }]);
 	}
 
 	const handleRemoveSubject = ( name, index ) => {
@@ -1155,47 +1155,15 @@ const SubjectBox = props => {
 
 			subjects.forEach(( subject, index ) => {
 				tempRenderedSubjects.push(
-					<div 
-						key={uniqid()} 
-						className={`col-12 border ${selected?.map?.( item => item?.index )?.includes?.( index ) ? 'border-success' : null} d-flex justify-content-between align-items-center p-3 my-2 rounded`}
-					>
-						<div className="col-6">
-							<p>
-								{ subject }
-							</p>
-						</div>
-						<div className="col-4">
-							<div className="mb-3">
-								<TextField 
-									disabled={!selected?.map?.( item => item?.index )?.includes?.( index )}
-									type="time" 
-									label="Start" 
-									defaultValue={selected?.filter?.( slctd => slctd.index === index )?.[ 0 ]?.start ?? '07:00'}
-									onChange={e => handleClock( e.target.value, index )}
-								/>
-							</div>
-							<div className="mt-3">
-								<TextField 
-									disabled={!selected?.map?.( item => item?.index )?.includes?.( index )}
-									type="time" 
-									label="End" 
-									defaultValue={selected?.filter?.( slctd => slctd.index === index )?.[ 0 ]?.end ?? '18:00'}
-									onChange={e => handleClock( e.target.value, index, false )}
-								/>
-							</div>
-						</div>
-						<div className="col-1">
-							{
-								!selected?.map?.( item => item?.index )?.includes?.( index )
-									? <IconButton onClick={() => handleAddSubject( subject, index )}>
-										<AddIcon/>
-									</IconButton>
-									: <IconButton onClick={() => handleRemoveSubject( subject, index )}>
-										<DeleteIcon/>
-									</IconButton>
-							}
-						</div>
-					</div>	
+					<Subject 
+						key={uniqid()}
+						selected={selected}
+						subject={subject}
+						index={index}
+						onAdd={() => handleAddSubject( subject, index )}
+						onRemove={() => handleRemoveSubject( subject, index )}
+						onChange={(value, isStart) => handleClock( value, index, isStart )}
+					/>
 				);
 			});
 
@@ -1205,15 +1173,32 @@ const SubjectBox = props => {
 
 	React.useEffect(() => props?.setInstructorSubject?.([ ...selected ]), [selected]);
 
+	// const Row = React.useCallback(({ index, style }) => {
+	// 	const subjectName = subjects[ index ];
+
+	// 	return(
+	// 		<div id={uniqid()} style={style}>
+	// 			<Subject 
+	// 				selected={selected}
+	// 				subject={subjectName}
+	// 				index={index}
+	// 				onAdd={() => handleAddSubject( subjectName, index )}
+	// 				onRemove={() => handleRemoveSubject( subjectName, index )}
+	// 				onChange={(value, isStart) => handleClock( value, index, isStart )}
+	// 			/>
+	// 		</div>
+	// 	)
+	// }, [subjects, selected]);
+
 	return(
 		<div style={{ width: '100%', maxWidth: '530px', height: 'fit-content' }}>
 			{
-				renderedSubjects.length
-					? <>
-						<Divider/>
-						<br/>
-						<h5>Subjects:</h5>
-					</>
+				subjects.length
+					?	<div className="w-full h-[300px]">
+							<Divider/>
+							<br/>
+							<h5>Subjects:</h5>
+						</div>
 					: null
 			}
 			{ renderedSubjects }
@@ -1221,6 +1206,76 @@ const SubjectBox = props => {
 	);
 } 
 
+// <AutoSizer>
+// 	{
+// 		({ height, width }) => (
+// 			<List
+// 				height={height}
+// 				width={width}
+// 				itemSize={200}
+// 				itemCount={subjects?.length}
+// 			>
+// 				{ Row }
+// 			</List>
+// 		)
+// 	}
+// </AutoSizer>
+
+const Subject = ({ selected, subject, onAdd, onRemove, onChange, index }) => {
+	const [start, setStart] = React.useState( '07:00' );
+	const [end, setEnd] = React.useState( '18:00' );
+
+	React.useEffect(() => {
+		onChange( start, true );
+	}, [start]);
+
+	React.useEffect(() => {
+		onChange( end, false );
+	}, [end]);
+
+	return(
+		<div 
+			className={`col-12 border ${selected?.map?.( item => item?.index )?.includes?.( index ) ? 'border-success' : null} d-flex justify-content-between align-items-center p-3 my-2 rounded`}
+		>
+			<div className="col-6">
+				<p>
+					{ subject }
+				</p>
+			</div>
+			<div className="col-4">
+				<div className="mb-3">
+					<TextField 
+						disabled={!selected?.map?.( item => item?.index )?.includes?.( index )}
+						type="time" 
+						label="Start" 
+						value={start}
+						onChange={e => setStart( e.target.value )}
+					/>
+				</div>
+				<div className="mt-3">
+					<TextField 
+						disabled={!selected?.map?.( item => item?.index )?.includes?.( index )}
+						type="time" 
+						label="End" 
+						value={end}
+						onChange={e => setEnd( e.target.value )}
+					/>
+				</div>
+			</div>
+			<div className="col-1">
+				{
+					!selected?.map?.( item => item?.index )?.includes?.( index )
+						? <IconButton onClick={onAdd}>
+							<AddIcon/>
+						</IconButton>
+						: <IconButton onClick={onRemove}>
+							<DeleteIcon/>
+						</IconButton>
+				}
+			</div>
+		</div>
+	);
+}
 
 const TeacherBox = props => {
 	const [searchText, setSearchText] = React.useState( '' );

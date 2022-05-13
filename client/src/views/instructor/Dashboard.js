@@ -34,9 +34,8 @@ const Dashboard = props => {
 	const { enqueueSnackbar } = useSnackbar();
 
 	const handleAttendancing = async studentNo => {
-		console.log('here: ', studentNo);
 		Axios.put(
-			`${window.API_BASE_ADDRESS}/master/student/update-attendance/id/${studentNo}`,
+			`${window.API_BASE_ADDRESS}/master/student/update-attendance/id/${studentNo}/teacherId/${Cookies.get('userId')}`,
 			window.requestHeader
 		)
 		.then( res => {
@@ -45,13 +44,17 @@ const Dashboard = props => {
 			enqueueSnackbar( `${studentName} now has attendance.`, { variant: 'success' });
 		})	
 		.catch( err => {
-			throw err;
+			const message = err?.response?.data?.message ?? 'Please try again!';
+
+			enqueueSnackbar( message, { variant: 'error' });
 		});
 	}
+	
 	const memoizedAttendancing = React.useCallback(() => {
 		if( qrData )
-			handleUserDataFetching( qrData );
+			handleAttendancing( qrData );
 	}, [qrData]);
+
 	const debouncedAttendancing = debounce(() => memoizedAttendancing(), 1000);
 
 	const handleUserDataFetching = () => {
@@ -108,7 +111,6 @@ const Dashboard = props => {
 									Camera permission denied
 								</h5>
 						}
-						<p>{ qrData }</p>
 					</div>
 					<div 
 						style={{ height: '200px', maxHeight: 'fit-content' }} 

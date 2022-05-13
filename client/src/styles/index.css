@@ -622,7 +622,7 @@ body{
 }
 
 .attendance-box-day:hover{
-	background-color: #efe0de;
+	/*background-color: #efe0de;*/
 }
 
 .attendance-box-day-today{
