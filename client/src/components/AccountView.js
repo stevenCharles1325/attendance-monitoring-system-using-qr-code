@@ -322,7 +322,7 @@ const AccountView = props => {
 				lrn,
 				email,
 				gender,
-				subjects: instructorSubject.map( sbjct => ({ name: sbjct.name, start: sbjct.start, end: sbjct.end }))
+				subjects: instructorSubject
 			},
 			window.requestHeader
 		)
@@ -676,7 +676,7 @@ const AccountView = props => {
 								// Create a new value from the user input
 								dispatch(handleGender( newValue.inputValue ));
 							} else {
-								console.log( newValue );
+								// console.log( newValue );
 								dispatch(handleGender( newValue ));
 							}
 						}}
@@ -1076,6 +1076,7 @@ const IconField = ({ Icon, label, type, onChange, params, placeholder, defaultVa
 	);
 }
 
+
 const IconAutocomplete = ({ list, multiple, Icon, label, placeholder, defaultValue, onChange, freeSolo }) => {
 	return(
 		<Autocomplete
@@ -1107,30 +1108,45 @@ const SubjectBox = props => {
 	const [subjects, setSubjects] = React.useState( [] );
 	const [selected, setSelected] = React.useState( [] );
 
-	const handleAddSubject = ( name, index ) => {
-		setSelected( selected => [ ...selected, { id: uniqid(), name, index, start: '07:00', end: '18:00' }]);
-	}
+	// const handleClock = ( value, index, isStart = true ) => {
+	// 	// const tempSubjects = selected.map( slctd => {
+	// 	// 	if( slctd.index === index ){
+	// 	// 		if( isStart ){
+	// 	// 			slctd.start = value.lenght ? '7:00' : value;
+	// 	// 		}
+	// 	// 		else{
+	// 	// 			slctd.end = value.lenght ? '18:00' : value;
+	// 	// 		}
+	// 	// 	}
 
-	const handleRemoveSubject = ( name, index ) => {
-		const tempSubjects = selected.filter( slctd => slctd.index !== index );
-		setSelected([ ...tempSubjects ]);
-	}
+	// 	// 	return slctd;
+	// 	// });
+	// 	const tempSubjects = [ ...selected ];
+	// 	tempSubjects[ index ][ isStart ? 'start' : 'end' ] = value;
 
-	const handleClock = ( value, index, isStart = true ) => {
-		const tempSubjects = selected.map( slctd => {
-			if( slctd.index === index ){
-				if( isStart ){
-					slctd.start = value.lenght ? '7:00' : value;
+	// 	setSelected(() => [ ...tempSubjects ]);	
+	
+	// 	// setSelected( selected => {
+	// 	// 	selected[ index ][ isStart ? 'start' : 'end' ] = value;
+
+	// 	// 	return selected;
+	// 	// });
+	// }
+
+	const handleSubjectSetup = ( data, doRemove ) => {
+		if( doRemove ){
+			setSelected( selected => [ ...selected.filter( slctd => slctd.id !== data.id ) ]);
+		}
+		else{
+			setSelected( slctd => {
+				if(slctd.map(slctd => slctd.id ).includes( data.id )){
+					return [ ...slctd?.filter?.( slctd2 => slctd2.id !== data.id ), data ]
 				}
 				else{
-					slctd.end = value.lenght ? '18:00' : value;
+					return [ ...slctd, data ];
 				}
-			}
-
-			return slctd;
-		});
-
-		setSelected(() => [ ...tempSubjects ]);
+			});
+		}
 	}
 
 	const handleStrandSubjects = async () => {
@@ -1149,27 +1165,50 @@ const SubjectBox = props => {
 			handleStrandSubjects();
 	}, [props]);
 
+	const renderSubject = React.useCallback(( ) => {
+		const tempRenderedSubjects = [];
+
+		subjects.forEach(( subject, index ) => {
+			tempRenderedSubjects.push(
+				<Subject 
+					key={uniqid()}
+					subject={subject}
+					onChange={handleSubjectSetup}
+				/>
+			);
+		});
+
+		setRenderedSubjects([ ...tempRenderedSubjects ]);
+	}, [subjects]);
+
+
+	// const debouncedRendering = debounce(renderSubject, 1000);
+
 	React.useEffect(() => {
-		if( subjects?.length ){
-			const tempRenderedSubjects = [];
+		// if( subjects?.length ){
+		// 	// const tempRenderedSubjects = [];
+		// 	renderSubject( selected );
+		// 	// subjects.forEach(( subject, index ) => {
+		// 	// 	tempRenderedSubjects.push(
+		// 	// 		<Subject 
+		// 	// 			key={uniqid()}
+		// 	// 			end={end}
+		// 	// 			start={start}
+		// 	// 			isInSelected={selected?.map?.( item => item?.index )?.includes?.( index )}
+		// 	// 			subject={subject}
+		// 	// 			onAdd={() => handleAddSubject( subject, index )}
+		// 	// 			onRemove={() => handleRemoveSubject( subject, index )}
+		// 	// 			onChange={(value, isStart) => handleClock( value, index, isStart )}
+		// 	// 		/>
+		// 	// 	);
+		// 	// });
 
-			subjects.forEach(( subject, index ) => {
-				tempRenderedSubjects.push(
-					<Subject 
-						key={uniqid()}
-						selected={selected}
-						subject={subject}
-						index={index}
-						onAdd={() => handleAddSubject( subject, index )}
-						onRemove={() => handleRemoveSubject( subject, index )}
-						onChange={(value, isStart) => handleClock( value, index, isStart )}
-					/>
-				);
-			});
+		// 	// setRenderedSubjects([ ...tempRenderedSubjects ]);
+		// }
+		renderSubject();
+	}, [subjects]);
 
-			setRenderedSubjects([ ...tempRenderedSubjects ]);
-		}
-	}, [subjects, selected]);
+	React.useEffect(() => console.log('1: ', selected), [selected]);
 
 	React.useEffect(() => props?.setInstructorSubject?.([ ...selected ]), [selected]);
 
@@ -1194,11 +1233,11 @@ const SubjectBox = props => {
 		<div style={{ width: '100%', maxWidth: '530px', height: 'fit-content' }}>
 			{
 				subjects.length
-					?	<div className="w-full h-[300px]">
+					?	<>
 							<Divider/>
 							<br/>
 							<h5>Subjects:</h5>
-						</div>
+						</>
 					: null
 			}
 			{ renderedSubjects }
@@ -1221,21 +1260,30 @@ const SubjectBox = props => {
 // 	}
 // </AutoSizer>
 
-const Subject = ({ selected, subject, onAdd, onRemove, onChange, index }) => {
+const Subject = ({ subject, onChange }) => {
+	const [id, setId] = React.useState( uniqid() );
 	const [start, setStart] = React.useState( '07:00' );
 	const [end, setEnd] = React.useState( '18:00' );
+	const [isSelected, setIsSelected] = React.useState( false );
+
+	const data = React.useMemo(() => ({
+		id,
+		name: subject,
+		start,
+		end,
+	}), [subject, start, end]);
+
+	const handleOnClick = doSelect => {
+		setIsSelected( doSelect );
+	}
 
 	React.useEffect(() => {
-		onChange( start, true );
-	}, [start]);
-
-	React.useEffect(() => {
-		onChange( end, false );
-	}, [end]);
+		onChange( data, !isSelected );
+	}, [data, isSelected]);
 
 	return(
 		<div 
-			className={`col-12 border ${selected?.map?.( item => item?.index )?.includes?.( index ) ? 'border-success' : null} d-flex justify-content-between align-items-center p-3 my-2 rounded`}
+			className={`col-12 border ${isSelected ? 'border-success' : null} d-flex justify-content-between align-items-center p-3 my-2 rounded`}
 		>
 			<div className="col-6">
 				<p>
@@ -1245,7 +1293,7 @@ const Subject = ({ selected, subject, onAdd, onRemove, onChange, index }) => {
 			<div className="col-4">
 				<div className="mb-3">
 					<TextField 
-						disabled={!selected?.map?.( item => item?.index )?.includes?.( index )}
+						disabled={!isSelected}
 						type="time" 
 						label="Start" 
 						value={start}
@@ -1254,7 +1302,7 @@ const Subject = ({ selected, subject, onAdd, onRemove, onChange, index }) => {
 				</div>
 				<div className="mt-3">
 					<TextField 
-						disabled={!selected?.map?.( item => item?.index )?.includes?.( index )}
+						disabled={!isSelected}
 						type="time" 
 						label="End" 
 						value={end}
@@ -1264,11 +1312,11 @@ const Subject = ({ selected, subject, onAdd, onRemove, onChange, index }) => {
 			</div>
 			<div className="col-1">
 				{
-					!selected?.map?.( item => item?.index )?.includes?.( index )
-						? <IconButton onClick={onAdd}>
+					!isSelected
+						? <IconButton onClick={() => handleOnClick( true )}>
 							<AddIcon/>
 						</IconButton>
-						: <IconButton onClick={onRemove}>
+						: <IconButton onClick={() => handleOnClick( false )}>
 							<DeleteIcon/>
 						</IconButton>
 				}
