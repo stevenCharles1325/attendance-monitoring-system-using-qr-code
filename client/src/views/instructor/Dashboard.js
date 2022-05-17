@@ -39,14 +39,24 @@ const Dashboard = props => {
 			window.requestHeader
 		)
 		.then( res => {
+			const attendanceMsg = res?.data?.message;
+			const isMessage = !!attendanceMsg;
 			const studentName = res?.data?.studentName ?? studentNo;
 
-			enqueueSnackbar( `${studentName} now has attendance.`, { variant: 'success' });
+			if( isMessage ){
+				enqueueSnackbar( attendanceMsg, { variant: 'success' });
+			}
+			else{
+				enqueueSnackbar( `${studentName} now has attendance.`, { variant: 'success' });
+			}
+
+			setQrData( null );
 		})	
 		.catch( err => {
 			const message = err?.response?.data?.message ?? 'Please try again!';
 
 			enqueueSnackbar( message, { variant: 'error' });
+			setQrData( null );
 		});
 	}
 	
@@ -69,13 +79,13 @@ const Dashboard = props => {
 	}
 
 	React.useEffect(() => {
-		navigator.permissions.query({name: 'microphone'})
-		.then((permissionObj) => {
+		navigator.permissions.query({ name: 'microphone' })
+		.then( permissionObj => {
 			const isPermissionDenied = permissionObj.state === 'denied'; 
 
 			setIsCameraDenied( isPermissionDenied );
 		})
-		.catch((error) => {
+		.catch( error => {
 			console.log('Got error :', error);
 			setIsCameraDenied( true );
 		});

@@ -569,7 +569,19 @@ router.post('/add/type/:type', authentication, async ( req, res ) => {
       Student.create({ ...req.body }, err => {
         if( err ) return res.sendStatus( 500 );
 
-        return res.json({ message: 'Successfully added a new Student' });
+        const { studentNo, firstName, middleName, lastName, attendance } = req.body;
+
+        Attendance.create({ 
+          studentNo, 
+          firstName, 
+          middleName, 
+          lastName,
+          attendance: []
+        }, err => {
+          if( err ) return res.sendStatus( 500 );
+
+          return res.json({ message: 'Successfully added a new Student' });
+        });
       });
       break;
 
@@ -637,7 +649,7 @@ router.put('/student/update-attendance/id/:id/teacherId/:teacherId', async ( req
 
   const graceTime = 30; // 30minute grace time or period
 
-  const getRemark = async ( time, teachers ) => {
+  const getRemarkAndSubjectID = async ( time, teachers ) => {
     for( let teacher of teachers ){
       const teacherDBId = await Teacher.findOne({ employeeNo: teacherId }).exec();
 
@@ -665,11 +677,19 @@ router.put('/student/update-attendance/id/:id/teacherId/:teacherId', async ( req
                 ? 'present'
                 : 'error';
 
-        return remark;
+        return [ teacher.subject.id , remark ];
       }
     }
 
-    return null;
+    return [ null, null ];
+  }
+
+  const checkIfStudentHasAttendanceToday = ( attendanceRecord, dateToday ) => {
+    for( let attRec of attendanceRecord ){
+      if( attRec.date === dateToday ){
+        return true;
+      }
+    }
   }
 
   Student.findOne({ studentNo: id }, async ( err, doc ) => {
@@ -689,8 +709,8 @@ router.put('/student/update-attendance/id/:id/teacherId/:teacherId', async ( req
           const dateToday = new Date().toDateString();
           const timeToday = new Date().toTimeString();
 
-          const remark = await getRemark( timeToday, doc.teachers );
-          const attendance = { date: dateToday, remark };
+          const [ subjectId, remark ] = await getRemarkAndSubjectID( timeToday, doc.teachers );
+          const attendance = { subjectId, date: dateToday, remark };
 
           if( !remark ) 
             return res
@@ -702,18 +722,26 @@ router.put('/student/update-attendance/id/:id/teacherId/:teacherId', async ( req
           if( doesStudentHavePrevAttendance ){
             const attendanceRecord = [ ...studentAttendance.attendance ]; 
 
-            attendanceRecord.push( attendance );
+            const isStudentHasAttendance = checkIfStudentHasAttendanceToday( attendanceRecord, dateToday );
 
-            studentAttendance.attendance = attendanceRecord;
-
-            studentAttendance.save( err => {
-              if( err ) return res.sendStatus( 500 );
-
+            if( isStudentHasAttendance ){
               return res
                 .json({
-                  studentName: doc.firstName + ' ' + doc.lastName 
+                  message: 'Student already had attendance'
                 });
-            });
+            }
+            else{
+              attendanceRecord.push( attendance );
+              studentAttendance.attendance = attendanceRecord;
+              studentAttendance.save( err => {
+                if( err ) return res.sendStatus( 500 );
+
+                return res
+                  .json({
+                    studentName: doc.firstName + ' ' + doc.lastName 
+                  });
+              });
+            }
           }
           else{
             const {

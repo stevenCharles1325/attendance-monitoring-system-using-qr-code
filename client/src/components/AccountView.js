@@ -25,7 +25,8 @@ import {
 	handleEmail,
 	handleGender,
 	handleSubjects,
-	handleTeachers
+	handleTeachers,
+	handleSchoolStartDate
 } from '../features/account/accountSlice';
 
 import Box from '@mui/material/Box';
@@ -127,6 +128,7 @@ const AccountView = props => {
 		strand,
 		strandName,
 		sectionName,
+		schoolStartDate,
 		userType,
 		subjects,
 		teachers
@@ -287,7 +289,8 @@ const AccountView = props => {
 				lrn,
 				email,
 				gender,
-				teachers
+				teachers,
+				schoolStartDate: new Date( schoolStartDate ).toDateString()
 			},
 			window.requestHeader
 		)
@@ -620,6 +623,14 @@ const AccountView = props => {
 					label="Birth-date" 
 					type="date"
 					onChange={e => dispatch(handleBirthDate( e.target.value ))}
+				/>,
+				<IconField 
+					Icon={CakeIcon} 
+					key={uniqid()}
+					defaultValue={schoolStartDate} 
+					label="School Starting Day" 
+					type="date"
+					onChange={e => dispatch(handleSchoolStartDate( e.target.value ))}
 				/>,
 				<Box key={uniqid()} sx={{ display: 'flex', alignItems: 'flex-end', margin: '30px 0 30px 0'}}>
 					<FemaleIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
@@ -1388,11 +1399,11 @@ const TeacherBox = props => {
 
 		props?.teachers?.forEach( teacher => {
 			const { firstName, lastName, middleName, subjects } = teacher;
-			const fullName = `${lastName}${firstName}${middleName}`;
+			const fullName = `${lastName}${firstName}${middleName}`.toLowerCase();
 
-			const isFirstNameMatched = firstName.includes( searchText );
-			const isLastNameMatched = lastName.includes( searchText );
-			const isMiddleNameMatched = middleName.includes( searchText );
+			const isFirstNameMatched = firstName.toLowerCase().includes( searchText );
+			const isLastNameMatched = lastName.toLowerCase().includes( searchText );
+			const isMiddleNameMatched = middleName.toLowerCase().includes( searchText );
 
 			const isFullNameMatched = fullName.includes( searchText );
 			const isSubjectMathced = checkIfSubjectMatched(teacher.subjects.map( subject => subject.name ), searchText);
@@ -1444,7 +1455,7 @@ const TeacherBox = props => {
 							label=""
 							variant="standard"
 							value={searchText}
-							onChange={e => setSearchText( e.target.value )}
+							onChange={e => setSearchText( e.target.value.toLowerCase() )}
 						/>
 					</Box>
 					<br/>
@@ -1528,7 +1539,7 @@ const ProfileView = props => {
 					<br/>
 					<Divider variant="middle"/>
 					<br/>
-					<div className="border shadow p-5">
+					<div className="border shadow p-5 text-capitalize">
 						<p><b className="text-uppercase text-[#656565] mr-4 text-ellipsis">first name:</b> { firstName }</p>
 						<p><b className="text-uppercase text-[#656565] mr-4 text-ellipsis">last name:</b> { lastName }</p>
 						<p><b className="text-uppercase text-[#656565] mr-4 text-ellipsis">middle name:</b> { middleName }</p>
@@ -1557,14 +1568,13 @@ const ProfileView = props => {
 									<p><b className="text-uppercase text-[#656565] mr-4 text-ellipsis">teachers:</b></p>
 									 { 
 									 	teachers?.map?.(({ firstName, lastName, middleName }) => (
-									 		<div key={uniqid()} className="m-1">
+									 		<div key={uniqid()} className="m-1 text-capitalize">
 										 		<Chip key={uniqid()} label={`${lastName} ${firstName} ${middleName ?? ''}`}/>
 									 		</div>
 									 	)) 
 									 }
 								</div>
 						}
-						
 					</div>
 					<br/>
 					<Divider variant="middle"/>

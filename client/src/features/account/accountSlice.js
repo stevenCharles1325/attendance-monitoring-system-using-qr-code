@@ -12,6 +12,7 @@ export const accountSlice = createSlice({
 		lrn: '',
 		email: '',
 		gender: '',
+		schoolStartDate: '',
 		section: null,
 		strand: null,
 		strandName: '',
@@ -41,6 +42,9 @@ export const accountSlice = createSlice({
 		},
 		handleBirthDate: (state, action) => {
 			state.birthDate = action.payload
+		},
+		handleSchoolStartDate: (state, action) => {
+			state.schoolStartDate = action.payload
 		},
 		handleSection: (state, action) => {
 			state.section = action.payload
@@ -82,6 +86,7 @@ export const accountSlice = createSlice({
 			state.middleName = '';
 			state.lastName = '';
 			state.birthDate = '';
+			state.schoolStartDate = '';
 			state.section = null;
 			state.strand = null;
 			state.strandName = '';
@@ -111,6 +116,7 @@ export const {
 	handleStrandName,
 	handleSectionName,
 	handleSectionParent,
+	handleSchoolStartDate,
 	handleSubjects,
 	handleUserType,
 	handleClear,

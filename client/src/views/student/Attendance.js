@@ -2,6 +2,7 @@ import React from 'react';
 import Axios from 'axios';
 import uniqid from 'uniqid';
 import Cookies from 'js-cookie';
+import DateDiff from 'date-diff';
 
 import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
@@ -14,7 +15,9 @@ import CircularProgress from '@mui/material/CircularProgress';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import CheckIcon from '@mui/icons-material/Check';
-
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import CloseIcon from '@mui/icons-material/Close';
+import PriorityHighIcon from '@mui/icons-material/PriorityHigh';
 
 const monthTable = [
 	'january',
@@ -45,7 +48,7 @@ const Attendance = props => {
 	const [month, setMonth] = React.useState( null );
 	const [year, setYear] = React.useState( null );
 	const [calDate, setCalDate] = React.useState( null );
-	const [days, setDays] = React.useState( null );
+	const [days, setDays] = React.useState( [] );
 	const [attendance, setAttendance] = React.useState( null );
 	const [userData, setUserData] = React.useState( null );
 
@@ -76,6 +79,12 @@ const Attendance = props => {
 		setCalDate( () => date.toDateString() );
 		getAttendance();
 		getUserDataFetching();
+
+		// const fetchAttendanceInterval = 1000; // 1sec
+		
+		// const fetchAttendance = setInterval(() => {
+		// 	getAttendance();
+		// }, fetchAttendanceInterval);
 	}, []);
 
 	React.useEffect(() => {
@@ -110,13 +119,13 @@ const Attendance = props => {
 
 		const nextDays = 7 - lastDayIndex - 1;
 
-		function getDate(){
+		function getDate( month, day, year ){
 			return ( callback ) => {
-				const thisDate = new Date( ...arguments ).toDateString();
+				const thisDate = new Date(`${monthTable[ month ].slice(0, 3)} ${day} ${year}`).toDateString();
 
 				for( let attdnc of attendance.attendance ){
 					if( thisDate === attdnc.date ){
-						return callback( attdnc );
+						return callback( attendance.attendance );
 					}
 				}
 			}
@@ -133,37 +142,53 @@ const Attendance = props => {
 			setAttendanceDateData({ userData, attendance: data });
 		}
 
-		const createDay = (dayNumber, notInMonth = false, isToday = false) => ( attendanceVal = 0 ) =>{
+		const createDay = ({ dayNumber, notInMonth = false, isToday = false, dayCategory }) => ( attendanceVal = 0 ) =>{
 			tempDays.push(
 				<Day
 					key={uniqid()}
 					notInMonth={notInMonth}
 					isToday={isToday}
 					dayNumber={dayNumber}
+					dayCategory={dayCategory}
 					attendanceVal={attendanceVal}
-					onClick={() => getDate(  year, month, dayNumber )( getDataOfDate )}
+					onClick={() => getDate( month, dayNumber, year )( getDataOfDate )}
 				/>
 			);
 		}
 
 		for (let prevDay = firstDayIndex; prevDay > 0; prevDay--) {
 			const dayNumber = prevLastDay - prevDay + 1; 
-			const attendanceVal = getDate(  year, month, dayNumber )( getAttendanceValue );
+			const attendanceVal = getDate( month, dayNumber, year )( getAttendanceValue );
 
-			createDay( dayNumber, true )( attendanceVal );
+			createDay({ dayNumber, notInMonth: true, dayCategory: 'past' })( attendanceVal );
 		}
 
 		for (let currDay = 1; currDay <= lastDay; currDay++) {
 			const isToday = currDay === new Date().getDate() && date.getMonth() === new Date().getMonth();
-			const attendanceVal = getDate(  year, month, currDay )( getAttendanceValue );
+			const attendanceVal = getDate( month, currDay, year )( getAttendanceValue );
 
-			createDay( currDay, false, isToday )( attendanceVal );
+			const today = new Date();
+			const schoolDateStart = new Date( userData.schoolStartDate );
+			const thisDate = new Date(`${monthTable[ month ].slice(0, 3)} ${currDay} ${year}`);
+
+			const dateDiff = new DateDiff( thisDate, today );
+			const schoolStartDiff = new DateDiff( thisDate, schoolDateStart );
+
+			const dayCategory = schoolStartDiff.days() >= 0
+				? dateDiff.days() > 0  
+					? 'future'
+					: dateDiff.days() <= -1
+						? 'past'
+						: 'current'
+				: null;
+
+			createDay({ dayNumber: currDay, notInMonth: false, isToday, dayCategory })( attendanceVal );
 		}
 
 		for (let nextDay = 1; nextDay <= nextDays; nextDay++) {
-			const attendanceVal = getDate(  year, month, nextDay )( getAttendanceValue );
+			const attendanceVal = getDate( month, nextDay, year )( getAttendanceValue );
 
-			createDay( nextDay, true )( attendanceVal );
+			createDay({ dayNumber: nextDay, notInMonth: true, dayCategory: 'future' })( attendanceVal );
 		}
 
 		setDays([ ...tempDays ]);
@@ -230,19 +255,61 @@ const Attendance = props => {
 const DayScheduleDialog = props => {
 	const theme = useTheme();
 	const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
-
+	const subjectIds = React.useMemo(() => props?.data?.attendance?.map?.( attd => attd.subjectId ), [props]);
 
 	return(
 		<Dialog
 			open={props?.open}
 			onClose={props?.onClose}
+			fullScreen={fullScreen}
 		>
-			{ console.log( props?.data ) }
+			<div className="w-[100%] max-w-[600px] min-w-[300px] h-[100%] max-h-[600px] min-h-[300px] p-5 d-flex flex-column justify-content-center align-items-center">
+				{
+					props?.data?.userData?.teachers?.map?.( teacher => {
+						if(subjectIds.includes( teacher.subject.id )){
+							return(
+								<div key={uniqid()} className="shadow p-2 m-2 bg-[#a4a4a4] text-[white] rounded w-full h-fit d-flex flex-column justify-content-between align-items-center">
+									<div className="w-100 d-flex flex-row justify-content-between align-items-center border-bottom">
+										<p className="col-11 text-truncate">{ teacher.subject.name }</p>
+										<div className="col-1 d-flex justify-content-center">
+											<CheckCircleOutlineIcon sx={{ color: 'green' }}/>
+										</div>
+									</div>
+									<div className="p-2 w-100">
+										<p><b>Teacher: </b>{ teacher.lastName + ' ' + teacher.firstName }</p>
+										<p><b>Start: </b>{ teacher.subject.start }</p>
+										<p><b>End: </b>{ teacher.subject.end }</p>
+									</div>
+								</div>
+							)
+						}
+						else{
+							return(
+								<div key={uniqid()} className="shadow p-2 m-2 bg-[#a4a4a4] text-[white] rounded w-full h-fit d-flex flex-column justify-content-between align-items-center">
+									<div className="w-100 d-flex flex-row justify-content-between align-items-center border-bottom">
+										<p className="col-11 text-truncate">{ teacher.subject.name }</p>
+									</div>
+									<div className="p-2 w-100">
+										<p><b>Teacher: </b>{ teacher.lastName + ' ' + teacher.firstName }</p>
+										<p><b>Start: </b>{ teacher.subject.start }</p>
+										<p><b>End: </b>{ teacher.subject.end }</p>
+									</div>
+								</div>
+							)
+						}
+					})
+				}
+				<div className="w-100 d-flex justify-content-end">				
+					<Button onClick={props?.onClose}>
+						close
+					</Button>
+				</div>				
+			</div>
 		</Dialog>
 	);
 }
 
-const Day = ({ dayNumber, notInMonth, isToday, attendanceVal, onClick }) => {
+const Day = ({ dayNumber, notInMonth, isToday, attendanceVal, dayCategory, onClick }) => {
 	return (
 		<div className={`position-relative attendance-box-day d-flex justify-content-center align-items-center`}>
 			<div className="position-absolute top-50 start-50 translate-middle z-10">
@@ -256,19 +323,33 @@ const Day = ({ dayNumber, notInMonth, isToday, attendanceVal, onClick }) => {
 							: isToday 
 								? 'rgba(0, 0, 0, 0.7)'
 								: 'rgba(0, 0, 0, 0.5)',
-						backgroundColor: isToday ? '#ddbdb8' : 'rgba(0, 0, 0, 0.09)',
+						backgroundColor: isToday ? 'rgba(221, 189, 184, 0.5)' : 'rgba(0, 0, 0, 0.04)',
 					}}
 					onClick={onClick}
 				>
 					{ dayNumber }
 				</IconButton>
 			</div>
-			<div className={`position-absolute w-100 h-100 d-flex ${ attendanceVal === 100 ? 'justify-content-start align-items-start' : 'justify-content-center align-items-center'}`}>
-				{
+			<div className={`position-absolute w-100 h-100 d-flex ${ dayCategory === 'current' ? 'justify-content-center align-items-center' : 'justify-content-start align-items-start'}`}>
+				{/*{
 					attendanceVal > 1
 						? attendanceVal === 100
 							? <CheckIcon/>
 							: <CircularProgress variant="determinate" value={attendanceVal}/>
+						: null
+				}*/}
+				{
+
+					dayCategory
+						? dayCategory === 'past'
+							? attendanceVal > 0 && attendanceVal < 100
+								? <PriorityHighIcon/>
+								: attendanceVal === 0
+									? <CloseIcon/>
+									: null
+							: dayCategory === 'future'
+								? null
+								: <CircularProgress variant="determinate" value={attendanceVal}/>
 						: null
 				}
 			</div>
