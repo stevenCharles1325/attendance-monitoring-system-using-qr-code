@@ -83,6 +83,127 @@ window.requestHeader = {
   }
 }
 
+window.STRANDS = {
+  'ABM': {
+    '1': [
+      'Introduction to the Philosophy of the Human Person',
+      'Contemporary Philippine Art from the Region',
+      'Understanding Culture, Society and Politics',
+      'Physical education and Health 3',
+      'Values education 3',
+      'Practical Research 2',
+      'English for Academic and Professional purpose',
+      'Fundamental of Accountancy, Business and Management 2',
+      'Business Mathematics',
+      'Business Finance',
+    ],
+    '2': [
+      'Media and Information Literacy',
+      'Physical Education and Health 4',
+      'Values education 4',
+      'Inquiries, Investigations and Immersion',
+      'Applied Economics',
+      'Business Ethics and Social Responsibility',
+      'Principle of Marketing',
+      'Work Immersion/Business Enterprise Simulation'
+    ]
+  },
+  'HUMSS': {
+    '1': [
+      'Introduction to the Philosophy of the Human Person',
+      'Contemporary Philippine Art from the Region',
+      'Understanding Culture, Society and Politics',
+      'Physical education and Health 3',
+      'Values education 3',
+      'Practical Research 2',
+      'English for Academic and Professional purpose',
+      'Discipline and Ideas in the Applied Social Science',
+      'Creative Writing',
+      'Introduction to World Religion and Belief System',
+    ],
+    '2': [
+      'Media and Information Literacy',
+      'Physical Education and Health 4',
+      'Values education 4',
+      'Inquiries, Investigations and Immersion',
+      'Trend, Networks and Critical Thinking in the 21st Century',
+      'Community Engagement Solidarity and Citizenship',
+      'Creative Non-Fiction: The Literary Essay',
+      'Culminating Activity',
+    ]
+  },
+  'STEM': {
+    '1': [
+      '21st Century Literature from the Philippines and the World',
+      'Contemporary Philippine Art from the Region',
+      'Media and Information Literacy',
+      'Understanding Culture, Society and Politics',
+      'Physical education and Health 3',
+      'Values education 3',
+      'English for Academic and Professional purpose',
+      'Pagsulat sa Filipino sa Piling Larangan (Akademiko)',
+      'General Physics 1',
+      'General Biology',
+    ],
+    '2': [
+      'Physical Education and Health 4',
+      'Values education 4',
+      'Entrepreneurship',
+      'Practical Research 2',
+      'Inquiries, Investigations and Immersion',
+      'General Physics 2',
+      'General Chemistry 2',
+      'General Biology 2',
+      'Research',
+    ]
+  },
+  'HE': {
+    '1': [
+      'Contemporary Philippine Art from the Region',
+      'Introduction to the Philosophy of the Human Person',
+      'Understanding Culture, Society and Politics',
+      'Physical Education and Health 3',
+      'Values education 3',
+      'Media and Information Literacy',
+      'English for Academic and Professional purpose',
+      'Practical Research 2',
+      'Bread and Pastry Production 3',
+      'Food and Beverages Production 3',
+    ],
+    '2': [
+      'Physical Education and Health 4',
+      'Values education 4',
+      'Inquiries, Investigations and Immersion',
+      'Bread and Pastry Production 4',
+      'Food and Beverages Production 4',
+      'Work Immersion',
+    ]
+  },
+  'ICT': {
+      '1': [
+        'Contemporary Philippine Art from the Region',
+        'Introduction to the Philosophy of the Human Person',
+        'Understanding Culture, Society and Politics',
+        'Physical Education and Health 3',
+        'Values education 3',
+        'Media and Information Literacy',
+        'English for Academic and Professional purpose',
+        'Practical Research 2',
+        'Computer Programing 3',
+        'Animation 3',
+      ],
+      '2': [
+        'Physical Education and Health 4',
+        'Values education 4',
+        'Inquiries, Investigations and Immersion',
+        'Computer Programing 4',
+        'Animation 4',
+        'Work Immersion',
+      ]
+  }
+};
+
+
 window.availableStrandNames = {
   STEM: 'science, technology, engineering and mathematics',
   HE: 'home economics strand',
@@ -122,7 +243,7 @@ function App() {
       onClick: () => handleNavigation('/app/sysadmin/dashboard')
     },
     {
-      text: 'Account',
+      text: 'Manage Accounts',
       icon: <AccountBox/>,
       collapsable: true,
       subList: [

@@ -876,19 +876,23 @@ const AccountView = props => {
 				</div>*/}
 				
 				<div className="col-5 d-flex justify-content-end">
-					<ButtonGroup  size="small" sx={{ color: 'black' }}>
-						<Button onClick={() => handleUserAddFormType( props?.userType )(setOpenDialogForm( true ))}>
-							Add { props?.userType }
-						</Button>
+					{
+						props?.buttonsOff
+							? null
+							: <ButtonGroup  size="small" sx={{ color: 'black' }}>
+								<Button onClick={() => handleUserAddFormType( props?.userType )(setOpenDialogForm( true ))}>
+									Add { props?.userType }
+								</Button>
 
-						<Button onClick={() => handleUserAddFormType( 'section' )(setOpenDialogForm( true ))}>
-							Add Section
-						</Button>
+								<Button onClick={() => handleUserAddFormType( 'section' )(setOpenDialogForm( true ))}>
+									Add Section
+								</Button>
 
-						<Button onClick={() => handleUserAddFormType( 'strand' )(setOpenDialogForm( true ))}>
-							Add Strand
-						</Button>
-					</ButtonGroup>
+								<Button onClick={() => handleUserAddFormType( 'strand' )(setOpenDialogForm( true ))}>
+									Add Strand
+								</Button>
+							</ButtonGroup>
+					}
 					{/*{
 						props?.addUserOn
 							? <div className="account-view-add-user" onClick={() => handleUserAddFormType( props?.userType )(setOpenDialogForm( true ))}>

@@ -18,10 +18,11 @@ const Gate = () => {
 			</div>
 			<div 
 				style={{ width: '60%', height: '100%' }} 
-				className="py-5 gate-decor d-flex justify-content-center align-items-start app-text-color text-center"
+				className="py-5 gate-decor d-flex justify-content-center align-items-center app-text-color text-center"
 			>
-				<div style={{ height: 'fit-content'}}>
+				<div style={{ height: 'fit-content' }} className="d-flex flex-column justify-content-center align-items-center">
 					<img width="200px" height="200px" src="/images/logo/cctLogo_new.png" alt="CCT image"/>
+					<br/>
 					<Typography variant="h4" component="div">
 						City College of Tagaytay
 					</Typography>

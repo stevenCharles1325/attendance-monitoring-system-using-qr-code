@@ -94,6 +94,7 @@ const Attendance = props => {
 	const renderDate = React.useCallback(() => {
 		if( !month || !year || !attendance || !userData ) return;
 
+		const today = new Date();
 		const tempDays = [];
 		date.setDate(1);
 
@@ -125,16 +126,24 @@ const Attendance = props => {
 
 				for( let attdnc of attendance.attendance ){
 					if( thisDate === attdnc.date ){
-						return callback( attendance.attendance );
+						return callback( attendance.attendance, month, day, year );
 					}
 				}
 			}
 		}
 
-		function getAttendanceValue(){
+		function getAttendanceValue( _, month, day, year ){
+			let attendanceNumber = 0;
 			const numberOfSubjects = userData.teachers.length;
-			const attendanceVal = (100 / numberOfSubjects) * attendance.attendance.length;
+			const thisDate = new Date(`${monthTable[ month ].slice(0, 3)} ${day} ${year}`).toDateString();
 
+			for( let att of attendance.attendance ){
+				if( thisDate === att.date ){
+					attendanceNumber += 1;
+				}
+			}
+
+			const attendanceVal = (100 / numberOfSubjects) * attendanceNumber;
 			return attendanceVal;
 		}  
 
@@ -160,14 +169,13 @@ const Attendance = props => {
 			const dayNumber = prevLastDay - prevDay + 1; 
 			const attendanceVal = getDate( month, dayNumber, year )( getAttendanceValue );
 
-			createDay({ dayNumber, notInMonth: true, dayCategory: 'past' })( attendanceVal );
+			createDay({ dayNumber, notInMonth: true, dayCategory: null })( attendanceVal );
 		}
 
 		for (let currDay = 1; currDay <= lastDay; currDay++) {
 			const isToday = currDay === new Date().getDate() && date.getMonth() === new Date().getMonth();
 			const attendanceVal = getDate( month, currDay, year )( getAttendanceValue );
 
-			const today = new Date();
 			const schoolDateStart = new Date( userData.schoolStartDate );
 			const thisDate = new Date(`${monthTable[ month ].slice(0, 3)} ${currDay} ${year}`);
 
@@ -188,7 +196,7 @@ const Attendance = props => {
 		for (let nextDay = 1; nextDay <= nextDays; nextDay++) {
 			const attendanceVal = getDate( month, nextDay, year )( getAttendanceValue );
 
-			createDay({ dayNumber: nextDay, notInMonth: true, dayCategory: 'future' })( attendanceVal );
+			createDay({ dayNumber: nextDay, notInMonth: true, dayCategory: null })( attendanceVal );
 		}
 
 		setDays([ ...tempDays ]);
@@ -339,7 +347,6 @@ const Day = ({ dayNumber, notInMonth, isToday, attendanceVal, dayCategory, onCli
 						: null
 				}*/}
 				{
-
 					dayCategory
 						? dayCategory === 'past'
 							? attendanceVal > 0 && attendanceVal < 100

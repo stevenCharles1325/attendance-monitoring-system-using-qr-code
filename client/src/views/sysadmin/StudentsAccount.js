@@ -42,6 +42,7 @@ const StudentsAccount = props => {
 		<div className="students-account d-flex justify-content-center align-items-center">
 			<AccountView 
 				statusSwitchOn
+				buttonsOff
 				userType="student"
 				header={['Student No', 'First name', 'Middle Name', 'Last name', 'Section', 'Strand', 'status']}
 				renderItemsKey={['studentNo', 'firstName', 'middleName', 'lastName', 'section', 'strand', 'status']}

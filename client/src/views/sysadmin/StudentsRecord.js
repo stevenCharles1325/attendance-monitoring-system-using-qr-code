@@ -41,11 +41,8 @@ const StudentsRecord = props => {
 	return(
 		<div className="students-account d-flex justify-content-center align-items-center">
 			<AccountView 
-				addUserOn
-				addStrandOn
-				addSectionOn
 				statusSwitchOn
-				semSettingsOn
+				buttonsOff
 				userType="student"
 				header={['Student No', 'First name', 'Middle Name', 'Last name', 'Section', 'Strand']}
 				renderItemsKey={['studentNo', 'firstName', 'middleName', 'lastName', 'section', 'strand']}

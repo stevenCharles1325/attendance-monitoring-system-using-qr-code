@@ -30,6 +30,8 @@ import AccountCircle from '@mui/icons-material/AccountCircle';
 
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
+import SettingsIcon from '@mui/icons-material/Settings';
+
 
 
 const QamsMenu = props => {
@@ -213,7 +215,7 @@ const QamsMenu = props => {
 							</div>
 							<div style={{ width: '100%' }} className="mx-3 d-flex justify-content-end">
 								<IconButton onClick={handleAccMenuClick}>
-									<PowerSettingsNew sx={{ color: 'white' }}/>
+									<SettingsIcon sx={{ color: 'white' }}/>
 								</IconButton>
 							</div>
 						</div>
@@ -232,7 +234,7 @@ const QamsMenu = props => {
 				}}
 			>
 				<MenuItem onClick={handleOpenProfile}>Profile</MenuItem>
-				<MenuItem onClick={handleLogOut}>Logout</MenuItem>
+				<MenuItem onClick={handleLogOut}>Sign-out</MenuItem>
 			</Menu>
 		</div>
 	);	

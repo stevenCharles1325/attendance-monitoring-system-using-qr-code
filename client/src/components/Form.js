@@ -25,6 +25,7 @@ import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
+import Avatar from '@mui/material/Avatar';
 
 import { styled } from '@mui/styles';
 
@@ -293,14 +294,14 @@ const SigninForm = props => {
 			<div 
 				style={{ 
 					width: 'fit-content', 
-					borderLeft: '4px solid #D9B5B5',
 				}} 
-				className="text-center px-2"
+				className="text-center"
 			>
-				<Typography variant="h2" color="var(--text-color)" component="div">
-					Sign-in
-				</Typography>
+				<Avatar src="/images/logo/cct-shs-logo.jpg" alt="" sx={{ width: '150px', height: '150px' }}/>
 			</div>
+			<Typography variant="h5" color="var(--text-color)" component="div" className="text-uppercase tracking-[1px]">
+				Sign-in
+			</Typography>
 			<div 
 				style={{ height: '20%', color: 'white' }} 
 				className="d-flex flex-column justify-content-between align-items-center"
@@ -335,7 +336,7 @@ const SigninForm = props => {
 					Sign-in
 				</Button>
 			</div>		
-			<Button onClick={() => props.setFormType('verification')}>forgot password?</Button>
+			{/*<Button onClick={() => props.setFormType('verification')}>forgot password?</Button>*/}
 			{/*<div className="text-center">	
 				<Typography variant="caption" color="inherit" component="div">
 					Forgot password?
@@ -422,14 +423,14 @@ const SignupForm = props => {
 			<div 
 				style={{ 
 					width: 'fit-content', 
-					borderLeft: '4px solid #D9B5B5',
 				}} 
 				className="text-center px-2"
 			>
-				<Typography variant="h2" color="var(--text-color)" component="div">
-					Sign-up
-				</Typography>
+				<Avatar src="/images/logo/cct-shs-logo.jpg" alt="" sx={{ width: '100px', height: '100px' }}/>
 			</div>
+			<Typography variant="h5" color="var(--text-color)" component="div" className="text-uppercase tracking-[1px]">
+				Sign-up
+			</Typography>
 			<div className="container-fluid">
 				<SignUpSteps activeStep={activeStep}/>
 			</div>
