@@ -187,7 +187,7 @@ const Dashboard = props => {
 			case 'section':
 				setFormTitle('Add a Section');
 				setFormMessage('Please fill up the form to add a new Section');
-				// setFormContent(<SectionForm/>);
+				setFormContent(<SectionForm close={() => setFormContent( null )}/>);
 				break;
 
 			default:
@@ -772,6 +772,66 @@ const SubjectBox = props => {
 		</div>
 	);
 } 
+
+const SectionForm = props => {
+	const dispatch = useDispatch();
+	const [section, setSection] = React.useState({
+		name: null,
+		parent: null
+	});
+	const [strands, setStrands] = React.useState( [] );
+	const { enqueueSnackbar } = useSnackbar();
+
+	const handleAddSection = () => {
+		Axios.post(`${window.API_BASE_ADDRESS}/master/add/type/section`,  
+			{ ...section },
+			window.requestHeader
+		)
+		.then( res => {
+			enqueueSnackbar( res.data.message, { variant: 'success', preventDuplicate: true });
+			props?.close?.();
+		})
+		.catch( err => {
+			enqueueSnackbar( err?.response?.data?.message ?? 'Please try again!', { variant: 'error', preventDuplicate: true });
+		});
+	}
+
+	const getStrand = async () => {
+		Axios.get(`${window.API_BASE_ADDRESS}/master/get-items/type/strand`)
+		.then( res => {
+			setStrands(() => [ ...res.data ]);			
+		})
+		.catch( err => {
+			console.error( err );
+		});
+	}
+
+	React.useEffect(() => {
+		getStrand();
+	}, []);
+
+	return(
+		<>
+			<IconField 
+				label="Section name"
+				Icon={DriveFileRenameOutlineIcon} 
+				onChange={e => setSection(section => ({ name: e.target.value, parent: section.parent }))}
+			/>
+			<IconAutocomplete 
+				list={strands?.map( strand => strand.name )}
+				Icon={StoreIcon}
+				label="Member of Strand"
+				placeholder="Strand"
+				onChange={(_, newValue) => setSection(section => ({ name: section.name, parent: newValue }))}
+			/>
+			<div className="w-full d-flex justify-content-center align-items-center">
+				<Button variant="outlined" onClick={handleAddSection}>
+					Add Section
+				</Button>
+			</div>
+		</>
+	);
+}
 
 const Subject = ({ subject, onChange }) => {
 	const [id, setId] = React.useState( uniqid() );
