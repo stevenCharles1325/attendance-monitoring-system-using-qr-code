@@ -30,6 +30,7 @@ import {
 
 import Calendar from 'react-calendar';
 import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete';
+import ButtonGroup from '@mui/material/ButtonGroup';
 import Chip from '@mui/material/Chip';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
@@ -778,15 +779,28 @@ const Subject = ({ subject, onChange }) => {
 	const [end, setEnd] = React.useState( '18:00' );
 	const [isSelected, setIsSelected] = React.useState( false );
 
+	const arr = Array( 6 ).fill( 0 );
+	const generateDays = (arr, index, isReset) => {
+		arr[ index ] = isReset ? 0 : 1;
+
+		return [ ...arr ];
+	}
+	const [days, setDays] = React.useState(generateDays( arr, 0 ));
+
 	const data = React.useMemo(() => ({
 		id,
 		name: subject,
+		days: days,
 		start,
 		end,
-	}), [subject, start, end]);
+	}), [subject, start, end, days]);
 
 	const handleOnClick = doSelect => {
 		setIsSelected( doSelect );
+	}
+
+	const handleDay = index => {
+		setDays(days => generateDays(days, index, days[ index ]));
 	}
 
 	React.useEffect(() => {
@@ -797,12 +811,21 @@ const Subject = ({ subject, onChange }) => {
 		<div 
 			className={`col-12 border ${isSelected ? 'border-success' : null} d-flex justify-content-between align-items-center p-3 my-2 rounded`}
 		>
-			<div className="col-6">
+			<div className={`col-7 ${isSelected ? 'black' : 'text-[rgba(0, 0, 0, 0.5)'}]`}>
 				<p>
 					{ subject }
 				</p>
+				<br/>
+				<ButtonGroup size="small" disabled={!isSelected}>
+					<Button color={days[ 0 ] === 1 ? 'success' : 'primary'} onClick={() => handleDay( 0 )}>Mon</Button>
+					<Button color={days[ 1 ] === 1 ? 'success' : 'primary'} onClick={() => handleDay( 1 )}>Tue</Button>
+					<Button color={days[ 2 ] === 1 ? 'success' : 'primary'} onClick={() => handleDay( 2 )}>Wed</Button>
+					<Button color={days[ 3 ] === 1 ? 'success' : 'primary'} onClick={() => handleDay( 3 )}>Thu</Button>
+					<Button color={days[ 4 ] === 1 ? 'success' : 'primary'} onClick={() => handleDay( 4 )}>Fri</Button>
+					<Button color={days[ 5 ] === 1 ? 'success' : 'primary'} onClick={() => handleDay( 5 )}>Sat</Button>
+				</ButtonGroup>
 			</div>
-			<div className="col-4">
+			<div className="col-3">
 				<div className="mb-3">
 					<TextField 
 						disabled={!isSelected}

@@ -44,9 +44,12 @@ import ChangePassword from './views/ChangePasswordForm';
 import Attendance from './views/student/Attendance';
 import DashboardStudent from './views/student/Dashboard';
 
-// Students components
+// Teacher components
 import DashboardTeacher from './views/instructor/Dashboard';
+import Schedule from './views/instructor/Schedule';
+import StudentsAttendance from './views/instructor/StudentsAttendance';
 
+// Page component
 import PageLoading from './components/PageLoading';
 
 // Root will always be excluded. Index 1 = 0
@@ -441,6 +444,8 @@ function App() {
             <Route path="/app/teacher/dashboard" element={<DashboardTeacher/>}/>
             <Route path="/app/teacher/account/profile" element={<Profile userType="teacher"/>}/>
             <Route path="/app/teacher/account/change-password" element={<ChangePassword/>}/>
+            <Route path="/app/teacher/schedule" element={<Schedule/>}/>
+            <Route path="/app/teacher/students-attendance-record" element={<StudentsAttendance/>}/>
           </Routes>
         </Menu>      
       </Authentication>

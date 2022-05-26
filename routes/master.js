@@ -89,7 +89,6 @@ router.get('/check-semester', async ( req, res ) => {
   Semester.findOne({}, ( err, doc ) => {
     if( err ) return res.sendStatus( 500 );
 
-    console.log( doc );
     if( doc ){
       return res.sendStatus( 200 );
     }
@@ -135,7 +134,6 @@ router.get('/user-forgot-password/get-code/id/:id', async ( req, res ) => {
         return res.status( 200 ).json({ message: 'A confirmation code has been sent to your email address' });
       }
       catch( err ){
-        console.log( err );
         return res.sendStatus( 500 );
       }
     }
@@ -151,7 +149,6 @@ router.get('/user-forgot-password/get-code/id/:id', async ( req, res ) => {
             return res.status( 200 ).json({ message: 'A confirmation code has been sent to your email address' });
           }
           catch( err ){
-            console.log( err );
             return res.sendStatus( 500 );
           }
         }
@@ -588,7 +585,6 @@ router.post('/add/type/:type', authentication, async ( req, res ) => {
     case 'teacher':
       Teacher.create({ ...req.body }, err => {
         if( err ){
-          console.log( err );
           return res.sendStatus( 500 );
         }
 
@@ -677,7 +673,7 @@ router.put('/student/update-attendance/id/:id/teacherId/:teacherId', async ( req
                 ? 'present'
                 : 'error';
 
-        return [ teacher.subject.id , remark ];
+        return [ teacher.teacherId, teacher.subject.id , remark ];
       }
     }
 
@@ -690,6 +686,14 @@ router.put('/student/update-attendance/id/:id/teacherId/:teacherId', async ( req
         return true;
       }
     }
+  }
+
+  const getFullName = ({ firstName, middleName, lastName }) => {
+    const isMiddleNameExist = !!middleName.length;
+
+    return isMiddleNameExist
+      ? `${lastName}, ${firstName} ${middleName}`
+      : `${lastName}, ${firstName}`;
   }
 
   Student.findOne({ studentNo: id }, async ( err, doc ) => {
@@ -709,8 +713,14 @@ router.put('/student/update-attendance/id/:id/teacherId/:teacherId', async ( req
           const dateToday = new Date().toDateString();
           const timeToday = new Date().toTimeString();
 
-          const [ subjectId, remark ] = await getRemarkAndSubjectID( timeToday, doc.teachers );
-          const attendance = { subjectId, date: dateToday, remark };
+          const [ teacherId, subjectId, remark ] = await getRemarkAndSubjectID( timeToday, doc.teachers );
+          const attendance = { 
+            fullName: getFullName( doc ),
+            teacherId, 
+            subjectId, 
+            date: dateToday, 
+            remark 
+          };
 
           if( !remark ) 
             return res
@@ -778,5 +788,47 @@ router.put('/student/update-attendance/id/:id/teacherId/:teacherId', async ( req
   });
 });
 
+
+router.get('/teacher/:teacherDBID/students/attendance', authentication, async ( req, res ) => {
+  const { teacherDBID } = req.params;
+
+  try{
+    const allAttendance = await Attendance.find()
+      .$where(function() {
+        return this.attendance.length > 0;
+      });
+
+    const attendance = [];
+
+    allAttendance.forEach( att => {
+      att.forEach( data => {
+        if( data.teacherId === teacherDBID ){
+          attendance.push( data );
+        }
+      });
+    });
+
+    return res.json( attendance );
+  }
+  catch( err ){
+    throw err;
+    return res.sendStatus( 500 );
+  }
+});
+
+router.get('/teacher/:id', async ( req, res ) => {
+  const { id } = req.params;
+
+  Teacher.findOne({ employeeNo: id }, ( err, doc ) => {
+    if( err ) return res.sendStatus( 500 );
+
+    if( doc ){
+      return res.json({ id: doc._id });
+    }
+    else{
+      return res.sendStatus( 404 );      
+    }
+  });
+});
 
 module.exports = router;
