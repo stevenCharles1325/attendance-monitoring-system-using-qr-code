@@ -7,11 +7,8 @@ import Typography from '@mui/material/Typography';
 const Header = props => {
 	return(
 		<>
-			<div className="px-5 d-flex justify-content-between align-items-center">
-				<Clock/>
-			</div>
-			<div style={{ width: '100%' }} className="p-0 m-0">
-				<Divider textAlign="right">
+			<div style={{ width: '100%' }} className="p-0 my-4">
+				<Divider textAlign="left">
 					<Typography variant="h6" sx={{ color: 'var(--text-color)' }}>
 						{ props.title }
 					</Typography>
