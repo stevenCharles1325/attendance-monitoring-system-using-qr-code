@@ -35,6 +35,7 @@ import StudentsAccount from './views/sysadmin/StudentsAccount';
 import TeachersAccount from './views/sysadmin/TeachersAccount';
 import StudentsRecord from './views/sysadmin/StudentsRecord';
 import TeachersRecord from './views/sysadmin/TeachersRecord';
+import AttendanceRecord from './views/sysadmin/AttendanceRecord';
 
 // Students and Teachers merged components
 import Profile from './views/Profile';
@@ -279,22 +280,8 @@ function App() {
         },
         {
           text: 'Attendance Record',
-          icon: <ListAlt/>
-        }
-      ]
-    },
-    {
-      text: 'Reports',
-      icon: <Assessment/>,
-      collapsable: true,
-      subList: [
-        {
-          text: 'Graph',
-          icon: <SsidChart/>
-        },
-        {
-          text: 'School Form 2',
-          icon: <Feed/>
+          icon: <ListAlt/>,
+          onClick: () => handleNavigation('/app/sysadmin/attendance-record')
         }
       ]
     }
@@ -433,6 +420,7 @@ function App() {
             <Route path="/app/sysadmin/students-account" element={<StudentsAccount/>}/>
             <Route path="/app/sysadmin/teachers-account" element={<TeachersAccount/>}/>
             <Route path="/app/sysadmin/teachers-record" element={<TeachersRecord/>}/>
+            <Route path="/app/sysadmin/attendance-record" element={<AttendanceRecord/>}/>
             
             {/* Students' routes */}
             <Route path="/app/student/dashboard" element={<DashboardStudent/>}/>

@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
+const remarkSchema = new Schema({
+	category: { type: Number, default: 0 },
+	content: { type: String, default: null }
+});
 
 const studentRecordScheme = new Schema({
 	studentNo: { type: String, required: true },
@@ -16,7 +20,10 @@ const studentRecordScheme = new Schema({
 	section: { type: [ String ], required: true },
 	strand: { type: [ String ], required: true },
 	state: { type: String, default: 'unverified' },
-	status: { type: String, default: 'deactivated' }
+	status: { type: String, default: 'deactivated' },
+	remark: remarkSchema,
+	currentAttendanceID: { type: String, default: null },
+	currentSubject: { type: String, default: null },
 });
 
 

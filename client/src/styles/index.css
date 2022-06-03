@@ -29,6 +29,11 @@ body{
 	color: var(--text-color);
 }
 
+
+.d-unset{
+	display: unset !important;
+}
+
 .App, .gate, .form,
 .form-sign-in, .form-sign-up,
 .sysadmin-dashboard, .student-dashboard,

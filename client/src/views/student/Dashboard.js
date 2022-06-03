@@ -36,6 +36,20 @@ const Dashboard = props => {
 		});
 	}
 
+	// const handleTimeout = () => {
+	// 	Axios.put(
+	// 		`${window.API_BASE_ADDRESS}/master/time-out/attendanceId/${userData?.currentAttendanceID}/student/${Cookies.get('userId')}`, 
+	// 		null,
+	// 		window.requestHeader
+	// 	)
+	// 	.then(() => {
+	// 		handleUserDataFetching();
+	// 	})
+	// 	.catch( err => {
+	// 		console.error( err );
+	// 	});
+	// }
+
 	React.useEffect(() => handleUserDataFetching(), []);
 
 	return(
@@ -48,27 +62,40 @@ const Dashboard = props => {
 						<QR.Generator value={userData?.studentNo}/>	
 					</div>
 					<div 
-						style={{ height: 'fit-content' }} 
-						className="col-md-6 p-4"
+						style={{ height: '300px' }} 
+						className="col-md-6 p-4 border d-flex flex-column justify-content-around"
 					>
-						<h2 className="mb-4">QR CODE</h2>
+						<h2 className="mb-4"><b>QR CODE</b></h2>
+						<Divider/>
+						<br/>
 						<p className="m-0 text-capitalize">{ userData?.lastName + ',' } { userData?.firstName } { userData?.middleName?.[0] ? userData?.middleName?.[0] + '.' : '' }</p>
 						<p>{ userData?.studentNo }</p>
-
-						<Stack direction="row" spacing={1}>
-							<Chip icon={<StoreIcon fontSize="small"/>} label={userData?.strand[ 0 ]}/>
-							<Chip icon={<CreditCardIcon fontSize="small"/>} label={userData?.section[ 0 ]}/>
-						</Stack>
+						<div className="my-2">
+							<Stack direction="row" spacing={1}>
+								<Chip icon={<StoreIcon fontSize="small"/>} label={userData?.strand[ 0 ]}/>
+								<Chip icon={<CreditCardIcon fontSize="small"/>} label={userData?.section[ 0 ]}/>
+							</Stack>
+						</div>
+						<Divider/>
+						<div className="col-12 d-flex flex-column justify-content-center align-items-center">
+							<div className="w-full">
+								<p>Current Subject:</p>
+							</div>
+							{
+								userData?.currentSubject
+									? <Chip label={userData?.currentSubject}/>
+									: null
+							}
+						</div>
 					</div>
 				</div>
-				<div className="student-dashboard-sched-box my-3 d-flex flex-column justify-content-center align-items-center border">
+				{/*<div className="student-dashboard-sched-box my-3 d-flex flex-column justify-content-center align-items-center border">
 					<div className="col-12 py-2 text-center border-bottom">
 						<h4>{ userData?.section[ 0 ] } Schedule</h4>
 					</div>
 					<div className="flex-grow-1 col-12">
-						{/*SCHEDULE GOES HERE!*/}
 					</div>
-				</div>
+				</div>*/}
 			</div>
 		</div>
 	);

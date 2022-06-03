@@ -17,6 +17,8 @@ import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 
 import AddCardIcon from '@mui/icons-material/AddCard';
 import AddBusinessIcon from '@mui/icons-material/AddBusiness';
@@ -28,12 +30,14 @@ import { useSnackbar } from 'notistack';
 
 const Dashboard = props => {
 	const [userData, setUserData] = React.useState( null );
-	const [qrData, setQrData] = React.useState( null );
+	const [qrData, setQrData] = React.useState( '' );
+	const [isTimein, setIsTimein] = React.useState( true );
 	const [isCameraDenied, setIsCameraDenied] = React.useState( null );
 
 	const { enqueueSnackbar } = useSnackbar();
 
-	const handleAttendancing = async studentNo => {
+	const handleTimingin = (_, isTimingIn) => setIsTimein( isTimingIn );
+	const handleTimein = async studentNo => {
 		Axios.put(
 			`${window.API_BASE_ADDRESS}/master/student/update-attendance/id/${studentNo}/teacherId/${Cookies.get('userId')}`,
 			window.requestHeader
@@ -59,13 +63,27 @@ const Dashboard = props => {
 			setQrData( null );
 		});
 	}
-	
-	const memoizedAttendancing = React.useCallback(() => {
-		if( qrData )
-			handleAttendancing( qrData );
-	}, [qrData]);
 
-	const debouncedAttendancing = debounce(() => memoizedAttendancing(), 1000);
+	const handleTimeout = async studentNo => {
+		Axios.put(
+			`${window.API_BASE_ADDRESS}/master/time-out/student/${studentNo}`, 
+			null,
+			window.requestHeader
+		)
+		.then(() => {
+			enqueueSnackbar( 'Successfully time-out student', { variant: 'error' });
+		})
+		.catch( err => {
+			console.error( err );
+		});
+	}
+	
+	// const memoizedAttendancing = React.useCallback(() => {
+	// 	if( qrData )
+	// 		handleAttendancing( qrData );
+	// }, [qrData]);
+
+	// const debouncedAttendancing = debounce(() => memoizedAttendancing(), 1000);
 
 	const handleUserDataFetching = () => {
 		Axios.get(
@@ -93,18 +111,27 @@ const Dashboard = props => {
 		handleUserDataFetching()
 	}, []);
 
-	React.useEffect(() => debouncedAttendancing(), [qrData]);
+	React.useEffect(() => {
+		if( qrData ){
+			if( isTimein ){
+				handleTimein( qrData );
+			}		
+			else{
+				handleTimeout( qrData );
+			}
+		}
+	}, [isTimein, qrData]);
 
 	return(
 		<div className="student-dashboard row d-flex flex-column">
 			<QamsHeader title="Dashboard"/>
 			<div className="flex-grow-1 d-flex flex-column justify-content-around align-items-center">
-				<div className="student-dashboard-info-box row">
+				<div className="student-dashboard-info-box row shadow">
 					<div 
 						style={{
 							height: '300px',
 						}} 
-						className="col-md-6 p-3 d-flex justify-content-center align-items-center"
+						className="border col-md-6 p-3 d-flex justify-content-center align-items-center"
 					>
 						{/*<QRCode
 							qrStyle="dots"
@@ -126,23 +153,49 @@ const Dashboard = props => {
 						style={{ height: '200px', maxHeight: 'fit-content' }} 
 						className="col-md-6 p-4"
 					>
-						<h2 className="mb-4">QR CODE</h2>
-						<p className="m-0 text-capitalize">{ userData?.lastName + ',' } { userData?.firstName } { userData?.middleName?.[0] ? userData?.middleName?.[0] + '.' : '' }</p>
+						<h2 className="mb-4">QR SCANNER</h2>
+						<Divider/>
+						<br/>
+						<p className="m-0 text-capitalize font-bold">{ userData?.lastName + ',' } { userData?.firstName } { userData?.middleName?.[0] ? userData?.middleName?.[0] + '.' : '' }</p>
 						<p>{ userData?.studentNo }</p>
-
-						<Stack direction="row" spacing={1}>
-							<Chip icon={<StoreIcon fontSize="small"/>} label={userData?.strand[ 0 ]}/>
-							<Chip icon={<CreditCardIcon fontSize="small"/>} label={userData?.section[ 0 ]}/>
-						</Stack>
+						<div className="my-2">
+							<Stack direction="row" spacing={1}>
+								<Chip icon={<StoreIcon fontSize="small"/>} label={userData?.strand[ 0 ]}/>
+								<Chip icon={<CreditCardIcon fontSize="small"/>} label={userData?.section[ 0 ]}/>
+							</Stack>
+						</div>
+						<div className="col-12 d-flex flex-column justify-content-center align-items-center">
+							{
+								userData?.currentSubject
+									? <Chip label={userData?.currentSubject}/>
+									: null
+							}
+							<br/>
+							<div className="w-full d-flex justify-content-around align-items-center">
+								<ToggleButtonGroup
+							      value={isTimein}
+							      exclusive
+							      onChange={handleTimingin}
+							      aria-label="time-in toggle"
+							    >
+							      <ToggleButton value={true} aria-label="Time in">
+							      	Time in
+							      </ToggleButton>
+							      <ToggleButton value={false} aria-label="Time out">
+							        Time out
+							      </ToggleButton>
+							    </ToggleButtonGroup>
+							</div>
+						</div>
 					</div>
 				</div>
-				<div className="student-dashboard-sched-box my-3 d-flex flex-column justify-content-center align-items-center border">
+				{/*<div className="student-dashboard-sched-box my-3 d-flex flex-column justify-content-center align-items-center border">
 					<div className="col-12 py-2 text-center border-bottom">
 						<h4>{ userData?.section[ 0 ] } Schedule</h4>
 					</div>
 					<div className="flex-grow-1 col-12">
 					</div>
-				</div>
+				</div>*/}
 			</div>
 		</div>
 	);

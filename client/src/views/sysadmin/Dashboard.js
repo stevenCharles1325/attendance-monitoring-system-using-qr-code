@@ -658,7 +658,7 @@ const PersonForm = props => {
 				<IconAutocomplete 
 					defaultValue={props?.formType === 'student' ? strand : strand ?? []}
 					multiple={props?.formType !== 'student' ? true : false}
-					list={memoizedStrandGenerator()}
+					list={Object.keys(window.STRANDS)}
 					Icon={StoreIcon}
 					label="Strand"
 					placeholder="Add strand"
@@ -818,7 +818,7 @@ const SectionForm = props => {
 				onChange={e => setSection(section => ({ name: e.target.value, parent: section.parent }))}
 			/>
 			<IconAutocomplete 
-				list={strands?.map( strand => strand.name )}
+				list={Object.keys(window.STRANDS)}
 				Icon={StoreIcon}
 				label="Member of Strand"
 				placeholder="Strand"
@@ -1024,9 +1024,9 @@ const TeacherBox = props => {
 		props?.onChange?.( selectedTeacherWithProperSubjects ); 
 	}, [selectedTeachers]);
 
-	const debouncedOnChangeHandler = debounce(memoizedOnChangeHandler, 500);
+	// const debouncedOnChangeHandler = debounce(memoizedOnChangeHandler, 50);
 
-	React.useEffect(() => debouncedOnChangeHandler(), [selectedTeachers]);
+	React.useEffect(() => memoizedOnChangeHandler(), [selectedTeachers]);
 	// React.useEffect(() => console.log( selectedTeachers ), [selectedTeachers]);
 
 	return(

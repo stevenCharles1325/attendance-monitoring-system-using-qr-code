@@ -4,8 +4,7 @@ const { Schema } = mongoose;
 
 const strandsScheme = new Schema({
 	name: { type: String, required: true },
-	sections: { type: [ String ], default: [] },
-	subjects: { type: [ String ], required: true }
+	sections: { type: [ String ], default: [] }
 });
 
 

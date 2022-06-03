@@ -21,7 +21,6 @@ var Student = require('../models/StudentRecord');
 var Teacher = require('../models/TeacherRecord');
 var Semester = require('../models/Semester');
 var Attendance = require('../models/Attendance');
-// var SchoolYear = require('../models/SchoolYear');
 var Strand = require('../models/Strand');
 
 
@@ -543,27 +542,42 @@ router.post('/add/type/:type', authentication, async ( req, res ) => {
       const { name, parent } = req.body;
 
       if( !name || !parent ) return res.status( 404 ).json({ message: 'Please fill up all fields' });
+      const strands = [ 'ABM', 'HUMSS', 'STEM', 'HE', 'ICT' ];
 
-      Strand.findOne({ name: parent }, ( err, doc ) => {
-        if( err ) return res.sendStatus( 500 );
+      if(strands.includes( parent )){
+        Strand.findOne({ name: parent }, ( err, doc ) => {
+          if( err ) return res.sendStatus( 500 );
 
-        if( doc ){
-          doc.sections.push( name.toUpperCase() );
+          if( doc ){
+            doc.sections.push( name.toUpperCase() );
 
-          doc.save( err => {
-            if( err ) return res.sendStatus( 500 );
+            doc.save( err => {
+              if( err ) return res.sendStatus( 500 );
 
-            return res.json({ message: 'Successfully added a new Strand' });
-          });      
-        }
-        else{
-          return res.status( 404 ).json({ message: 'Successfully added a new Strand' });
-        }
-      });      
+              return res.json({ message: 'Successfully added a new Strand' });
+            });      
+          }
+          else{
+            Strand.create({ name: parent, sections: [ name ] }, ( err, doc ) => {
+              if( err ) return res.sendStatus( 500 );
+
+              return res.json({ message: 'Successfully added a new Strand' });
+            });
+          }
+        });      
+      }
+      else{
+        return res.status( 404 ).json({ message: 'Strand does not exist!' });
+      }
       break;
 
     case 'student':
-      Student.create({ ...req.body }, err => {
+      const remark = {
+        category: 0,
+        content: null
+      };
+
+      Student.create({ ...req.body, remark }, err => {
         if( err ) return res.sendStatus( 500 );
 
         const { studentNo, firstName, middleName, lastName, attendance } = req.body;
@@ -646,10 +660,11 @@ router.put('/student/update-attendance/id/:id/teacherId/:teacherId', async ( req
   const graceTime = 30; // 30minute grace time or period
 
   const getRemarkAndSubjectID = async ( time, teachers ) => {
+    const teacherDBId = await Teacher.findOne({ employeeNo: teacherId }).exec();
     for( let teacher of teachers ){
-      const teacherDBId = await Teacher.findOne({ employeeNo: teacherId }).exec();
 
       if( teacher.teacherId === teacherDBId._id.toString() ){
+        const subjectName = teacher.subject.name;
         const teacherSubjectTimeHour = Number(teacher.subject.start.split(':')[ 0 ]);
         const teacherSubjectTimeMinutes = Number(teacher.subject.start.split(':')[ 1 ]);
 
@@ -673,7 +688,19 @@ router.put('/student/update-attendance/id/:id/teacherId/:teacherId', async ( req
                 ? 'present'
                 : 'error';
 
-        return [ teacher.teacherId, teacher.subject.id , remark ];
+        return [ teacher.teacherId, teacher.subject.id , remark, subjectName ];
+      }
+    }
+
+    return [ null, null ];
+  }
+
+  const getSubjectName = async ( time, teachers ) => {
+    for( let teacher of teachers ){
+      const teacherDBId = await Teacher.findOne({ employeeNo: teacherId }).exec();
+
+      if( teacher.teacherId === teacherDBId._id.toString() ){
+        
       }
     }
 
@@ -713,13 +740,18 @@ router.put('/student/update-attendance/id/:id/teacherId/:teacherId', async ( req
           const dateToday = new Date().toDateString();
           const timeToday = new Date().toTimeString();
 
-          const [ teacherId, subjectId, remark ] = await getRemarkAndSubjectID( timeToday, doc.teachers );
-          const attendance = { 
+          const [ teacherId, subjectId, remark, subjectName ] = await getRemarkAndSubjectID( timeToday, doc.teachers );
+          const attId = uniqid();
+          const attendance = {
+            id: attId,
+            studentNo: id,
             fullName: getFullName( doc ),
             teacherId, 
-            subjectId, 
+            subjectId,
             date: dateToday, 
-            remark 
+            remark,
+            status: 'timein',
+            subject: subjectName
           };
 
           if( !remark ) 
@@ -746,10 +778,24 @@ router.put('/student/update-attendance/id/:id/teacherId/:teacherId', async ( req
               studentAttendance.save( err => {
                 if( err ) return res.sendStatus( 500 );
 
-                return res
-                  .json({
-                    studentName: doc.firstName + ' ' + doc.lastName 
+                if( remark !== 'absent' ){
+                  doc.currentAttendanceID = attId;
+                  doc.currentSubject = subjectName;
+                  doc.save( err => {
+                    if( err ) return res.sendStatus( 500 );
+
+                    return res
+                      .json({
+                        studentName: doc.firstName + ' ' + doc.lastName 
+                      });
                   });
+                }
+                else{
+                  return res
+                    .json({
+                      studentName: doc.firstName + ' ' + doc.lastName 
+                    });
+                }
               });
             }
           }
@@ -770,10 +816,16 @@ router.put('/student/update-attendance/id/:id/teacherId/:teacherId', async ( req
             }, err => {
               if( err ) return res.sendStatus( 500 );
 
-              return res
-                .json({
-                  studentName: doc.firstName + ' ' + doc.lastName 
-                });
+              doc.currentAttendanceID = attId;
+              doc.currentSubject = subjectName;
+              doc.save( err => {
+                if( err ) return res.sendStatus( 500 );
+
+                return res
+                  .json({
+                    studentName: doc.firstName + ' ' + doc.lastName 
+                  });
+              });
             });
           }          
         }
@@ -793,22 +845,28 @@ router.get('/teacher/:teacherDBID/students/attendance', authentication, async ( 
   const { teacherDBID } = req.params;
 
   try{
-    const allAttendance = await Attendance.find()
-      .$where(function() {
-        return this.attendance.length > 0;
-      });
+    const allStudentsOfThisTeacher = await Student.find().$where(`this.teachers.map(({ teacherId }) => teacherId).includes('${teacherDBID}')`);
 
-    const attendance = [];
+    if( allStudentsOfThisTeacher.length ){
+      const attendance = [];
 
-    allAttendance.forEach( att => {
-      att.forEach( data => {
-        if( data.teacherId === teacherDBID ){
-          attendance.push( data );
-        }
-      });
-    });
+      for( let student of allStudentsOfThisTeacher ){
+        const allAttendance = await Attendance.find({ studentNo: student.studentNo });
 
-    return res.json( attendance );
+        allAttendance.forEach( att => {
+          att.attendance.forEach( data => {
+            if( data.teacherId === teacherDBID ){
+              attendance.push( data );
+            }
+          });
+        });
+      }
+
+      return res.json( attendance );
+    }
+    else{
+      return res.end();
+    }
   }
   catch( err ){
     throw err;
@@ -816,7 +874,7 @@ router.get('/teacher/:teacherDBID/students/attendance', authentication, async ( 
   }
 });
 
-router.get('/teacher/:id', async ( req, res ) => {
+router.get('/teacher/:id', authentication, async ( req, res ) => {
   const { id } = req.params;
 
   Teacher.findOne({ employeeNo: id }, ( err, doc ) => {
@@ -830,5 +888,115 @@ router.get('/teacher/:id', async ( req, res ) => {
     }
   });
 });
+
+router.put('/student/remark/:id', authentication, async ( req, res ) => {
+  const { id } = req.params;
+
+  Student.findOne({ studentNo: id }, ( err, doc ) => {
+    if( err ) return res.sendStatus( 500 );
+
+    if( doc ){
+      doc.remark = req.body;
+
+      doc.save( err => {
+        if( err ) return res.sendStatus( 500 );
+
+        return res.end();
+      });
+    }
+    else{
+      return res.sendStatus( 404 );      
+    }
+  });
+});
+
+
+router.get('/get-student/remark/:id', authentication, async ( req, res ) => {
+  const { id } = req.params;
+
+  Student.findOne({ studentNo: id }, ( err, doc ) => {
+    if( err ) return res.sendStatus( 500 );
+
+    if( doc ){
+      return res.json( doc.remark );
+    }
+    else{
+      return res.sendStatus( 404 );      
+    }
+  });
+});
+
+
+router.put('/time-out/student/:studentId', authentication, async ( req, res ) => {
+  const { studentId } = req.params;
+
+  const attendanceId = await Student.findOne({ studentNo:studentId }).exec().currentAttendanceID;
+
+  if( !attendanceId ) return res.sendStatus( 404 );
+
+  Attendance.findOne({ studentNo: studentId }, ( err, doc ) => {
+    if( err ) return res.sendStatus( 500 );
+
+    if( doc ){
+      if( doc.attendance.length ){
+        for( let index in doc.attendance ){
+
+          if( doc.attendance[ index ].id === attendanceId ){
+            const tempAttendance = doc;
+
+            tempAttendance.attendance[ index ].status = 'timeout';
+
+            doc.attendance = tempAttendance.attendance;
+            doc.save( err => {
+              if( err ) {
+                console.log( err );
+                return res.sendStatus( 500 );
+              }
+
+              Student.findOne({ studentNo: studentId }, ( err, student ) => {
+                if( err ) return res.sendStatus( 500 );
+
+                if( student ){
+                  student.currentAttendanceID = null;
+                  student.currentSubject = null;
+
+                  student.save( err => {
+                    if( err ) return res.sendStatus( 500 );
+
+                    return res.sendStatus( 200 );
+                  });
+                }
+                else{
+                  return res.sendStatus( 404 );
+                }
+              });
+            });
+          }
+        }
+      } 
+      else{
+        return res.sendStatus( 200 );
+      }
+    }
+    else{
+      return res.sendStatus( 404 );
+    }
+  });
+});
+
+
+router.get('/attendances', authentication, async ( req, res ) => {
+  Attendance.find({}, ( err, doc ) => {
+    if( err ) return res.sendStatus( 500 );
+
+    if( doc ){
+      return res.json( doc.reduce(( prev, curr ) => [ ...prev, ...curr.attendance ], []) );
+    }
+    else{
+      return res.end();
+    }
+  });
+});
+
 
 module.exports = router;

@@ -123,7 +123,9 @@ const Attendance = props => {
 		function getDate( month, day, year ){
 			return ( callback ) => {
 				const thisDate = new Date(`${monthTable[ month ].slice(0, 3)} ${day} ${year}`).toDateString();
+				const thisDay = thisDate.split(' ')[ 0 ];
 
+				if( thisDay === 'Sun' || thisDay === 'Sat' ) return;
 				for( let attdnc of attendance.attendance ){
 					if( thisDate === attdnc.date ){
 						return callback( attendance.attendance, month, day, year );
@@ -138,7 +140,7 @@ const Attendance = props => {
 			const thisDate = new Date(`${monthTable[ month ].slice(0, 3)} ${day} ${year}`).toDateString();
 
 			for( let att of attendance.attendance ){
-				if( thisDate === att.date ){
+				if( thisDate === att.date && att.status === 'timeout' ){
 					attendanceNumber += 1;
 				}
 			}
@@ -274,7 +276,9 @@ const DayScheduleDialog = props => {
 			<div className="w-[100%] max-w-[600px] min-w-[300px] h-[100%] max-h-[600px] min-h-[300px] p-5 d-flex flex-column justify-content-center align-items-center">
 				{
 					props?.data?.userData?.teachers?.map?.( teacher => {
-						if(subjectIds.includes( teacher.subject.id )){
+						const index = subjectIds.indexOf( teacher.subject.id );
+
+						if(subjectIds.includes( teacher.subject.id ) && (index > -1 && props?.data?.attendance?.[ index ]?.status === 'timeout') ){
 							return(
 								<div key={uniqid()} className="shadow p-2 m-2 bg-[#a4a4a4] text-[white] rounded w-full h-fit d-flex flex-column justify-content-between align-items-center">
 									<div className="w-100 d-flex flex-row justify-content-between align-items-center border-bottom">
