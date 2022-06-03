@@ -50,7 +50,11 @@ const Dashboard = props => {
 	// 	});
 	// }
 
-	React.useEffect(() => handleUserDataFetching(), []);
+	React.useEffect(() => {
+		const refreshData = setInterval(() => handleUserDataFetching(), 2000);
+
+		return () => clearInterval( refreshData );
+	}, []);
 
 	return(
 		<div className="student-dashboard row d-flex flex-column">

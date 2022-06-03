@@ -930,58 +930,64 @@ router.get('/get-student/remark/:id', authentication, async ( req, res ) => {
 router.put('/time-out/student/:studentId', authentication, async ( req, res ) => {
   const { studentId } = req.params;
 
-  const attendanceId = await Student.findOne({ studentNo:studentId }).exec().currentAttendanceID;
+  try{
+    const attendance = await Student.findOne({ studentNo:studentId }).exec();
+    const attendanceId = attendance.currentAttendanceID;
+    
+    // if( !attendanceId ) return res.sendStatus( 404 );
+    Attendance.findOne({ studentNo: studentId }, ( err, doc ) => {
+      if( err ) return res.sendStatus( 500 );
 
-  if( !attendanceId ) return res.sendStatus( 404 );
+      if( doc ){
+        if( doc.attendance.length ){
+          for( let index in doc.attendance ){
 
-  Attendance.findOne({ studentNo: studentId }, ( err, doc ) => {
-    if( err ) return res.sendStatus( 500 );
+            if( doc.attendance[ index ].id === attendanceId ){
+              const tempAttendance = doc;
 
-    if( doc ){
-      if( doc.attendance.length ){
-        for( let index in doc.attendance ){
+              tempAttendance.attendance[ index ].status = 'timeout';
 
-          if( doc.attendance[ index ].id === attendanceId ){
-            const tempAttendance = doc;
-
-            tempAttendance.attendance[ index ].status = 'timeout';
-
-            doc.attendance = tempAttendance.attendance;
-            doc.save( err => {
-              if( err ) {
-                console.log( err );
-                return res.sendStatus( 500 );
-              }
-
-              Student.findOne({ studentNo: studentId }, ( err, student ) => {
-                if( err ) return res.sendStatus( 500 );
-
-                if( student ){
-                  student.currentAttendanceID = null;
-                  student.currentSubject = null;
-
-                  student.save( err => {
-                    if( err ) return res.sendStatus( 500 );
-
-                    return res.sendStatus( 200 );
-                  });
+              doc.attendance = tempAttendance.attendance;
+              doc.save( err => {
+                if( err ) {
+                  console.log( err );
+                  return res.sendStatus( 500 );
                 }
-                else{
-                  return res.sendStatus( 404 );
-                }
+
+                Student.findOne({ studentNo: studentId }, ( err, student ) => {
+                  if( err ) return res.sendStatus( 500 );
+
+                  if( student ){
+                    student.currentAttendanceID = null;
+                    student.currentSubject = null;
+
+                    student.save( err => {
+                      if( err ) return res.sendStatus( 500 );
+
+                      return res.sendStatus( 200 );
+                    });
+                  }
+                  else{
+                    return res.sendStatus( 404 );
+                  }
+                });
               });
-            });
+            }
           }
+        } 
+        else{
+          return res.sendStatus( 200 );
         }
-      } 
-      else{
-        return res.sendStatus( 200 );
       }
-    }
-    else{
-      return res.sendStatus( 404 );
-    }
-  });
+      else{
+        return res.sendStatus( 404 );
+      }
+    });
+  }
+  catch( err ){
+    console.log( err );
+    return res.sendStatus( 500 );
+  }
 });
 
 

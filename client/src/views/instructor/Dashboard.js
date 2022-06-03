@@ -71,7 +71,7 @@ const Dashboard = props => {
 			window.requestHeader
 		)
 		.then(() => {
-			enqueueSnackbar( 'Successfully time-out student', { variant: 'error' });
+			enqueueSnackbar( 'Successfully time-out student', { variant: 'success' });
 		})
 		.catch( err => {
 			console.error( err );

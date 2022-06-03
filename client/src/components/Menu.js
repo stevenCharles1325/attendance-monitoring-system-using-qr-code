@@ -31,7 +31,7 @@ import AccountCircle from '@mui/icons-material/AccountCircle';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import SettingsIcon from '@mui/icons-material/Settings';
-
+import Profile from './Profile';
 
 
 const QamsMenu = props => {
@@ -42,6 +42,7 @@ const QamsMenu = props => {
 	const [drawer, setDrawer] = React.useState( false );
 	const [dropDowns, setDropDowns] = React.useState( {} );
 	const [active, setActive] = React.useState( Cookies.get('active-menu') ?? props?.items?.[ userRole ]?.[0]?.text );
+	const [isProfileOpen, setIsOpenProfile] = React.useState( false );
 	const location = useLocation();
 
 	const [accElement, setAccElement] = React.useState( null );
@@ -68,7 +69,7 @@ const QamsMenu = props => {
 		.catch( err => console.error( err ));
 	}
 
-	const handleOpenProfile = () => console.log('profile open');
+	const handleOpenProfile = () => setIsOpenProfile( isProfileOpen => !isProfileOpen );
 
 	const toggleDrawer = (open) => (event) => {
 		if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
@@ -236,6 +237,7 @@ const QamsMenu = props => {
 				<MenuItem onClick={handleOpenProfile}>Profile</MenuItem>
 				<MenuItem onClick={handleLogOut}>Sign-out</MenuItem>
 			</Menu>
+			<Profile open={isProfileOpen} handleClose={handleOpenProfile}/>
 		</div>
 	);	
 }
