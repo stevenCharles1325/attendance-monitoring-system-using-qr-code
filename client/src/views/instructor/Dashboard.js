@@ -126,7 +126,7 @@ const Dashboard = props => {
 		<div className="student-dashboard row d-flex flex-column">
 			<QamsHeader title="Dashboard"/>
 			<div className="flex-grow-1 d-flex flex-column justify-content-around align-items-center">
-				<div className="student-dashboard-info-box my-4 shadow">
+				<div className="student-dashboard-info-box my-4 shadow row h-fit">
 					<div className="border col-md-6 h-[300px] p-3 d-flex justify-content-center align-items-center">
 						{/*<QRCode
 							qrStyle="dots"
@@ -145,8 +145,7 @@ const Dashboard = props => {
 						}
 					</div>
 					<div 
-						style={{ height: '200px', maxHeight: 'fit-content' }} 
-						className="col-md-6 p-4 overflow-auto"
+						className="col-md-6 p-4 h-fit"
 					>
 						<h2 className="mb-4">QR SCANNER</h2>
 						<Divider/>
