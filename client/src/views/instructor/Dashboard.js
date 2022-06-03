@@ -126,13 +126,8 @@ const Dashboard = props => {
 		<div className="student-dashboard row d-flex flex-column">
 			<QamsHeader title="Dashboard"/>
 			<div className="flex-grow-1 d-flex flex-column justify-content-around align-items-center">
-				<div className="student-dashboard-info-box row shadow">
-					<div 
-						style={{
-							height: '300px',
-						}} 
-						className="border col-md-6 p-3 d-flex justify-content-center align-items-center"
-					>
+				<div className="student-dashboard-info-box my-4 shadow">
+					<div className="border col-md-6 h-[300px] p-3 d-flex justify-content-center align-items-center">
 						{/*<QRCode
 							qrStyle="dots"
 							eyeRadius={10}
@@ -151,7 +146,7 @@ const Dashboard = props => {
 					</div>
 					<div 
 						style={{ height: '200px', maxHeight: 'fit-content' }} 
-						className="col-md-6 p-4"
+						className="col-md-6 p-4 overflow-auto"
 					>
 						<h2 className="mb-4">QR SCANNER</h2>
 						<Divider/>
@@ -171,7 +166,7 @@ const Dashboard = props => {
 									: null
 							}
 							<br/>
-							<div className="w-full d-flex justify-content-around align-items-center">
+							<div className="w-full h-fit d-flex justify-content-around align-items-center">
 								<ToggleButtonGroup
 							      value={isTimein}
 							      exclusive
