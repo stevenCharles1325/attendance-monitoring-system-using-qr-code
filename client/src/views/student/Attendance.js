@@ -128,7 +128,7 @@ const Attendance = props => {
 				if( thisDay === 'Sun' || thisDay === 'Sat' ) return;
 				for( let attdnc of attendance.attendance ){
 					if( thisDate === attdnc.date ){
-						return callback( attendance.attendance, month, day, year );
+						return callback( attendance.attendance, month, day, year, thisDate );
 					}
 				}
 			}
@@ -149,11 +149,12 @@ const Attendance = props => {
 			return attendanceVal;
 		}  
 
-		const getDataOfDate = data => {
-			setAttendanceDateData({ userData, attendance: data });
+		const getDataOfDate = (attendance, month, day, year, thisDate) => {
+			setAttendanceDateData({ userData, attendance, thisDate });
 		}
 
 		const createDay = ({ dayNumber, notInMonth = false, isToday = false, dayCategory }) => ( attendanceVal = 0 ) =>{
+
 			tempDays.push(
 				<Day
 					key={uniqid()}
@@ -266,6 +267,7 @@ const DayScheduleDialog = props => {
 	const theme = useTheme();
 	const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
 	const subjectIds = React.useMemo(() => props?.data?.attendance?.map?.( attd => attd.subjectId ), [props]);
+	const isDateForToday = React.useCallback(index => props?.data?.thisDate === props?.data?.attendance?.[ index ]?.date, [props]);
 
 	return(
 		<Dialog
@@ -278,7 +280,7 @@ const DayScheduleDialog = props => {
 					props?.data?.userData?.teachers?.map?.( teacher => {
 						const index = subjectIds.indexOf( teacher.subject.id );
 
-						if(subjectIds.includes( teacher.subject.id ) && (index > -1 && props?.data?.attendance?.[ index ]?.status === 'timeout') ){
+						if(subjectIds.includes( teacher.subject.id ) && (index > -1 && props?.data?.attendance?.[ index ]?.status === 'timeout' && isDateForToday( index )) ){
 							return(
 								<div key={uniqid()} className="shadow p-2 m-2 bg-[#a4a4a4] text-[white] rounded w-full h-fit d-flex flex-column justify-content-between align-items-center">
 									<div className="w-100 d-flex flex-row justify-content-between align-items-center border-bottom">
@@ -320,6 +322,7 @@ const DayScheduleDialog = props => {
 		</Dialog>
 	);
 }
+
 
 const Day = ({ dayNumber, notInMonth, isToday, attendanceVal, dayCategory, onClick }) => {
 	return (

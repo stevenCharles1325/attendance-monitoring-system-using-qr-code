@@ -932,7 +932,7 @@ const AccountView = props => {
 					'aria-labelledby': 'filter-btn',
 				}}
 			>
-				<Paper sx={{ width: 400, height: 'fit-content', maxHeight: 300, overflow: 'auto' }} elevation={0}>
+				<Paper sx={{ width: 200, height: 'fit-content', maxHeight: 300, overflow: 'auto' }} elevation={0}>
 					<MuiList sx={{ width: '100%', minWidth: '100%'}} dense>
 						{
 							filter?.map?.(( fltr, index ) => (
@@ -948,7 +948,7 @@ const AccountView = props => {
 										<ListItemText primary={fltr.name}/>
 										{
 											fltr.sections.length
-												? filter[ index ].isOpen ? <ExpandMore/> : <ExpandLess/>
+												? filter[ index ].isOpen ? <ExpandLess/> : <ExpandMore/>
 												: null
 										}
 									</ListItemButton>
@@ -1222,8 +1222,6 @@ const SubjectBox = props => {
 		// }
 		renderSubject();
 	}, [subjects]);
-
-	React.useEffect(() => console.log('1: ', selected), [selected]);
 
 	React.useEffect(() => props?.setInstructorSubject?.([ ...selected ]), [selected]);
 

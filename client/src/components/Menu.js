@@ -6,7 +6,6 @@ import { useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { handleNavigateTo } from '../features/navigation/navigationSlice';
 
-import Collapse from '@mui/material/Collapse';
 import Drawer from '@mui/material/Drawer';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
@@ -25,9 +24,10 @@ import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 import MenuOpen from '@mui/icons-material/MenuOpen';
 import PowerSettingsNew from '@mui/icons-material/PowerSettingsNew';
+import Grow from '@mui/material/Grow';
 
 import AccountCircle from '@mui/icons-material/AccountCircle';
-
+import Collapse from '@mui/material/Collapse';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -118,6 +118,7 @@ const QamsMenu = props => {
 			sx={{ width: 250 }}
 			role="presentation"
 			onKeyDown={toggleDrawer( false )}
+			className="transition-all"
 		>	
 			<div className="my-2 row col-12 d-flex justify-content-center align-items-center">
 				<div className="col-3">
@@ -130,20 +131,28 @@ const QamsMenu = props => {
 				</div>
 			</div>
 			<Divider/>
-			<br/>
-			<div className="my-2 col-12 d-flex flex-column">
-				<div className="col-12 d-flex justify-content-center align-items-center">
-					<Avatar sx={{ width: 100, height: 100, border: '4px solid rgba(0, 0, 0, 0.2)' }}/>
-				</div>
-				<br/>
-				<div 
-					className="col-12 d-flex justify-content-center align-items-center"
-				>
-					<h6>{ props?.username ?? 'User' }</h6>
-				</div>
-			</div>
-			<br/>
-			<Divider sx={{ margin: '5px' }} variant="inset"/>
+			{
+				!drawer
+					?	<Grow in={!drawer}>
+							<div>
+								<br/>
+								<div className="my-2 col-12 d-flex flex-column">
+									<div className="col-12 d-flex justify-content-center align-items-center">
+										<Avatar sx={{ width: 100, height: 100, border: '4px solid rgba(0, 0, 0, 0.2)' }}/>
+									</div>
+									<br/>
+									<div 
+										className="col-12 d-flex justify-content-center align-items-center"
+									>
+										<h6>{ props?.username ?? 'User' }</h6>
+									</div>
+								</div>
+								<br/>
+								<Divider sx={{ margin: '5px' }} variant="inset"/>
+							</div>
+						</Grow>
+					: null
+			}
 			<br/>
 			<List>
 				{props?.items?.[ userRole ]?.map?.(({ text, icon, onClick, collapsable, subList }, index) => (
@@ -191,19 +200,12 @@ const QamsMenu = props => {
 	);
 	
 	return(
-		<div className="view-box d-flex flex-column">
+		<div className="view-box w-full h-full d-flex flex-column overflow-hidden">
 			{
 				location.pathname === props?.hideOn
 					? null
 					: (
 						<div className="menu d-flex justify-content-start align-items-center">
-							<Drawer
-								anchor="left"
-								open={drawer}
-								onClose={toggleDrawer( false )}
-							>
-								{ list() }
-							</Drawer>
 							<div style={{ width: 'fit-content' }} className="mx-3">
 								<IconButton onClick={() => setDrawer( !drawer )}>
 									<MenuOpen sx={{ color: 'white' }}/>
@@ -222,8 +224,19 @@ const QamsMenu = props => {
 						</div>
 					)
 			}
-			<div className="view-content flex-grow-1">
-				{ props?.children }
+			<div className="view-content flex-grow-1 d-flex position-relative">
+				{
+					location.pathname !== props?.hideOn
+						?	<div className="menu-box w-fit bg-white shadow">
+								<Collapse in={!drawer} orientation="horizontal" collapsedSize={window.document.body.clientWidth > 400 ? "60px" : '0px'}>
+									{ list() }
+								</Collapse>
+							</div>
+						: null
+				}
+				<div className="flex-grow-1 h-[100vh] p-0 overflow-hidden">
+					{ props?.children }
+				</div>
 			</div>
 			<Menu
 				id="menu-account-menu"

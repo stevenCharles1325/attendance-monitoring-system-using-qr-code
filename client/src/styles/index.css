@@ -668,6 +668,14 @@ body{
 }
 
 
+@media screen and (max-width: 480px){
+	.menu-box{
+		position: absolute;
+		height: 100%;
+		z-index: 100;
+	}
+}
+
 
 
 ::-webkit-scrollbar {

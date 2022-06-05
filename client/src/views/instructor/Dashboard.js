@@ -36,7 +36,7 @@ const Dashboard = props => {
 
 	const { enqueueSnackbar } = useSnackbar();
 
-	const handleTimingin = (_, isTimingIn) => setIsTimein( isTimingIn );
+	const handleTimingin = (_, isTimingIn) => setIsTimein( isTimein => isTimingIn === null ? isTimein : isTimingIn );
 	const handleTimein = async studentNo => {
 		Axios.put(
 			`${window.API_BASE_ADDRESS}/master/student/update-attendance/id/${studentNo}/teacherId/${Cookies.get('userId')}`,
@@ -191,6 +191,14 @@ const Dashboard = props => {
 					</div>
 				</div>*/}
 			</div>
+		</div>
+	);
+}
+
+const CountCard = props => {
+	return(
+		<div className="w-[350px] h-[300px] rounded bg-white">
+
 		</div>
 	);
 }
