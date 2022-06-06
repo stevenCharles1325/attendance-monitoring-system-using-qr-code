@@ -154,6 +154,8 @@ const Attendance = props => {
 		}
 
 		const createDay = ({ dayNumber, notInMonth = false, isToday = false, dayCategory }) => ( attendanceVal = 0 ) =>{
+			const thisDate = new Date(`${monthTable[ month ].slice(0, 3)} ${dayNumber} ${year}`).toDateString();
+			const isSunday = thisDate.split(' ')[ 0 ] === 'Sun';
 
 			tempDays.push(
 				<Day
@@ -163,6 +165,7 @@ const Attendance = props => {
 					dayNumber={dayNumber}
 					dayCategory={dayCategory}
 					attendanceVal={attendanceVal}
+					isSunday={isSunday}
 					onClick={() => getDate( month, dayNumber, year )( getDataOfDate )}
 				/>
 			);
@@ -235,7 +238,7 @@ const Attendance = props => {
 							</IconButton>
 						</div>
 						<div className="text-center">
-							<h1 className="text-capitalize text-dark">{ Object.values( monthTable )?.[ month ] }</h1>
+							<h1 className="text-capitalize text-dark font-bold">{ Object.values( monthTable )?.[ month ] }</h1>
 							{/*<p style={{ color: 'var( --text-color )'}}>{ calDate }</p>*/}
 						</div>
 						<div>
@@ -244,7 +247,7 @@ const Attendance = props => {
 							</IconButton>
 						</div>
 					</div>
-					<div className="d-flex justify-content-around align-items-center py-2 text-secondary border-bottom">
+					<div className="shadow d-flex justify-content-around align-items-center py-2 text-secondary border-bottom">
 						<p className="m-0">Sun</p>
 						<p className="m-0">Mon</p>
 						<p className="m-0">Tue</p>
@@ -324,7 +327,7 @@ const DayScheduleDialog = props => {
 }
 
 
-const Day = ({ dayNumber, notInMonth, isToday, attendanceVal, dayCategory, onClick }) => {
+const Day = ({ dayNumber, notInMonth, isToday, attendanceVal, isSunday, dayCategory, onClick }) => {
 	return (
 		<div className={`position-relative attendance-box-day d-flex justify-content-center align-items-center`}>
 			<div className="position-absolute top-50 start-50 translate-middle z-10">
@@ -338,35 +341,39 @@ const Day = ({ dayNumber, notInMonth, isToday, attendanceVal, dayCategory, onCli
 							: isToday 
 								? 'rgba(0, 0, 0, 0.7)'
 								: 'rgba(0, 0, 0, 0.5)',
-						backgroundColor: isToday ? 'rgba(221, 189, 184, 0.5)' : 'rgba(0, 0, 0, 0.04)',
+						backgroundColor: isSunday ? '#fcc8ca' : isToday ? 'rgba(221, 189, 184, 0.5)' : 'rgba(0, 0, 0, 0.04)',
 					}}
 					onClick={onClick}
 				>
 					{ dayNumber }
 				</IconButton>
 			</div>
-			<div className={`position-absolute w-100 h-100 d-flex ${ dayCategory === 'current' ? 'justify-content-center align-items-center' : 'justify-content-start align-items-start'}`}>
-				{/*{
-					attendanceVal > 1
-						? attendanceVal === 100
-							? <CheckIcon/>
-							: <CircularProgress variant="determinate" value={attendanceVal}/>
-						: null
-				}*/}
-				{
-					dayCategory
-						? dayCategory === 'past'
-							? attendanceVal > 0 && attendanceVal < 100
-								? <PriorityHighIcon/>
-								: attendanceVal === 0
-									? <CloseIcon/>
+			{
+				!isSunday
+					?	<div className={`position-absolute w-100 h-100 d-flex ${ dayCategory === 'current' ? 'justify-content-center align-items-center' : 'justify-content-start align-items-start'}`}>
+							{/*{
+								attendanceVal > 1
+									? attendanceVal === 100
+										? <CheckIcon/>
+										: <CircularProgress variant="determinate" value={attendanceVal}/>
 									: null
-							: dayCategory === 'future'
-								? null
-								: <CircularProgress variant="determinate" value={attendanceVal}/>
-						: null
-				}
-			</div>
+							}*/}
+							{
+								dayCategory
+									? dayCategory === 'past'
+										? attendanceVal > 0 && attendanceVal < 100
+											? <PriorityHighIcon/>
+											: attendanceVal === 0
+												? <CloseIcon/>
+												: null
+										: dayCategory === 'future'
+											? null
+											: <CircularProgress variant="determinate" value={attendanceVal}/>
+									: null
+							}
+						</div>
+					: null
+			}
 		</div>
 	);
 }

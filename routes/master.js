@@ -21,6 +21,7 @@ var Student = require('../models/StudentRecord');
 var Teacher = require('../models/TeacherRecord');
 var Semester = require('../models/Semester');
 var Attendance = require('../models/Attendance');
+var TimeRecord = require('../models/TimeRecord');
 var Strand = require('../models/Strand');
 
 
@@ -654,6 +655,7 @@ router.get('/students-attendance/id/:id', async ( req, res, next ) => {
   });
 });
 
+// Time-in
 router.put('/student/update-attendance/id/:id/teacherId/:teacherId', async ( req, res, next ) => {
   const { id, teacherId } = req.params;
 

@@ -122,7 +122,7 @@ const QamsMenu = props => {
 		>	
 			<div className="my-2 row col-12 d-flex justify-content-center align-items-center">
 				<div className="col-3">
-					<Avatar src="images/logo/cct-shs-logo.jpg"/>
+					<Avatar src="/images/logo/cct-shs-logo.jpg"/>
 				</div>
 				<div className="col-8">
 					<Typography variant="h6" gutterBottom>
@@ -133,7 +133,7 @@ const QamsMenu = props => {
 			<Divider/>
 			{
 				!drawer
-					?	<Grow in={!drawer}>
+					?	<Grow in={!drawer} timeout={500}>
 							<div>
 								<br/>
 								<div className="my-2 col-12 d-flex flex-column">
@@ -200,12 +200,12 @@ const QamsMenu = props => {
 	);
 	
 	return(
-		<div className="view-box w-full h-full d-flex flex-column overflow-hidden">
+		<div className="menu-view d-flex flex-column">
 			{
 				location.pathname === props?.hideOn
 					? null
 					: (
-						<div className="menu d-flex justify-content-start align-items-center">
+						<div className="bg-black text-white w-full h-50px min-h-[50px] d-flex justify-content-center align-items-center">
 							<div style={{ width: 'fit-content' }} className="mx-3">
 								<IconButton onClick={() => setDrawer( !drawer )}>
 									<MenuOpen sx={{ color: 'white' }}/>
@@ -224,17 +224,17 @@ const QamsMenu = props => {
 						</div>
 					)
 			}
-			<div className="view-content flex-grow-1 d-flex position-relative">
+			<div className="flex-grow-1 d-flex position-relative">
 				{
 					location.pathname !== props?.hideOn
-						?	<div className="menu-box w-fit bg-white shadow">
+						?	<div className="menu-box w-fit bg-white shadow border">
 								<Collapse in={!drawer} orientation="horizontal" collapsedSize={window.document.body.clientWidth > 400 ? "60px" : '0px'}>
 									{ list() }
 								</Collapse>
 							</div>
 						: null
 				}
-				<div className="flex-grow-1 h-[100vh] p-0 overflow-hidden">
+				<div className="flex-grow-1 h-[615px] w-[500px] overflow-hidden">
 					{ props?.children }
 				</div>
 			</div>

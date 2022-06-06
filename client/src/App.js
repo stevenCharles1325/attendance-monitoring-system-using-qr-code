@@ -11,6 +11,7 @@ import { handleUserRole } from './features/form/formSlice';
 import { handleNavigateTo } from './features/navigation/navigationSlice';
 import { useSnackbar } from 'notistack';
 
+import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
 import KeyIcon from '@mui/icons-material/Key';
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -21,6 +22,7 @@ import AccountCircle from '@mui/icons-material/AccountCircle';
 import SsidChart from '@mui/icons-material/SsidChart';
 import Feed from '@mui/icons-material/Feed';
 import ListAlt from '@mui/icons-material/ListAlt';
+import QrCodeIcon from '@mui/icons-material/QrCode';
 
 import Authentication from './Authentication';
 import Menu from './components/Menu';
@@ -42,12 +44,12 @@ import Profile from './views/Profile';
 import ChangePassword from './views/ChangePasswordForm';
 
 // Students components
-import Attendance from './views/student/Attendance';
+import QRCode from './views/student/QRCode';
 import DashboardStudent from './views/student/Dashboard';
 
 // Teacher components
 import DashboardTeacher from './views/instructor/Dashboard';
-import Schedule from './views/instructor/Schedule';
+import QRScanner from './views/instructor/QRScanner';
 import StudentsAttendance from './views/instructor/StudentsAttendance';
 
 // Page component
@@ -60,12 +62,12 @@ const views = new ViewsPath(
   'student/dashboard',
   'student/account/profile',
   'student/account/change-password',
-  'student/attendance',
+  'student/qr-code',
 
   'teacher/dashboard',
   'teacher/account/profile',
   'teacher/account/change-password',
-  'teacher/schedule',
+  'teacher/qr-scanner',
   'teacher/students-attendance-record',
 
   'sysadmin/dashboard',
@@ -218,7 +220,7 @@ window.availableStrandNames = {
 }
 
 function App() {
-  const { userRole } = useSelector( state => state.form );
+  const { userRole, id } = useSelector( state => state.form );
   const navigateTo = useSelector( state => state.navigation.to );
   const dispatch = useDispatch();
   const { enqueueSnackbar } = useSnackbar();
@@ -317,9 +319,9 @@ function App() {
       ]
     },
     {
-      text: 'Schedule',
-      icon: <Folder/>,
-      onClick: () => handleNavigation('/app/teacher/schedule')
+      text: 'Qr Scanner',
+      icon: <QrCodeScannerIcon/>,
+      onClick: () => handleNavigation('/app/teacher/qr-scanner')
     },
     {
       text: 'Students Attendance Record',
@@ -341,6 +343,11 @@ function App() {
       onClick: () => handleNavigation('/app/student/dashboard')
     },
     {
+      text: 'QR Code',
+      icon: <QrCodeIcon/>,
+      onClick: () => handleNavigation('/app/student/qr-code')
+    },
+    {
       text: 'Account',
       icon: <AccountBox/>,
       collapsable: true,
@@ -357,11 +364,6 @@ function App() {
         }
       ]
     },
-    {
-      text: 'Attendance Record',
-      icon: <FactCheckIcon/>,
-      onClick: () => handleNavigation('/app/student/attendance')
-    }
   ];
 
 
@@ -389,7 +391,7 @@ function App() {
 
   React.useEffect(() => checkIfSemesterExists(), []);
   React.useEffect(() => dispatch(handleNavigateTo( null )), [navigateTo]);
-
+  
   return (
     <div className="App">
       <Authentication
@@ -409,7 +411,7 @@ function App() {
         setRole={val => dispatch(handleUserRole( val ))}
         setRedirectTo={val => dispatch(handleNavigateTo( val ))}
       >
-        <Menu items={items} hideOn='/app/gate'>
+        <Menu items={items} hideOn='/app/gate' username={Cookies.get('userId')}>
           <Routes>
             {/* Gate */}
             <Route path="/app/gate" element={<Gate />}/>
@@ -426,13 +428,13 @@ function App() {
             <Route path="/app/student/dashboard" element={<DashboardStudent/>}/>
             <Route path="/app/student/account/profile" element={<Profile userType="student"/>}/>
             <Route path="/app/student/account/change-password" element={<ChangePassword/>}/>
-            <Route path="/app/student/attendance" element={<Attendance/>}/>
+            <Route path="/app/student/qr-code" element={<QRCode/>}/>
 
             {/* Teachers' routes */}
             <Route path="/app/teacher/dashboard" element={<DashboardTeacher/>}/>
             <Route path="/app/teacher/account/profile" element={<Profile userType="teacher"/>}/>
             <Route path="/app/teacher/account/change-password" element={<ChangePassword/>}/>
-            <Route path="/app/teacher/schedule" element={<Schedule/>}/>
+            <Route path="/app/teacher/qr-scanner" element={<QRScanner/>}/>
             <Route path="/app/teacher/students-attendance-record" element={<StudentsAttendance/>}/>
           </Routes>
         </Menu>      

@@ -29,9 +29,31 @@ body{
 	color: var(--text-color);
 }
 
+.image-upload:hover{ cursor: pointer; }
+.image-upload:hover:after{
+	content: "Change profile picture";
+	position: absolute;
+	pointer-events: none;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+
+	width: 180px;
+	text-align: center;
+	padding: 3px;
+	border-radius: 5px;
+	background-color: #313030;
+	color: white;
+}
+
 
 .d-unset{
 	display: unset !important;
+}
+
+.qams-col{
+	width: 	calc( 100% / 6 );
+	height: 100%;
 }
 
 .default-bg{
@@ -51,10 +73,6 @@ body{
 
 	background-color: transparent;
 	/*transition: .2s ease-in-out;*/
-}
-
-.form-sign-in{
-
 }
 
 .sysadmin-dashboard, .student-dashboard,
@@ -127,6 +145,11 @@ body{
 	  	MENU
 
 ==================*/
+.menu-view{
+	width: 100%;
+	height: 100%;
+}
+
 .view-box{
 	width: 100%;
 	height: 100%;
@@ -134,9 +157,7 @@ body{
 
 .menu{
 	width: 100%;
-	height: 5%;
-	min-height: 50px;
-	max-height: 50px;
+	height: 70px !important;
 
 	background-color: rgba(0, 0, 0, 0.8);
 	
