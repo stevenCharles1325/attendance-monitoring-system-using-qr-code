@@ -346,7 +346,7 @@ const PersonForm = props => {
 	}
 
 	// Getter functions
-	const getStrand = async () => {
+	const getStrand = () => {
 		Axios.get(`${window.API_BASE_ADDRESS}/master/get-items/type/strand`)
 		.then( res => {
 			console.log( res.data );
@@ -357,7 +357,7 @@ const PersonForm = props => {
 		});
 	}
 
-	const getTeachers = async() => {
+	const getTeachers = () => {
 		Axios.get(`${window.API_BASE_ADDRESS}/master/get-users/type/teacher`)
 		.then( res => {
 			setTeacherList( res.data );
@@ -459,57 +459,57 @@ const PersonForm = props => {
 		return returnedIndex;
 	}
 
-	const generateSectionList = () => {
-		if( !strands ) return [];
+	// const generateSectionList = () => {
+	// 	if( !strands ) return [];
 
-		if( strand instanceof Array ){
-			const tempSections = [];
+	// 	if( strand instanceof Array ){
+	// 		const tempSections = [];
 
-			if( strand.length ){
-				strand.forEach( strnd => {
-					tempSections.push( ...strands?.[findChildrenIndexOf( strnd, strands )]?.sections );
-				});
+	// 		if( strand.length ){
+	// 			strand.forEach( strnd => {
+	// 				tempSections.push( ...strands?.[findChildrenIndexOf( strnd, strands )]?.sections );
+	// 			});
 
-				return tempSections;
-			}
-			else{
-				return strands.map( fltr => fltr.sections ).reduce(( prev, curr ) => [ ...prev, ...curr ], []);
-			}
-		}
-		else{
-			return strand && strand?.length
-				? strands?.[ findChildrenIndexOf( strand, strands ) ]?.sections ?? []
-				: strands.map( fltr => fltr.sections ).reduce(( prev, curr ) => [ ...prev, ...curr ], []) ?? []
-		}
-	}
+	// 			return tempSections;
+	// 		}
+	// 		else{
+	// 			return strands.map( fltr => fltr.sections ).reduce(( prev, curr ) => [ ...prev, ...curr ], []);
+	// 		}
+	// 	}
+	// 	else{
+	// 		return strand && strand?.length
+	// 			? strands?.[ findChildrenIndexOf( strand, strands ) ]?.sections ?? []
+	// 			: strands.map( fltr => fltr.sections ).reduce(( prev, curr ) => [ ...prev, ...curr ], []) ?? []
+	// 	}
+	// }
 
-	const generateStrandList = () => {
-		if( !strands ) return [];
+	// const generateStrandList = () => {
+	// 	if( !strands ) return [];
 		
-		if( section instanceof Array ){
-			const tempStrands = [];
+	// 	if( section instanceof Array ){
+	// 		const tempStrands = [];
 
-			if( section.length ){
-				section.forEach( sctn => {
-					if( strands?.[findChildrenIndexOf( sctn, strands, true )]?.name )
-						tempStrands.push( strands[findChildrenIndexOf( sctn, strands, true )].name );
-				});
+	// 		if( section.length ){
+	// 			section.forEach( sctn => {
+	// 				if( strands?.[findChildrenIndexOf( sctn, strands, true )]?.name )
+	// 					tempStrands.push( strands[findChildrenIndexOf( sctn, strands, true )].name );
+	// 			});
 
-				return tempStrands;
-			}
-			else{
-				return strands.map( fltr => fltr.name );
-			}
-		}
-		else{
-			return section && section?.length 
-				? [ strands?.[ findChildrenIndexOf( section, strands, true ) ]?.name ] ?? [] 
-				: strands.map( fltr => fltr.name ) ?? []
-		}
-	}
+	// 			return tempStrands;
+	// 		}
+	// 		else{
+	// 			return strands.map( fltr => fltr.name );
+	// 		}
+	// 	}
+	// 	else{
+	// 		return section && section?.length 
+	// 			? [ strands?.[ findChildrenIndexOf( section, strands, true ) ]?.name ] ?? [] 
+	// 			: strands.map( fltr => fltr.name ) ?? []
+	// 	}
+	// }
 
-	const memoizedStrandGenerator = React.useCallback(() => generateStrandList(), [ section, strands ]);
-	const memoizedSectionGenerator = React.useCallback(() => generateSectionList(), [ strand, strands ]);
+	// const memoizedStrandGenerator = React.useCallback(() => generateStrandList(), [ section, strands ]);
+	// const memoizedSectionGenerator = React.useCallback(() => generateSectionList(), [ strand, strands ]);
 
 	// React.useEffect(() => {
 	// 	console.log( subjectsCntxt );
@@ -520,9 +520,6 @@ const PersonForm = props => {
 		getTeachers();
 	}, []);
 
-	React.useEffect(() => {
-		console.log( selectedTeachers );
-	}, [selectedTeachers]);
 
 	return(
 		<>
@@ -589,39 +586,39 @@ const PersonForm = props => {
 					<FemaleIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
 					<Autocomplete
 						value={gender}
-						freeSolo
-						selectOnFocus
-						handleHomeEndKeys
+						// freeSolo
+						// selectOnFocus
+						// handleHomeEndKeys
 						options={genderOptions}
 						renderOption={(props, option) => <li {...props}>{ option }</li>}
-						getOptionLabel={(option) => {
-					        // Value selected with enter, right from the input
-					        if( typeof option === 'string' ) {
-					          return option;
-					        }
+						// getOptionLabel={(option) => {
+					 //        // Value selected with enter, right from the input
+					 //        if( typeof option === 'string' ) {
+					 //          return option;
+					 //        }
 					      	
-					        // Add "xxx" option created dynamically
-					        if( option.inputValue ) {
-					          return option.inputValue;
-					        }
+					 //        // Add "xxx" option created dynamically
+					 //        if( option.inputValue ) {
+					 //          return option.inputValue;
+					 //        }
 					      
-					        // Regular option
-					        return option.title;
-						}}
-						filterOptions={(options, params) => {
-					        const filtered = filterer(options, params);
+					 //        // Regular option
+					 //        return option.title;
+						// }}
+						// filterOptions={(options, params) => {
+					 //        const filtered = filterer(options, params);
 
-					        const { inputValue } = params;
+					 //        const { inputValue } = params;
 
-					        // console.log( options );
-					        // Suggest the creation of a new value
-					        const isExisting = options.some((option) => inputValue === option);
-					        if (inputValue !== '' && !isExisting) {
-										filtered.push( inputValue );
-					        }
+					 //        // console.log( options );
+					 //        // Suggest the creation of a new value
+					 //        const isExisting = options.some((option) => inputValue === option);
+					 //        if (inputValue !== '' && !isExisting) {
+						// 				filtered.push( inputValue );
+					 //        }
 
-					        return filtered;
-						}}
+					 //        return filtered;
+						// }}
 						renderInput={(params) => 
 							<TextField 
 								{...params} 
@@ -649,7 +646,7 @@ const PersonForm = props => {
 				<IconAutocomplete 
 					defaultValue={props?.formType === 'student' ? section : section ?? []}
 					multiple={props?.formType !== 'student' ? true : false}
-					list={memoizedSectionGenerator()}
+					list={strands?.reduce?.(( strandList, strand ) => [...strandList, ...strand.sections], [])}
 					Icon={CreditCardIcon}
 					label="Section"
 					placeholder="Add section"
@@ -1076,7 +1073,7 @@ const TeacherBox = props => {
 		</>
 	);
 }
-
+	
 const CustomChip = props => {
 	return(
 		<div className="m-1">

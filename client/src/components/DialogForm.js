@@ -13,9 +13,9 @@ const DialogForm = props => {
 	const theme = useTheme();
 	const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
 
-	const handleFormProcess = fn => {
-		props?.onProcess?.();
-		return fn;
+	const handleFormProcess = fn1 => fn2 => {
+		fn1?.();
+		return fn2;
 	}
 
 	return(
@@ -47,7 +47,22 @@ const DialogForm = props => {
 				{
 					props?.processBtnOff
 						? null
-						: <Button onClick={() => handleFormProcess(props?.close)}>Process</Button>
+						: <Button onClick={() => handleFormProcess( props?.onProcess )( props?.close )()}>Process</Button>
+				}
+				{
+					props?.onDelete
+						? <Button 
+							onClick={() => {
+								let isConfirmed = window.confirm('Are you sure you want to delete this user?');
+
+								if( isConfirmed ) return handleFormProcess( props?.onDelete )( props?.close )();
+
+								return;
+							}}
+							>
+								Delete
+							</Button>
+						: null 
 				}
 	        </DialogActions>
 		</Dialog>

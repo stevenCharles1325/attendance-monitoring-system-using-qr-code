@@ -32,6 +32,7 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import SettingsIcon from '@mui/icons-material/Settings';
 import Profile from './Profile';
+import ProfilePic from './ProfilePic';
 
 
 const QamsMenu = props => {
@@ -138,13 +139,13 @@ const QamsMenu = props => {
 								<br/>
 								<div className="my-2 col-12 d-flex flex-column">
 									<div className="col-12 d-flex justify-content-center align-items-center">
-										<Avatar sx={{ width: 100, height: 100, border: '4px solid rgba(0, 0, 0, 0.2)' }}/>
+										<ProfilePic openBorder disabled width="100px" height="100px"/>
 									</div>
 									<br/>
 									<div 
 										className="col-12 d-flex justify-content-center align-items-center"
 									>
-										<h6>{ props?.username ?? 'User' }</h6>
+										<h1 className="font-bold tracking-wide text-[#383735]">{ props?.username ?? 'User' }</h1>
 									</div>
 								</div>
 								<br/>
@@ -224,7 +225,7 @@ const QamsMenu = props => {
 						</div>
 					)
 			}
-			<div className="flex-grow-1 d-flex position-relative">
+			<div className="flex-grow-1 w-full h-[50px] d-flex position-relative">
 				{
 					location.pathname !== props?.hideOn
 						?	<div className="menu-box w-fit bg-white shadow border">
@@ -234,7 +235,7 @@ const QamsMenu = props => {
 							</div>
 						: null
 				}
-				<div className="flex-grow-1 h-[615px] w-[500px] overflow-hidden">
+				<div className="flex-grow-1 overflow-hidden">
 					{ props?.children }
 				</div>
 			</div>

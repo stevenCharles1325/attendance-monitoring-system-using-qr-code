@@ -59,19 +59,37 @@ const authentication = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[ 1 ];
 
-  if( !token ) return res.sendStatus( 401 );
+  const verify = () => {
+    if( !token ) return res.sendStatus( 401 );
 
-  jwt.verify( token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-    if( err ) return res.sendStatus( 401 );
+    jwt.verify( token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+      if( err ) return res.sendStatus( 401 );
 
-    req.user = user;
-    next();
+      req.user = user;
+      next();
+    });
+  }
+
+  User.findOne({ username: 'sysadmin' }, (err, sysadmin) => {
+    if( err ) return res.sendStatus( 500 );
+
+    if( !sysadmin ){
+      User.create({ username: 'sysadmin', password: 'sysadmin', role: 'sysadmin' }, err => {
+        if( err ) return res.sendStatus( 500 );
+
+        verify();
+      });
+    }
+    else{
+      verify();
+    }
   });
 }
 
 
 router.get('/verify-me', authentication, async (req, res, next) => {
   // If a request came here then the user is authorized
+  
   return res.json({ user: req.user, message: `Welcome ${ req.user.username }`});
 });
 
@@ -362,25 +380,26 @@ router.get('/get-users/type/:type', async ( req, res ) => {
 });
 
 
-router.get('/get-subject-from-strand/strands/:strands', async ( req, res ) => {
-  if( !req.params.strands ) return res.sendStatus( 406 );
+// router.get('/get-subject-from-strand/strands/:strands', async ( req, res ) => {
+//   if( !req.params.strands ) return res.sendStatus( 406 );
 
-  const strands = req.params.strands.split(',');
+//   const strands = req.params.strands.split(',');
 
-  Strand.find().where('name').in( strands ).exec(( err, doc ) => {
-    if( err ) return res.sendStatus( 500 );
+//   Strand.find().where('name').in( strands ).exec(( err, doc ) => {
+//     if( err ) return res.sendStatus( 500 );
 
-    if( doc.length ){
-      return res.json(doc.reduce(( prev, accum ) => {
-        prev = [ ...prev, ...accum.subjects ];
-        return prev;    
-      }, []));
-    }
-    else{
-      return res.sendStatus( 200 );
-    }
-  }); 
-});
+//     if( doc.length ){
+//       console.log( doc );
+//       return res.json(doc.reduce(( prev, accum ) => {
+//         prev = [ ...prev, ...accum.subjects ];
+//         return prev;    
+//       }, []));
+//     }
+//     else{
+//       return res.sendStatus( 200 );
+//     }
+//   }); 
+// });
 
 
 router.get('/get-items/type/:type', async ( req, res ) => {
@@ -432,18 +451,83 @@ router.post('/edit/type/:type/id/:id', authentication, async ( req, res ) => {
       break;
 
     case 'student':
-      Student.findOneAndUpdate({ _id: id }, { ...req.body }, err => {
+      Student.findOne({ _id: id }, (err, doc) => {
         if( err ) return res.sendStatus( 500 );
 
-        return res.json({ message: 'Successfully added a new Student' });
+        if( doc ){
+          if( doc.state === 'verified' ){
+            User.findOne({ username: doc.studentNo }, (err, doc2) => {
+              if( err ) return res.sendStatus( 500 );
+
+              if( doc2 ){
+                doc2.username = req.body.studentNo;
+                doc2.save( err => {
+                  if( err ) return res.sendStatus( 500 );
+
+                  Student.findOneAndUpdate({ _id: id }, { ...req.body }, err => {
+                    if( err ) return res.sendStatus( 500 );
+
+                    return res.json({ message: 'Successfully added a new Student' });
+                  });
+                });
+              }
+              else{
+                return res.sendStatus( 404 );
+              }
+            });
+          }
+          else{
+            Student.findOneAndUpdate({ _id: id }, { ...req.body }, err => {
+              if( err ) return res.sendStatus( 500 );
+
+              return res.json({ message: 'Successfully added a new Student' });
+            });
+          }
+        } 
+        else{
+          return res.sendStatus( 404 );
+        }       
       });
       break;
 
     case 'teacher':
-      Teacher.findOneAndUpdate({ _id: id }, { ...req.body }, err => {
+      Teacher.findOne({ _id: id }, (err, doc) => {
         if( err ) return res.sendStatus( 500 );
 
-        return res.json({ message: 'Successfully added a new Teacher' });
+        if( doc ){
+          if( doc.state === 'verified' ){
+            User.findOne({ username: doc.employeeNo }, (err, doc2) => {
+              if( err ) return res.sendStatus( 500 );
+
+              console.log( doc2 );
+              if( doc2 ){
+                doc2.username = req.body.employeeNo;
+                doc2.save( err => {
+                  if( err ) return res.sendStatus( 500 );
+
+                  Teacher.findOneAndUpdate({ _id: id }, { ...req.body }, err => {
+                    if( err ) return res.sendStatus( 500 );
+
+                    return res.json({ message: 'Successfully added a new Teacher' });
+                  });
+                });
+              }
+              else{
+                return res.sendStatus( 404 );
+              }
+            });
+          }
+          else{
+            Teacher.findOneAndUpdate({ _id: id }, { ...req.body }, err => {
+              if( err ) return res.sendStatus( 500 );
+
+              return res.json({ message: 'Successfully added a new Teacher' });
+            });
+          }
+        } 
+        else{
+          return res.sendStatus( 404 );
+        }       
       });
       break;
 
@@ -1006,5 +1090,75 @@ router.get('/attendances', authentication, async ( req, res ) => {
   });
 });
 
+
+router.put('/update-profile-picture/userId/:userId', authentication, async ( req, res ) => {
+  const { userId } = req.params;
+
+  if( !req.files ) return res.sendStatus( 404 );
+
+  User.findOne({ username: userId }, ( err, user ) => {
+    if( err ) return res.sendStatus( 500 );
+
+    if( user ){
+      const imagesPath = path.join( __dirname, '../client/public/images/user' );
+      const image = req.files.userPicture;
+
+      const fileName = `${userId}-${new Date().getTime()}.png`;
+      const destinationPath = path.join(imagesPath, `/${fileName}`);
+
+      fs.readdir( imagesPath, ( err, files ) => {
+        if( err ) return res.sendStatus( 500 );
+
+        for( let file of files ){
+
+          if( file === fileName ){
+            try{
+              fs.unlinkSync(path.join( imagesPath, `/${file}` ));
+            }
+            catch( err ){
+              console.log( err );
+              return res.sendStatus( 500 );
+            }
+          }
+        }
+
+        image.mv( destinationPath, err => {
+          if( err ) return res.sendStatus( 500 );
+
+          user.imageSrc = '/images/user/' + fileName;
+
+          user.save( err => {
+            if( err ) return res.sendStatus( 500 );
+
+            return res.json({
+              imageSrc: '/images/user/' + fileName
+            });
+          });
+        });
+      });
+    }
+    else{
+      return res.sendStatus( 404 );
+    }
+  });
+});
+
+
+router.get('/get-profile-picture/userId/:userId', authentication, async ( req, res ) => {
+  const { userId } = req.params;
+
+  User.findOne({ username: userId }, ( err, user ) => {
+    if( err ) return res.sendStatus( 500 );
+
+    if( user ){
+      return res.json({
+        imageSrc: user.imageSrc
+      });
+    }
+    else{
+      return res.sendStatus( 404 );
+    }
+  });
+});
 
 module.exports = router;

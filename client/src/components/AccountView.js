@@ -113,941 +113,1022 @@ const validEmailAddress = [
 ];
 
 
-const AccountView = props => {
-	const {
-		id,
-		role,
-		firstName,
-		middleName,
-		lastName,
-		birthDate,
-		email,
-		gender,
-		lrn,
-		section,
-		strand,
-		strandName,
-		sectionName,
-		schoolStartDate,
-		userType,
-		subjects,
-		teachers
-	} = useSelector( state => state.account );
+	const AccountView = props => {
+		const {
+			id,
+			role,
+			firstName,
+			middleName,
+			lastName,
+			birthDate,
+			email,
+			gender,
+			lrn,
+			section,
+			strand,
+			strandName,
+			sectionName,
+			schoolStartDate,
+			userType,
+			subjects,
+			teachers
+		} = useSelector( state => state.account );
 
-	const [semesterSwitch, setSemesterSwitch] = React.useState( [] );
+		const [semesterSwitch, setSemesterSwitch] = React.useState( [] );
+		const [strands, setStrands] = React.useState( [] );
 
-	const [filter, setFilter] = React.useState( [] );
-	const [filteredItems, setFilteredItems] = React.useState( [] );
-	const [filterAnchorEl, setFilterAnchorEl] = React.useState( null );
-	const [settingsAnchorEl, setSettingsAnchorEl] = React.useState( null );
-	const [selectedFilter, setSelectedFilter] = React.useState( [] );
-	const [filterIndexes, setFilterIndexes] = React.useState( {} );
-	const [searchText, setSearchText] = React.useState( '' );
-
-	const [openDialogForm, setOpenDialogForm] = React.useState( false );
-	const [formType, setFormType] = React.useState( null );
-
-	const { enqueueSnackbar } = useSnackbar();
-	const filterOpen = Boolean( filterAnchorEl );
-	const settingOpen = Boolean( settingsAnchorEl );
-	const dispatch = useDispatch();
-
-	// form states
-	const idLabel = props?.userType === 'student' ? 'Student' : 'Employee';
-	const infoMessageFor = props?.userType;
-
-	const [formTitle, setFormTitle] = React.useState( null );
-	const [infoMessage, setInfoMessage] = React.useState( null );
-	const [content, setContent] = React.useState( [] );
-	const [instructorSubject, setInstructorSubject] = React.useState( [] );
-
-	const [userData, setUserData] = React.useState( null );
-	const isOpenProfileView = React.useMemo(() => !!userData, [ userData ]);
-	const handleClearUserDataContent = () => setUserData( null );
-
-	const [teacherList, setTeacherList] = React.useState( [] );
-	const [selectedTeachers, setSelectedTeachers] = React.useState( [] );
-
-	const handleGetTeachers = async() => {
-		Axios.get(`${window.API_BASE_ADDRESS}/master/get-users/type/teacher`)
-		.then( res => {
-			setTeacherList( res.data );
-		})
-		.catch( err => {
-			throw err;
-		});
-	}
-
-	const handleChangeSelectedTeacher = selected => {
-		setSelectedTeachers([ ...selected ]);
-	}
-
-	const findChildrenIndexOf = ( name, list, isChildren = false ) => {
-		let returnedIndex = -1;
-
-		if( !list || !list?.length || !name ) return returnedIndex;
-
-		list.forEach(( item, index ) => {
-			if( isChildren ){
-				if( item.sections.includes( name ) ){
-					returnedIndex = index;
-					return;
-				}
-			}
-			else{
-				if( item.name === name ){
-					returnedIndex = index;
-					return;
-				}
-			}
-		});
-
-		return returnedIndex;
-	}
-
-	const generateSectionList = () => {
-		if( !props?.filter ) return [];
-
-		if( strand instanceof Array ){
-			const tempSections = [];
-
-			if( strand.length ){
-				strand.forEach( strnd => {
-					tempSections.push( ...props.filter[findChildrenIndexOf( strnd, props.filter )].sections );
-				});
-
-				return tempSections;
-			}
-			else{
-				return props.filter.map( fltr => fltr.sections ).reduce(( prev, curr ) => [ ...prev, ...curr ], []);
-			}
-		}
-		else{
-			return strand && strand?.length
-				? props?.filter?.[ findChildrenIndexOf( strand, props.filter ) ]?.sections ?? []
-				: props.filter.map( fltr => fltr.sections ).reduce(( prev, curr ) => [ ...prev, ...curr ], []) ?? []
-		}
-	}
-
-	const generateStrandList = () => {
-		if( !props?.filter ) return [];
-		
-		if( section instanceof Array ){
-			const tempStrands = [];
-
-			if( section.length ){
-				section.forEach( sctn => {
-					if( props?.filter?.[findChildrenIndexOf( sctn, props.filter, true )]?.name )
-						tempStrands.push( props.filter[findChildrenIndexOf( sctn, props.filter, true )].name );
-				});
-
-				return tempStrands;
-			}
-			else{
-				return props.filter.map( fltr => fltr.name );
-			}
-		}
-		else{
-			return section && section?.length 
-				? [ props?.filter?.[ findChildrenIndexOf( section, props.filter, true ) ]?.name ] ?? [] 
-				: props.filter.map( fltr => fltr.name ) ?? []
-		}
-	}
-
-	const memoizedStrandGenerator = React.useCallback(() => generateStrandList(), [ section, props ]);
-	const memoizedSectionGenerator = React.useCallback(() => generateSectionList(), [ strand, props ]);
-
-	const isEmailValid = email => {
-		for( let eadd of validEmailAddress ){
-			const splittedEmail = email.split( '@' );
-
-			if( splittedEmail.length > 2 ) return false;
-			if( splittedEmail[ 0 ] === eadd ) return false;
-
-			if( splittedEmail[ 1 ] === eadd ) return true;
+		const getStrand = () => {
+			Axios.get(`${window.API_BASE_ADDRESS}/master/get-items/type/strand`)
+			.then( res => {
+				console.log( res.data );
+				setStrands(() => [ ...res.data ]);			
+			})
+			.catch( err => {
+				console.error( err );
+			});
 		}
 
-		return false;
-	}
+		const formData = React.useMemo(() => ({
+			id, 
+			role, 
+			firstName, 
+			middleName, 
+			lastName, 
+			birthDate, 
+			email, 
+			gender, 
+			lrn, 
+			section, 
+			strand, 
+			strandName, 
+			sectionName, 
+			schoolStartDate, 
+			userType, 
+			subjects, 
+			teachers
+		}), [ 
+			id, role, firstName, 
+			middleName, lastName, birthDate, 
+			email, gender, lrn, 
+			section, strand, 
+			strandName, sectionName, 
+			schoolStartDate, userType, subjects, 
+			teachers 
+		]);
 
-	const handleAddStudent = () => {
-		if(!isEmailValid( email )) 
-			return enqueueSnackbar('Email is invalid', { variant: 'error', preventDuplicate: true });
+		const [filter, setFilter] = React.useState( [] );
+		const [filteredItems, setFilteredItems] = React.useState( [] );
+		const [filterAnchorEl, setFilterAnchorEl] = React.useState( null );
+		const [settingsAnchorEl, setSettingsAnchorEl] = React.useState( null );
+		const [selectedFilter, setSelectedFilter] = React.useState( [] );
+		const [filterIndexes, setFilterIndexes] = React.useState( {} );
+		const [searchText, setSearchText] = React.useState( '' );
 
-		if( !teachers?.length )
-			return enqueueSnackbar('Teacher list is empty', { variant: 'error', preventDuplicate: true });
+		const [openDialogForm, setOpenDialogForm] = React.useState( false );
+		const [formType, setFormType] = React.useState( null );
 
-		Axios.post(`${window.API_BASE_ADDRESS}/master/add/type/student`,  
-			{
-				studentNo: id,
-				firstName,
-				middleName,
-				lastName,
-				birthDate,
-				section,
-				strand,
-				lrn,
-				email,
-				gender,
-				teachers,
-				schoolStartDate: new Date( schoolStartDate ).toDateString()
-			},
-			window.requestHeader
-		)
-		.then( res => {
-			enqueueSnackbar( res.data.message, { variant: 'success', preventDuplicate: true });
-			handleDialogFormClose();
+		const { enqueueSnackbar } = useSnackbar();
+		const filterOpen = Boolean( filterAnchorEl );
+		const settingOpen = Boolean( settingsAnchorEl );
+		const dispatch = useDispatch();
 
-			props?.refresh?.();
-		})
-		.catch( err => {
-			enqueueSnackbar( err?.response?.data?.message ?? 'Please try again!', { variant: 'error', preventDuplicate: true });
-		});
-	}
+		// form states
+		const idLabel = props?.userType === 'student' ? 'Student' : 'Employee';
+		const infoMessageFor = props?.userType;
 
-	const handleAddTeacher = () => {
-		if(!isEmailValid( email )) 
-			return enqueueSnackbar('Email is invalid', { variant: 'error', preventDuplicate: true });
+		const [formTitle, setFormTitle] = React.useState( null );
+		const [infoMessage, setInfoMessage] = React.useState( null );
+		const [content, setContent] = React.useState( [] );
+		const [instructorSubject, setInstructorSubject] = React.useState( [] );
 
-		if( !instructorSubject.length ){
-			return enqueueSnackbar('At least 1 subject is required', { variant: 'error', preventDuplicate: true });
+		const [userData, setUserData] = React.useState( null );
+		// const isOpenProfileView = React.useMemo(() => !!userData, [ userData ]);
+		const handleClearUserDataContent = () => setUserData( null );
+
+		const [teacherList, setTeacherList] = React.useState( [] );
+		const [selectedTeachers, setSelectedTeachers] = React.useState( [] );
+
+		const handleGetTeachers = async() => {
+			Axios.get(`${window.API_BASE_ADDRESS}/master/get-users/type/teacher`)
+			.then( res => {
+				setTeacherList( res.data );
+			})
+			.catch( err => {
+				throw err;
+			});
 		}
 
-		Axios.post(`${window.API_BASE_ADDRESS}/master/add/type/teacher`,  
-			{
-				employeeNo: id,
-				firstName,
-				middleName,
-				lastName,
-				birthDate,
-				section,
-				strand,
-				lrn,
-				email,
-				gender,
-				subjects: instructorSubject
-			},
-			window.requestHeader
-		)
-		.then( res => {
-			enqueueSnackbar( res.data.message, { variant: 'success', preventDuplicate: true });
-			handleDialogFormClose();
-
-			props?.refresh?.();
-		})
-		.catch( err => {
-			enqueueSnackbar( err?.response?.data?.message ?? 'Please try again!', { variant: 'error', preventDuplicate: true });
-		});
-	}
-
-	const handleAddStrand = () => {
-		Axios.post(`${window.API_BASE_ADDRESS}/master/add/type/strand`,  
-			{
-				name: strandName,
-				subjects: subjects
-			},
-			window.requestHeader
-		)
-		.then( res => {
-			enqueueSnackbar( res.data.message, { variant: 'success', preventDuplicate: true });
-			handleDialogFormClose();
-
-			props?.refresh?.();
-		})
-		.catch( err => {
-			enqueueSnackbar( err?.response?.data?.message ?? 'Please try again!', { variant: 'error', preventDuplicate: true });
-		});
-	}
-
-	const handleAddSection = () => {
-		Axios.post(`${window.API_BASE_ADDRESS}/master/add/type/section`,  
-			{ ...sectionName },
-			window.requestHeader
-		)
-		.then( res => {
-			enqueueSnackbar( res.data.message, { variant: 'success', preventDuplicate: true });
-			handleDialogFormClose();
-
-			props?.refresh?.();
-		})
-		.catch( err => {
-			enqueueSnackbar( err?.response?.data?.message ?? 'Please try again!', { variant: 'error', preventDuplicate: true });
-		});
-	}
-
-	const initSemester = activeSemester => {
-		return [
-			{
-				name: '1st Semester',
-				isActive: activeSemester === 1,
-				onSwitch: () => handleSwitchSemester( 1 )
-			},
-			{
-				name: '2nd Semester',
-				isActive: activeSemester === 2,
-				onSwitch: () => handleSwitchSemester( 2 )
-			}
-		];
-	}
-
-	const handleFilterExpand = index => {
-		const tempFilter = filter;
-
-		tempFilter[ index ].isOpen = !tempFilter[ index ].isOpen;
-		setFilter([ ...tempFilter ]);
-	}
-
-	const getSemesters = () => {
-		Axios.get(`${window.API_BASE_ADDRESS}/master/get-items/type/semester`)
-		.then( res => setSemesterSwitch([ ...initSemester( res.data.activeSemester ) ]))
-		.catch( err => {
-			enqueueSnackbar('Error while getting semester', { variant: 'error' });
-			console.error( err );
-		});
-	}
-
-	const handleSettingsOpen = e => {
-		setSettingsAnchorEl( e.currentTarget );
-	}
-
-	const handleSettingsClose = () => {
-		setSettingsAnchorEl( null );
-	}	
-
-	const handleFilterOpen = e => {
-		setFilterAnchorEl( e.currentTarget );
-	}
-
-	const handleFilterClose = () => {
-		setFilterAnchorEl( null );
-	}
-
-	const handleSwitchSemester = semesterNumber => {
-		Axios.put(`${window.API_BASE_ADDRESS}/master/activate/semester/${semesterNumber}`, null, window.requestHeader)
-		.then(() => {
-			setSemesterSwitch(() => [ ...initSemester( semesterNumber ) ]);
-		})
-		.catch( err => {
-			enqueueSnackbar('Error while switching semester', { variant: 'error' });
-			console.error( err );
-		});
-	}
-
-	const handleSelectFilter = text => {
-		let tempSelectedFilter = [ ...selectedFilter ];
-
-		if(tempSelectedFilter.includes( text )){
-			tempSelectedFilter = [ ...tempSelectedFilter.filter( filter => filter !== text ) ];
-		}
-		else{
-			tempSelectedFilter = [ ...tempSelectedFilter, text ];
+		const handleChangeSelectedTeacher = selected => {
+			setSelectedTeachers([ ...selected ]);
 		}
 
-		tempSelectedFilter = Array.from( new Set( tempSelectedFilter ) );
-		setSelectedFilter([ ...tempSelectedFilter ]);
-	}
+		const findChildrenIndexOf = ( name, list, isChildren = false ) => {
+			let returnedIndex = -1;
 
-	const handleUserAddFormType = type => fn => {
-		setFormType( type );
+			if( !list || !list?.length || !name ) return returnedIndex;
 
-		return fn;
-	}
-
-	const handleDialogFormClose = () => {
-		dispatch(handleClear());
-		setOpenDialogForm( false );
-	}
-
-	const handleRowSwitch = async ( e, id ) => {
-		const status = e.target.checked ? 'activated' : 'deactivated';
-
-		Axios.put(`${window.API_BASE_ADDRESS}/master/user-status-switch/status/${status}/id/${id}`, null, window.requestHeader)
-		.then(() => props?.refresh?.())
-		.catch( err => {
-			enqueueSnackbar( 
-				err?.response?.data?.message ?? 'Please try again!',
-				{ variant: 'error', preventDuplicate: true }
-			);
-
-			console.error( err );
-		});
-	}
-
-	const Row = React.useCallback(({ index, style }) => {
-			const index1 = index;
-			const keys = Object.keys(filteredItems[ index1 ]);
-
-			return( 
-				<div 
-					id={uniqid()} 
-					style={{...style, backgroundColor: index % 2 === 0 ? 'white' : '#f6f6f6'}} 
-					className="cursor-pointer account-view-item px-4 d-flex justify-content-between align-items-center"
-					onDoubleClick={() => setUserData( filteredItems[ index1 ] )}
-				>
-					{
-						props?.renderItemsKey?.map?.(( key, index ) => (
-							props?.statusSwitchOn && key === 'status'
-								? <div key={uniqid()}className="qams-row col-sm d-flex justify-content-center text-capitalize"> 
-									<FormGroup>
-										<FormControlLabel 
-											control={
-												<Switch 
-													checked={
-														filteredItems[ index1 ][ key ] === 'activated' 
-															? true 
-															: false
-														}
-													onChange={e => handleRowSwitch(e, filteredItems[ index1 ]._id)}
-													size="small"
-													color="default"
-												/>
-											} 
-											label={filteredItems[ index1 ][ key ] === 'activated' ? 'active' : 'inactive'}
-										/>
-								    </FormGroup>
-							    </div>
-							    : <div 
-							    	key={uniqid()} 
-							    	id={filteredItems[ index1 ][ key ]} 
-							    	className={`qams-row text-capitalize d-flex justify-content-${index === 0 ? 'start' : 'center'} col-sm`}
-							    >
-									{ 
-										filteredItems[ index1 ][ key ] instanceof Array 
-											? filteredItems[ index1 ][ key ].join(', ') 
-											: filteredItems[ index1 ][ key ] 
-									}
-								</div>
-						))
-					}
-				</div>
-			)
-		});
-
-	const filtering = items => {
-		const tempFilteredItems = [];
-		const tempSelectedFilters = selectedFilter.map( reformatText );
-
-		items?.forEach?.(( item, index ) => {
-			const keys = Object.values(props?.items?.[ index ]).map( reformatText );
-
-			for( let key of keys ){
-				if( typeof key === 'string' ){
-					if( !searchText.length || (searchText.length && key.includes(reformatText( searchText )))){
-						if( tempSelectedFilters.length ){
-							const applyFilter = () => {
-								for( let section of item.section ){
-									if( tempSelectedFilters.includes(reformatText( section )) ){
-										tempFilteredItems.push( item );
-										return;
-									}
-								}
-
-								for( let strand of item.strand ){
-									if( tempSelectedFilters.includes(reformatText( strand )) ){
-										tempFilteredItems.push( item );
-										return;
-									}
-								}
-							}
-
-							applyFilter();
-						}
-						else{
-							tempFilteredItems.push( item );
-							break;
-						}
-
-						break;
+			list.forEach(( item, index ) => {
+				if( isChildren ){
+					if( item.sections.includes( name ) ){
+						returnedIndex = index;
+						return;
 					}
 				}
-			}
-		});
-
-		setFilteredItems(() => [ ...tempFilteredItems ]);
-	}
-
-	const memoizedFiltering = React.useCallback(() => filtering( props?.items ), [ props?.items, selectedFilter, searchText ]);
-
-	React.useEffect(() => {
-		if( openDialogForm ){
-			const personForm = [
-				<IconField 
-					Icon={KeyIcon} 
-					key={uniqid()}
-					defaultValue={id}
-					label={`${idLabel} ID`}
-					onChange={e => dispatch(handleId( e.target.value ))}
-				/>,
-				props?.userType === 'student'
-					? <IconField 
-							Icon={NumbersIcon}
-							key={uniqid()}
-							defaultValue={lrn}
-							label="LRN"
-							onChange={e => dispatch(handleLrn( e.target.value ))}
-						/>
-					: null,
-				<IconField 
-					Icon={DriveFileRenameOutlineIcon} 
-					key={uniqid()}
-					defaultValue={firstName} 
-					label="First name"
-					onChange={e => dispatch(handleFirstName( e.target.value ))}
-				/>,
-				<IconField 
-					Icon={DriveFileRenameOutlineIcon} 
-					key={uniqid()}
-					defaultValue={middleName} 
-					label="Middle name"
-					onChange={e => dispatch(handleMiddleName( e.target.value ))}
-				/>,
-				<IconField 
-					Icon={DriveFileRenameOutlineIcon} 
-					key={uniqid()}
-					defaultValue={lastName} 
-					label="Last name"
-					onChange={e => dispatch(handleLastName( e.target.value ))}
-				/>,
-				<IconField 
-					Icon={AlternateEmailIcon} 
-					key={uniqid()}
-					defaultValue={email} 
-					label="Email"
-					type="email"
-					onChange={e => dispatch(handleEmail( e.target.value ))}
-				/>,
-				<IconField 
-					Icon={CakeIcon} 
-					key={uniqid()}
-					defaultValue={birthDate} 
-					label="Birth-date" 
-					type="date"
-					onChange={e => dispatch(handleBirthDate( e.target.value ))}
-				/>,
-				<IconField 
-					Icon={CakeIcon} 
-					key={uniqid()}
-					defaultValue={schoolStartDate} 
-					label="School Starting Day" 
-					type="date"
-					onChange={e => dispatch(handleSchoolStartDate( e.target.value ))}
-				/>,
-				<Box key={uniqid()} sx={{ display: 'flex', alignItems: 'flex-end', margin: '30px 0 30px 0'}}>
-					<FemaleIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
-					<Autocomplete
-						value={gender}
-						freeSolo
-						selectOnFocus
-						handleHomeEndKeys
-						options={genderOptions}
-						renderOption={(props, option) => <li {...props}>{ option }</li>}
-						getOptionLabel={(option) => {
-					        // Value selected with enter, right from the input
-					        if( typeof option === 'string' ) {
-					          return option;
-					        }
-					      
-					        // Add "xxx" option created dynamically
-					        if( option.inputValue ) {
-					          return option.inputValue;
-					        }
-					      
-					        // Regular option
-					        return option.title;
-						}}
-						filterOptions={(options, params) => {
-					        const filtered = filterer(options, params);
-
-					        const { inputValue } = params;
-
-					        // console.log( options );
-					        // Suggest the creation of a new value
-					        const isExisting = options.some((option) => inputValue === option);
-					        if (inputValue !== '' && !isExisting) {
-								filtered.push( inputValue );
-					        }
-
-					        return filtered;
-						}}
-						renderInput={(params) => 
-							<TextField 
-								{...params} 
-								label="Gender"
-								placeholder="Select or Type Gender"
-								variant="standard"
-								fullWidth
-								sx={{ width: 500 }}
-							/>
-						}
-						onChange={(_, newValue) => {
-							// console.log( newValue );
-							if (typeof newValue === 'string') {
-								dispatch(handleGender( newValue ));
-							} else if (newValue && newValue.inputValue) {
-								// Create a new value from the user input
-								dispatch(handleGender( newValue.inputValue ));
-							} else {
-								// console.log( newValue );
-								dispatch(handleGender( newValue ));
-							}
-						}}
-					/>
-				</Box>,
-				<IconAutocomplete 
-					defaultValue={formType === 'student' ? section : section ?? []}
-					multiple={formType !== 'student' ? true : false}
-					key={uniqid()}
-					list={memoizedSectionGenerator()}
-					Icon={CreditCardIcon}
-					label="Section"
-					placeholder="Add section"
-					onChange={(_, newValue) => dispatch(handleSection( newValue ))}
-				/>,
-				<IconAutocomplete 
-					defaultValue={formType === 'student' ? strand : strand ?? []}
-					multiple={formType !== 'student' ? true : false}
-					key={uniqid()}
-					list={memoizedStrandGenerator()}
-					Icon={StoreIcon}
-					label="Strand"
-					placeholder="Add strand"
-					onChange={(_, newValue) => dispatch(handleStrand( newValue ))}
-				/>,
-				formType === 'student'
-					? <TeacherBox key={uniqid()} teachers={teacherList} onChange={handleChangeSelectedTeacher}/>
-					: <SubjectBox key={uniqid()} strand={strand} setInstructorSubject={setInstructorSubject}/>
-			];
-
-			const sectionForm = [
-				<IconField 
-					key={uniqid()} 
-					label="Section name"
-					Icon={DriveFileRenameOutlineIcon} 
-					onChange={e => dispatch(handleSectionName( e.target.value ))}
-				/>,
-				<IconAutocomplete 
-					key={uniqid()}
-					list={props?.filter?.map?.( fltr => fltr.name ) ?? []}
-					Icon={StoreIcon}
-					label="Member of Strand"
-					placeholder="Strand"
-					onChange={(_, newValue) => dispatch(handleSectionParent( newValue ))}
-				/>
-			];
-
-			const strandForm = [
-				<IconField 
-					key={uniqid()} 
-					label="Section strand"
-					Icon={DriveFileRenameOutlineIcon} 
-					onChange={e => dispatch(handleStrandName( e.target.value ))}
-				/>,
-				<IconAutocomplete 
-					multiple={true}
-					key={uniqid()}
-					Icon={MenuBookIcon}
-					freeSolo={true}
-					list={[]}
-					label="Subjects"
-					placeholder="Add a subject"
-					onChange={(_, newValue) => dispatch(handleSubjects(newValue.map( val => val.toUpperCase() )))}
-				/>
-			];
-
-			setFormTitle( `Add a ${formType}` );
-			setInfoMessage( `Adding a ${infoMessageFor} requires you to fill all fields` );
-			setContent( 
-				formType === 'section' 
-					? sectionForm
-					: formType === 'strand'
-						? strandForm
-						: personForm
-			);
-		}
-		else{
-			setFormTitle( null );
-			setInfoMessage( null );
-			setContent( [] );
-		}
-	}, [openDialogForm, formType, props, section, strand]);
-
-	React.useEffect(() => {
-		if( props?.filter?.length ){
-			const tempFilterIndexes = {};
-
-			const tempFilterKeys = props.filter.map(( fltr, index ) => {
-				tempFilterIndexes[ fltr.name ] = index;
-				fltr["isOpen"] = false;
-				return fltr;
+				else{
+					if( item.name === name ){
+						returnedIndex = index;
+						return;
+					}
+				}
 			});
 
-			setFilterIndexes({ ...tempFilterIndexes });			
-			setFilter([ ...tempFilterKeys ]);
+			return returnedIndex;
 		}
-	}, [props.filter]);
 
-	React.useEffect(() => {
-		memoizedFiltering();
-		if( props?.userType ){
-			dispatch(handleUserType( props?.userType ));
+		// const generateSectionList = () => {
+		// 	if( !props?.filter ) return [];
+
+		// 	if( strand instanceof Array ){
+		// 		const tempSections = [];
+
+		// 		if( strand.length ){
+		// 			strand.forEach( strnd => {
+		// 				tempSections.push( ...props.filter[findChildrenIndexOf( strnd, props.filter )].sections );
+		// 			});
+
+		// 			return tempSections;
+		// 		}
+		// 		else{
+		// 			return props.filter.map( fltr => fltr.sections ).reduce(( prev, curr ) => [ ...prev, ...curr ], []);
+		// 		}
+		// 	}
+		// 	else{
+		// 		return strand && strand?.length
+		// 			? props?.filter?.[ findChildrenIndexOf( strand, props.filter ) ]?.sections ?? []
+		// 			: props.filter.map( fltr => fltr.sections ).reduce(( prev, curr ) => [ ...prev, ...curr ], []) ?? []
+		// 	}
+		// }
+
+		// const generateStrandList = () => {
+		// 	if( !props?.filter ) return [];
+			
+		// 	if( section instanceof Array ){
+		// 		const tempStrands = [];
+
+		// 		if( section.length ){
+		// 			section.forEach( sctn => {
+		// 				if( props?.filter?.[findChildrenIndexOf( sctn, props.filter, true )]?.name )
+		// 					tempStrands.push( props.filter[findChildrenIndexOf( sctn, props.filter, true )].name );
+		// 			});
+
+		// 			return tempStrands;
+		// 		}
+		// 		else{
+		// 			return props.filter.map( fltr => fltr.name );
+		// 		}
+		// 	}
+		// 	else{
+		// 		return section && section?.length 
+		// 			? [ props?.filter?.[ findChildrenIndexOf( section, props.filter, true ) ]?.name ] ?? [] 
+		// 			: props.filter.map( fltr => fltr.name ) ?? []
+		// 	}
+		// }
+
+		// const memoizedStrandGenerator = React.useCallback(() => generateStrandList(), [ section, props ]);
+		// const memoizedSectionGenerator = React.useCallback(() => generateSectionList(), [ strand, props ]);
+
+		const isEmailValid = email => {
+			for( let eadd of validEmailAddress ){
+				const splittedEmail = email.split( '@' );
+
+				if( splittedEmail.length > 2 ) return false;
+				if( splittedEmail[ 0 ] === eadd ) return false;
+
+				if( splittedEmail[ 1 ] === eadd ) return true;
+			}
+
+			return false;
 		}
-	}, [props, selectedFilter, searchText]);
 
-	React.useEffect(() => {
-		getSemesters();
-		handleGetTeachers();
-	}, []);
+		const handleAddStudent = () => {
+			if(!isEmailValid( email )) 
+				return enqueueSnackbar('Email is invalid', { variant: 'error', preventDuplicate: true });
 
-	React.useEffect(() => dispatch(handleTeachers([ ...selectedTeachers ])), [selectedTeachers]);
-	// React.useEffect(() => console.log( teachers ), [teachers]);
+			if( !teachers?.length )
+				return enqueueSnackbar('Teacher list is empty', { variant: 'error', preventDuplicate: true });
 
-	return(
-		<div className="account-view border rounded d-flex flex-column">
-			<div className="account-view-top-bar px-3 border-bottom d-flex justify-content-between align-items-center">
-				<div className="col-3">
-					<Box sx={{ display: 'flex', alignItems: 'center' }}>
-						<SearchIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
-						<TextField 
-							label=""
-							id="input-with-sx" 
-							variant="standard"
-							onChange={e => setSearchText( e.target.value )}
-						/>
-					</Box>
-				</div>
-				<div className="col-7 text-center d-flex" style={{ overflow: 'auto' }}>
-					{
-						selectedFilter?.map?.(( filterName, index ) => (
-							<Chip 
-								key={uniqid()} 
-								label={filterName} 
-								sx={{ margin: '0 5px 0 5px', color: 'var( --text-color )'}}
-								onDelete={() => handleSelectFilter( filterName )}
-							/>
-						))
-					}
-				</div>
-				<div className="col-2 d-flex justify-content-end">
-					<IconButton	id="filter-btn" onClick={handleFilterOpen}>
-						<FilterAltIcon/>
-					</IconButton>
-					{
-					props?.semSettingsOn
-						? <IconButton id="semswitch-btn" onClick={handleSettingsOpen}>
-							<SettingsIcon/>
-						</IconButton>
-						: null
-					}
-				</div>
-				
-			</div>
-			<div className="account-view-content-box flex-grow-1 d-flex flex-column">
-				{/*All accounts go here*/}
-				<div style={{ width: '100%', height: '50px'}} className="m-0 p-0 border-bottom shadow-sm">
-					<AccountHeader header={props?.header}/>
-				</div>
-				<div style={{ width: '100%' }} className="flex-grow-1">
-					<AutoSizer>
+			Axios.post(`${window.API_BASE_ADDRESS}/master/add/type/student`,  
+				{
+					studentNo: id,
+					firstName,
+					middleName,
+					lastName,
+					birthDate,
+					section,
+					strand,
+					lrn,
+					email,
+					gender,
+					teachers,
+					schoolStartDate: new Date( schoolStartDate ).toDateString()
+				},
+				window.requestHeader
+			)
+			.then( res => {
+				enqueueSnackbar( res.data.message, { variant: 'success', preventDuplicate: true });
+				handleDialogFormClose();
+
+				props?.refresh?.();
+			})
+			.catch( err => {
+				enqueueSnackbar( err?.response?.data?.message ?? 'Please try again!', { variant: 'error', preventDuplicate: true });
+			});
+		}
+
+		const handleAddTeacher = () => {
+			if(!isEmailValid( email )) 
+				return enqueueSnackbar('Email is invalid', { variant: 'error', preventDuplicate: true });
+
+			if( !instructorSubject.length ){
+				return enqueueSnackbar('At least 1 subject is required', { variant: 'error', preventDuplicate: true });
+			}
+
+			Axios.post(`${window.API_BASE_ADDRESS}/master/add/type/teacher`,  
+				{
+					employeeNo: id,
+					firstName,
+					middleName,
+					lastName,
+					birthDate,
+					section,
+					strand,
+					lrn,
+					email,
+					gender,
+					subjects: instructorSubject
+				},
+				window.requestHeader
+			)
+			.then( res => {
+				enqueueSnackbar( res.data.message, { variant: 'success', preventDuplicate: true });
+				handleDialogFormClose();
+
+				props?.refresh?.();
+			})
+			.catch( err => {
+				enqueueSnackbar( err?.response?.data?.message ?? 'Please try again!', { variant: 'error', preventDuplicate: true });
+			});
+		}
+
+		// const handleAddStrand = () => {
+		// 	Axios.post(`${window.API_BASE_ADDRESS}/master/add/type/strand`,  
+		// 		{
+		// 			name: strandName,
+		// 			subjects: subjects
+		// 		},
+		// 		window.requestHeader
+		// 	)
+		// 	.then( res => {
+		// 		enqueueSnackbar( res.data.message, { variant: 'success', preventDuplicate: true });
+		// 		handleDialogFormClose();
+
+		// 		props?.refresh?.();
+		// 	})
+		// 	.catch( err => {
+		// 		enqueueSnackbar( err?.response?.data?.message ?? 'Please try again!', { variant: 'error', preventDuplicate: true });
+		// 	});
+		// }
+
+		// const handleAddSection = () => {
+		// 	Axios.post(`${window.API_BASE_ADDRESS}/master/add/type/section`,  
+		// 		{ ...sectionName },
+		// 		window.requestHeader
+		// 	)
+		// 	.then( res => {
+		// 		enqueueSnackbar( res.data.message, { variant: 'success', preventDuplicate: true });
+		// 		handleDialogFormClose();
+
+		// 		props?.refresh?.();
+		// 	})
+		// 	.catch( err => {
+		// 		enqueueSnackbar( err?.response?.data?.message ?? 'Please try again!', { variant: 'error', preventDuplicate: true });
+		// 	});
+		// }
+
+		const initSemester = activeSemester => {
+			return [
+				{
+					name: '1st Semester',
+					isActive: activeSemester === 1,
+					onSwitch: () => handleSwitchSemester( 1 )
+				},
+				{
+					name: '2nd Semester',
+					isActive: activeSemester === 2,
+					onSwitch: () => handleSwitchSemester( 2 )
+				}
+			];
+		}
+
+		const handleFilterExpand = index => {
+			const tempFilter = filter;
+
+			tempFilter[ index ].isOpen = !tempFilter[ index ].isOpen;
+			setFilter([ ...tempFilter ]);
+		}
+
+		const getSemesters = () => {
+			Axios.get(`${window.API_BASE_ADDRESS}/master/get-items/type/semester`)
+			.then( res => setSemesterSwitch([ ...initSemester( res.data.activeSemester ) ]))
+			.catch( err => {
+				enqueueSnackbar('Error while getting semester', { variant: 'error' });
+				console.error( err );
+			});
+		}
+
+		const handleSettingsOpen = e => {
+			setSettingsAnchorEl( e.currentTarget );
+		}
+
+		const handleSettingsClose = () => {
+			setSettingsAnchorEl( null );
+		}	
+
+		const handleFilterOpen = e => {
+			setFilterAnchorEl( e.currentTarget );
+		}
+
+		const handleFilterClose = () => {
+			setFilterAnchorEl( null );
+		}
+
+		const handleSwitchSemester = semesterNumber => {
+			Axios.put(`${window.API_BASE_ADDRESS}/master/activate/semester/${semesterNumber}`, null, window.requestHeader)
+			.then(() => {
+				setSemesterSwitch(() => [ ...initSemester( semesterNumber ) ]);
+			})
+			.catch( err => {
+				enqueueSnackbar('Error while switching semester', { variant: 'error' });
+				console.error( err );
+			});
+		}
+
+		const handleSelectFilter = text => {
+			let tempSelectedFilter = [ ...selectedFilter ];
+
+			if(tempSelectedFilter.includes( text )){
+				tempSelectedFilter = [ ...tempSelectedFilter.filter( filter => filter !== text ) ];
+			}
+			else{
+				tempSelectedFilter = [ ...tempSelectedFilter, text ];
+			}
+
+			tempSelectedFilter = Array.from( new Set( tempSelectedFilter ) );
+			setSelectedFilter([ ...tempSelectedFilter ]);
+		}
+
+		const handleUserAddFormType = type => fn => data => {
+			setFormType(() => type);
+			setUserData(() => data);
+
+			return fn;
+		}
+
+		const handleDialogFormClose = () => {
+			dispatch(handleClear());
+			setOpenDialogForm( false );
+		}
+
+		const handleRowSwitch = async ( e, id ) => {
+			const status = e.target.checked ? 'activated' : 'deactivated';
+
+			Axios.put(`${window.API_BASE_ADDRESS}/master/user-status-switch/status/${status}/id/${id}`, null, window.requestHeader)
+			.then(() => props?.refresh?.())
+			.catch( err => {
+				enqueueSnackbar( 
+					err?.response?.data?.message ?? 'Please try again!',
+					{ variant: 'error', preventDuplicate: true }
+				);
+
+				console.error( err );
+			});
+		}
+
+		const Row = React.useCallback(({ index, style }) => {
+				const index1 = index;
+				const keys = Object.keys(filteredItems[ index1 ]);
+
+				return( 
+					<div 
+						id={uniqid()} 
+						style={{...style, backgroundColor: index % 2 === 0 ? 'white' : '#f6f6f6'}} 
+						className="cursor-pointer account-view-item px-4 d-flex justify-content-between align-items-center"
+						onDoubleClick={() => handleUserAddFormType( props?.userType )(setOpenDialogForm( true ))( filteredItems[ index1 ] )}
+					>
 						{
-							({ height, width }) => (
-								<List
-									height={height}
-									width={width}
-									itemSize={50}
-									itemCount={filteredItems?.length}
-								>
-									{ Row }
-								</List>
-							)
+							props?.renderItemsKey?.map?.(( key, index ) => (
+								props?.statusSwitchOn && key === 'status'
+									? <div key={uniqid()}className="qams-row col-sm d-flex justify-content-center text-capitalize"> 
+										<FormGroup>
+											<FormControlLabel 
+												control={
+													<Switch 
+														checked={
+															filteredItems[ index1 ][ key ] === 'activated' 
+																? true 
+																: false
+															}
+														onChange={e => handleRowSwitch(e, filteredItems[ index1 ]._id)}
+														size="small"
+														color="default"
+													/>
+												} 
+												label={filteredItems[ index1 ][ key ] === 'activated' ? 'active' : 'inactive'}
+											/>
+									    </FormGroup>
+								    </div>
+								    : <div 
+								    	key={uniqid()} 
+								    	id={filteredItems[ index1 ][ key ]} 
+								    	className={`qams-row text-capitalize d-flex justify-content-${index === 0 ? 'start' : 'center'} col-sm`}
+								    >
+										{ 
+											filteredItems[ index1 ][ key ] instanceof Array 
+												? filteredItems[ index1 ][ key ].join(', ') 
+												: filteredItems[ index1 ][ key ] 
+										}
+									</div>
+							))
 						}
-					</AutoSizer>
-				</div>
-			</div>
-			<div className="account-view-bot-bar px-3 border-top d-flex justify-content-between align-items-center">
-				<div className="col-3">
-					<Badge badgeContent={filteredItems.length} showZero>
-						<PersonOutlineIcon color="action"/>
-					</Badge>
-					{/*<h5 className="m-0 p-0">Total: { filteredItems.length }</h5>*/}
-				</div>
-				
-				{/*<div className="col-7 d-flex justify-content-center">
-					<Pagination count={11} siblingCount={0} variant="outlined" />
-				</div>*/}
-				
-				<div className="col-5 d-flex justify-content-end">
-					{
-						props?.buttonsOff
-							? null
-							: <ButtonGroup  size="small" sx={{ color: 'black' }}>
-								<Button onClick={() => handleUserAddFormType( props?.userType )(setOpenDialogForm( true ))}>
-									Add { props?.userType }
-								</Button>
+					</div>
+				)
+			});
 
-								<Button onClick={() => handleUserAddFormType( 'section' )(setOpenDialogForm( true ))}>
-									Add Section
-								</Button>
+		const filtering = items => {
+			const tempFilteredItems = [];
+			const tempSelectedFilters = selectedFilter.map( reformatText );
 
-								<Button onClick={() => handleUserAddFormType( 'strand' )(setOpenDialogForm( true ))}>
-									Add Strand
-								</Button>
-							</ButtonGroup>
-					}
-					{/*{
-						props?.addUserOn
-							? <div className="account-view-add-user" onClick={() => handleUserAddFormType( props?.userType )(setOpenDialogForm( true ))}>
-								<IconButton>
-									<AddCircleOutlineIcon/>
-								</IconButton>
-							</div>
-							: null
-					}
-					{
-						props?.addSectionOn
-							? <div className="account-view-add-section" onClick={() => handleUserAddFormType( 'section' )(setOpenDialogForm( true ))}>
-								<IconButton>
-									<AddCardIcon/>
-								</IconButton>
-							</div>
-							: null
-					}
-					{
-						props?.addStrandOn
-							? <div className="account-view-add-strand" onClick={() => handleUserAddFormType( 'strand' )(setOpenDialogForm( true ))}>
-								<IconButton>
-									<AddBusinessIcon/>
-								</IconButton>
-							</div>
-							: null
-					}*/}
-				</div>
-			</div>
+			items?.forEach?.(( item, index ) => {
+				const keys = Object.values(props?.items?.[ index ]).map( reformatText );
 
-			{/*FILTER*/}
-			<Menu
-				open={filterOpen}
-				anchorEl={filterAnchorEl}
-				onClose={handleFilterClose}
-				MenuListProps={{
-					'aria-labelledby': 'filter-btn',
-				}}
-			>
-				<Paper sx={{ width: 200, height: 'fit-content', maxHeight: 300, overflow: 'auto' }} elevation={0}>
-					<MuiList sx={{ width: '100%', minWidth: '100%'}} dense>
+				for( let key of keys ){
+					if( typeof key === 'string' ){
+						if( !searchText.length || (searchText.length && key.includes(reformatText( searchText )))){
+							if( tempSelectedFilters.length ){
+								const applyFilter = () => {
+									for( let section of item.section ){
+										if( tempSelectedFilters.includes(reformatText( section )) ){
+											tempFilteredItems.push( item );
+											return;
+										}
+									}
+
+									for( let strand of item.strand ){
+										if( tempSelectedFilters.includes(reformatText( strand )) ){
+											tempFilteredItems.push( item );
+											return;
+										}
+									}
+								}
+
+								applyFilter();
+							}
+							else{
+								tempFilteredItems.push( item );
+								break;
+							}
+
+							break;
+						}
+					}
+				}
+			});
+
+			setFilteredItems(() => [ ...tempFilteredItems ]);
+		}
+
+		const handleDeleteUser = ( id, type ) => {
+			Axios.delete(`${window.API_BASE_ADDRESS}/master/delete/type/${type}/id/${id}`, window.requestHeader)
+			.then(() => props?.refresh?.())
+			.catch( err => {
+				enqueueSnackbar( 
+					err?.response?.data?.message ?? 'Please try again!',
+					{ variant: 'error', preventDuplicate: true }
+				);
+
+				console.error( err );
+			});
+		}
+
+		const memoizedFiltering = React.useCallback(() => filtering( props?.items ), [ props?.items, selectedFilter, searchText ]);
+		const handleUpdateEntity = React.useCallback(userType => {
+			const primaryData = { // primary data
+				firstName: formData?.firstName,
+				middleName: formData?.middleName,
+				lastName: formData?.lastName,
+				birthDate: formData?.birthDate,
+				email: formData?.email,
+				gender: formData?.gender,
+				role: formData?.role,
+				section: formData?.section,
+				strand: formData?.strand
+			};
+
+			const teacher = {
+				employeeNo: formData?.id,
+				subjects: formData?.subjects,
+				...primaryData
+			}
+
+			const student = {
+				studentNo: formData?.id,
+				teachers: formData?.subjects,
+				schoolStartDate: formData?.schoolStartDate,
+				...primaryData
+			}
+
+			Axios.post(`${window.API_BASE_ADDRESS}/master/edit/type/${userType}/id/${userData?._id}`, 
+				userType === 'teacher' ? teacher : student,
+				window.requestHeader)
+			.then(() => {
+				enqueueSnackbar("Successfully updated user", { variant: 'success' });
+				dispatch(handleClear());
+				props?.refresh?.();
+				setOpenDialogForm( false );
+				handleDialogFormClose();
+			})
+			.catch( err => {
+				throw err;
+			});
+		}, [formData, userData]);
+
+		React.useEffect(() => {
+			if( openDialogForm ){
+				dispatch(handleId( props?.userType === 'teacher' ? userData?.employeeNo : userData?.studentNo )); 
+				dispatch(handleRole( props?.userType ));
+				dispatch(handleFirstName( userData?.firstName ));
+				dispatch(handleMiddleName( userData?.middleName ));
+				dispatch(handleLastName( userData?.lastName ));
+				dispatch(handleBirthDate( userData?.birthDate ));
+				dispatch(handleSection( userData?.section ));
+				dispatch(handleStrand( userData?.strand ));
+				dispatch(handleUserType( userData?.userType ));
+				dispatch(handleEmail( userData?.email ));
+				dispatch(handleGender( userData?.gender ));
+
+				if( props?.userType === 'student' ) dispatch(handleLrn( userData?.lrn ));
+				if( props?.userType === 'student' ) dispatch(handleTeachers( userData?.teachers ));
+				if( props?.userType === 'student' ) dispatch(handleSchoolStartDate( userData?.schoolStartDate ));				
+				if( props?.userType === 'teacher' ) dispatch(handleSubjects( userData?.subjects ));
+
+				// const sectionForm = [
+				// 	<IconField 
+				// 		key={uniqid()} 
+				// 		label="Section name"
+				// 		Icon={DriveFileRenameOutlineIcon} 
+				// 		onChange={e => dispatch(handleSectionName( e.target.value ))}
+				// 	/>,
+				// 	<IconAutocomplete 
+				// 		key={uniqid()}
+				// 		list={props?.filter?.map?.( fltr => fltr.name ) ?? []}
+				// 		Icon={StoreIcon}
+				// 		label="Member of Strand"
+				// 		placeholder="Strand"
+				// 		onChange={(_, newValue) => dispatch(handleSectionParent( newValue ))}
+				// 	/>
+				// ];
+
+				// const strandForm = [
+				// 	<IconField 
+				// 		key={uniqid()} 
+				// 		label="Section strand"
+				// 		Icon={DriveFileRenameOutlineIcon} 
+				// 		onChange={e => dispatch(handleStrandName( e.target.value ))}
+				// 	/>,
+				// 	<IconAutocomplete 
+				// 		multiple={true}
+				// 		key={uniqid()}
+				// 		Icon={MenuBookIcon}
+				// 		freeSolo={true}
+				// 		list={[]}
+				// 		label="Subjects"
+				// 		placeholder="Add a subject"
+				// 		onChange={(_, newValue) => dispatch(handleSubjects(newValue.map( val => val.toUpperCase() )))}
+				// 	/>
+				// ];
+
+				setFormTitle( `Add a ${formType}` );
+				setInfoMessage( `Adding a ${infoMessageFor} requires you to fill all fields` );
+				// setContent( personForm );
+			}
+			else{
+				setFormTitle( null );
+				setInfoMessage( null );
+				setContent( [] );
+			}
+		}, [openDialogForm, formType, props, userData]);
+
+		// React.useEffect(() => {
+		// 	if( formData ){
+		// 		console.log('here');
+		// 		const personForm = [
+						
+		// 			];
+
+		// 		setContent( personForm );
+		// 	}
+		// }, [formType]);
+
+		React.useEffect(() => {
+			if( props?.filter?.length ){
+				const tempFilterIndexes = {};
+
+				const tempFilterKeys = props.filter.map(( fltr, index ) => {
+					tempFilterIndexes[ fltr.name ] = index;
+					fltr["isOpen"] = false;
+					return fltr;
+				});
+
+				setFilterIndexes({ ...tempFilterIndexes });			
+				setFilter([ ...tempFilterKeys ]);
+			}
+		}, [props.filter]);
+
+		React.useEffect(() => {
+			memoizedFiltering();
+			if( props?.userType ){
+				dispatch(handleUserType( props?.userType ));
+			}
+		}, [props, selectedFilter, searchText]);
+
+		React.useEffect(() => {
+			getStrand();
+			getSemesters();
+			handleGetTeachers();
+		}, []);
+
+		React.useEffect(() => dispatch(handleTeachers([ ...selectedTeachers ])), [selectedTeachers]);
+		// React.useEffect(() => console.log( teachers ), [teachers]);
+
+		return(
+			<div className="account-view border rounded d-flex flex-column">
+				<div className="account-view-top-bar px-3 border-bottom d-flex justify-content-between align-items-center">
+					<div className="col-3">
+						<Box sx={{ display: 'flex', alignItems: 'center' }}>
+							<SearchIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
+							<TextField 
+								label=""
+								id="input-with-sx" 
+								variant="standard"
+								onChange={e => setSearchText( e.target.value )}
+							/>
+						</Box>
+					</div>
+					<div className="col-7 text-center d-flex" style={{ overflow: 'auto' }}>
 						{
-							filter?.map?.(( fltr, index ) => (
-								<React.Fragment key={uniqid()}>
-									<ListItemButton 
-										onClick={() => fltr.sections.length ? handleFilterExpand( index ) : handleSelectFilter( fltr.name )}
+							selectedFilter?.map?.(( filterName, index ) => (
+								<Chip 
+									key={uniqid()} 
+									label={filterName} 
+									sx={{ margin: '0 5px 0 5px', color: 'var( --text-color )'}}
+									onDelete={() => handleSelectFilter( filterName )}
+								/>
+							))
+						}
+					</div>
+					<div className="col-2 d-flex justify-content-end">
+						<IconButton	id="filter-btn" onClick={handleFilterOpen}>
+							<FilterAltIcon/>
+						</IconButton>
+						{
+						props?.semSettingsOn
+							? <IconButton id="semswitch-btn" onClick={handleSettingsOpen}>
+								<SettingsIcon/>
+							</IconButton>
+							: null
+						}
+					</div>
+					
+				</div>
+				<div className="account-view-content-box flex-grow-1 d-flex flex-column">
+					{/*All accounts go here*/}
+					<div style={{ width: '100%', height: '50px'}} className="m-0 p-0 border-bottom shadow-sm">
+						<AccountHeader header={props?.header}/>
+					</div>
+					<div style={{ width: '100%' }} className="flex-grow-1">
+						<AutoSizer>
+							{
+								({ height, width }) => (
+									<List
+										height={height}
+										width={width}
+										itemSize={50}
+										itemCount={filteredItems?.length}
 									>
-										<Checkbox 
-											checked={selectedFilter.includes( fltr.name )} 
-											onChange={() => handleSelectFilter( fltr.name )}
-											onClick={e => e.stopPropagation()}
-										/>
-										<ListItemText primary={fltr.name}/>
+										{ Row }
+									</List>
+								)
+							}
+						</AutoSizer>
+					</div>
+				</div>
+				<div className="account-view-bot-bar px-3 border-top d-flex justify-content-between align-items-center">
+					<div className="col-3">
+						<Badge badgeContent={filteredItems.length} showZero>
+							<PersonOutlineIcon color="action"/>
+						</Badge>
+						{/*<h5 className="m-0 p-0">Total: { filteredItems.length }</h5>*/}
+					</div>
+					
+					{/*<div className="col-7 d-flex justify-content-center">
+						<Pagination count={11} siblingCount={0} variant="outlined" />
+					</div>*/}
+					
+					<div className="col-5 d-flex justify-content-end">
+						{
+							props?.buttonsOff
+								? null
+								: <ButtonGroup  size="small" sx={{ color: 'black' }}>
+									<Button onClick={() => handleUserAddFormType( props?.userType )(setOpenDialogForm( true ))}>
+										Add { props?.userType }
+									</Button>
+
+									<Button onClick={() => handleUserAddFormType( 'section' )(setOpenDialogForm( true ))}>
+										Add Section
+									</Button>
+
+									<Button onClick={() => handleUserAddFormType( 'strand' )(setOpenDialogForm( true ))}>
+										Add Strand
+									</Button>
+								</ButtonGroup>
+						}
+						{/*{
+							props?.addUserOn
+								? <div className="account-view-add-user" onClick={() => handleUserAddFormType( props?.userType )(setOpenDialogForm( true ))}>
+									<IconButton>
+										<AddCircleOutlineIcon/>
+									</IconButton>
+								</div>
+								: null
+						}
+						{
+							props?.addSectionOn
+								? <div className="account-view-add-section" onClick={() => handleUserAddFormType( 'section' )(setOpenDialogForm( true ))}>
+									<IconButton>
+										<AddCardIcon/>
+									</IconButton>
+								</div>
+								: null
+						}
+						{
+							props?.addStrandOn
+								? <div className="account-view-add-strand" onClick={() => handleUserAddFormType( 'strand' )(setOpenDialogForm( true ))}>
+									<IconButton>
+										<AddBusinessIcon/>
+									</IconButton>
+								</div>
+								: null
+						}*/}
+					</div>
+				</div>
+
+				{/*FILTER*/}
+				<Menu
+					open={filterOpen}
+					anchorEl={filterAnchorEl}
+					onClose={handleFilterClose}
+					MenuListProps={{
+						'aria-labelledby': 'filter-btn',
+					}}
+				>
+					<Paper sx={{ width: 200, height: 'fit-content', maxHeight: 300, overflow: 'auto' }} elevation={0}>
+						<MuiList sx={{ width: '100%', minWidth: '100%'}} dense>
+							{
+								filter?.map?.(( fltr, index ) => (
+									<React.Fragment key={uniqid()}>
+										<ListItemButton 
+											onClick={() => fltr.sections.length ? handleFilterExpand( index ) : handleSelectFilter( fltr.name )}
+										>
+											<Checkbox 
+												checked={selectedFilter.includes( fltr.name )} 
+												onChange={() => handleSelectFilter( fltr.name )}
+												onClick={e => e.stopPropagation()}
+											/>
+											<ListItemText primary={fltr.name}/>
+											{
+												fltr.sections.length
+													? filter[ index ].isOpen ? <ExpandLess/> : <ExpandMore/>
+													: null
+											}
+										</ListItemButton>
 										{
-											fltr.sections.length
-												? filter[ index ].isOpen ? <ExpandLess/> : <ExpandMore/>
+											fltr.sections.length 
+												? <Collapse in={filter[ index ].isOpen} timeout="auto" unmountOnExit>
+											        <MuiList component="div" disablePadding>
+											          {
+											          	fltr?.sections?.map?.( sctn => (
+											          		<ListItemButton 
+											          			sx={{ backgroundColor: 'rgba(0, 0, 0, 0.4)'}}
+											          			key={uniqid()} sx={{ pl: 4 }} 
+											          			onClick={() => handleSelectFilter( sctn )}
+											          		>
+																<Checkbox checked={selectedFilter.includes( sctn )} onChange={() => handleSelectFilter( sctn )}/>
+													            <ListItemText primary={sctn}/>
+															</ListItemButton>
+											          		))
+											          }
+											        </MuiList>
+												</Collapse>
 												: null
 										}
-									</ListItemButton>
-									{
-										fltr.sections.length 
-											? <Collapse in={filter[ index ].isOpen} timeout="auto" unmountOnExit>
-										        <MuiList component="div" disablePadding>
-										          {
-										          	fltr?.sections?.map?.( sctn => (
-										          		<ListItemButton 
-										          			sx={{ backgroundColor: 'rgba(0, 0, 0, 0.4)'}}
-										          			key={uniqid()} sx={{ pl: 4 }} 
-										          			onClick={() => handleSelectFilter( sctn )}
-										          		>
-																		<Checkbox checked={selectedFilter.includes( sctn )} onChange={() => handleSelectFilter( sctn )}/>
-												            <ListItemText primary={sctn}/>
-																	</ListItemButton>
-										          		))
-										          }
-										        </MuiList>
-											</Collapse>
-											: null
-									}
-								</React.Fragment>
+									</React.Fragment>
+									))
+							}
+						</MuiList>
+					</Paper>
+				</Menu>
+
+				{/*SEMESTER SETTINGS*/}
+				<Menu
+					open={settingOpen}
+					anchorEl={settingsAnchorEl}
+					onClose={handleSettingsClose}
+					MenuListProps={{
+						'aria-labelledby': 'filter-btn',
+					}}
+				>
+					<Paper 
+						sx={{ 
+							width: 400, 
+							height: 'fit-content', 
+							maxHeight: 300, 
+							overflow: 'auto', 
+							color: 'var( --text-color )'
+						}} 
+						elevation={0}
+					>
+						{
+							semesterSwitch.map( semSwitch => (
+								<div key={uniqid()} className="semester-tab-semester my-4 col-12 d-flex flex-row justify-content-start align-items-center">
+									<div className="col-6 text-center">
+										<b>{ semSwitch.name }</b>
+									</div>
+									<div style={{ width: '200px' }} className="semester-switch row">
+										<div className="col-3 d-flex justify-content-center align-items-center">
+											Off
+										</div>
+										<div className="col-5 d-flex justify-content-center align-items-center">
+											<Switch checked={semSwitch.isActive} onChange={semSwitch.onSwitch}/>
+										</div>
+										<div className="col-3 d-flex justify-content-center align-items-center">
+											On
+										</div>
+									</div>
+								</div>
 								))
 						}
-					</MuiList>
-				</Paper>
-			</Menu>
+					</Paper>
+				</Menu>
 
-			{/*SEMESTER SETTINGS*/}
-			<Menu
-				open={settingOpen}
-				anchorEl={settingsAnchorEl}
-				onClose={handleSettingsClose}
-				MenuListProps={{
-					'aria-labelledby': 'filter-btn',
-				}}
-			>
-				<Paper 
-					sx={{ 
-						width: 400, 
-						height: 'fit-content', 
-						maxHeight: 300, 
-						overflow: 'auto', 
-						color: 'var( --text-color )'
-					}} 
-					elevation={0}
+				<DialogForm 
+					titleOn
+					contextTextOn
+					open={openDialogForm} 
+					formTitle={formTitle}
+					infoMessage={infoMessage}
+					close={() => handleDialogFormClose()}
+					onProcess={() => handleUpdateEntity( props?.userType )}
+					onDelete={() => handleDeleteUser( userData?._id, formData?.role )}
 				>
+					<IconField 
+						Icon={KeyIcon} 
+						defaultValue={formData?.id}
+						label={`${idLabel} ID`}
+						onChange={e => dispatch(handleId( e.target.value ))}
+					/>
 					{
-						semesterSwitch.map( semSwitch => (
-							<div key={uniqid()} className="semester-tab-semester my-4 col-12 d-flex flex-row justify-content-start align-items-center">
-								<div className="col-6 text-center">
-									<b>{ semSwitch.name }</b>
-								</div>
-								<div style={{ width: '200px' }} className="semester-switch row">
-									<div className="col-3 d-flex justify-content-center align-items-center">
-										Off
-									</div>
-									<div className="col-5 d-flex justify-content-center align-items-center">
-										<Switch checked={semSwitch.isActive} onChange={semSwitch.onSwitch}/>
-									</div>
-									<div className="col-3 d-flex justify-content-center align-items-center">
-										On
-									</div>
-								</div>
-							</div>
-							))
+						formType === 'student'
+							? <IconField 
+									Icon={NumbersIcon}
+									defaultValue={formData?.lrn}
+									label="LRN"
+									onChange={e => dispatch(handleLrn( e.target.value ))}
+								/>
+							: null
 					}
-				</Paper>
-			</Menu>
+					<IconField 
+						Icon={DriveFileRenameOutlineIcon} 
+						defaultValue={formData?.firstName} 
+						label="First name"
+						onChange={e => dispatch(handleFirstName( e.target.value ))}
+					/>
+					<IconField 
+						Icon={DriveFileRenameOutlineIcon} 
+						defaultValue={formData?.middleName} 
+						label="Middle name"
+						onChange={e => dispatch(handleMiddleName( e.target.value ))}
+					/>
+					<IconField 
+						Icon={DriveFileRenameOutlineIcon} 
+						defaultValue={formData?.lastName} 
+						label="Last name"
+						onChange={e => dispatch(handleLastName( e.target.value ))}
+					/>
+					<IconField 
+						Icon={AlternateEmailIcon} 
+						defaultValue={formData?.email} 
+						label="Email"
+						type="email"
+						onChange={e => dispatch(handleEmail( e.target.value ))}
+					/>
+					<IconField 
+						Icon={CakeIcon} 
+						defaultValue={formData?.birthDate} 
+						label="Birth-date" 
+						type="date"
+						onChange={e => dispatch(handleBirthDate( e.target.value ))}
+					/>
+					{
+						formType === 'student'
+						?	<IconField 
+								Icon={CakeIcon} 
+								defaultValue={formData?.schoolStartDate} 
+								label="School Starting Day" 
+								type="date"
+								onChange={e => dispatch(handleSchoolStartDate( e.target.value ))}
+							/>
+						: null
+					}
+					<Box sx={{ display: 'flex', alignItems: 'flex-end', margin: '30px 0 30px 0'}}>
+						<FemaleIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
+						<Autocomplete
+							value={formData?.gender}
+							freeSolo
+							selectOnFocus
+							handleHomeEndKeys
+							options={genderOptions}
+							renderOption={(props, option) => <li {...props}>{ option }</li>}
+							getOptionLabel={(option) => {
+						        // Value selected with enter, right from the input
+						        if( typeof option === 'string' ) {
+						          return option;
+						        }
+						      
+						        // Add "xxx" option created dynamically
+						        if( option.inputValue ) {
+						          return option.inputValue;
+						        }
+						      
+						        // Regular option
+						        return option.title;
+							}}
+							filterOptions={(options, params) => {
+						        const filtered = filterer(options, params);
 
-			<DialogForm 
-				titleOn
-				contextTextOn
-				open={openDialogForm} 
-				formTitle={formTitle}
-				infoMessage={infoMessage}
-				close={() => handleDialogFormClose()}
-				onProcess={
-					formType === 'section' 
-						?  handleAddSection
-						: formType === 'strand'
-							? handleAddStrand
-							: formType === 'student'
-								? handleAddStudent
-								: handleAddTeacher 
-				}
-			>
-				{ content }
-			</DialogForm>
-			<ProfileView 
-				userType={props?.userType} 
-				open={isOpenProfileView} 
-				onClose={handleClearUserDataContent} 
-				profileData={userData}
-			/>
-		</div>
-	);
+						        const { inputValue } = params;
+
+						        // console.log( options );
+						        // Suggest the creation of a new value
+						        const isExisting = options.some((option) => inputValue === option);
+						        if (inputValue !== '' && !isExisting) {
+									filtered.push( inputValue );
+						        }
+
+						        return filtered;
+							}}
+							renderInput={(params) => 
+								<TextField 
+									{...params} 
+									label="Gender"
+									placeholder="Select or Type Gender"
+									variant="standard"
+									fullWidth
+									sx={{ width: 500 }}
+								/>
+							}
+							onChange={(_, newValue) => {
+								// console.log( newValue );
+								if (typeof newValue === 'string') {
+									dispatch(handleGender( newValue ));
+								} else if (newValue && newValue.inputValue) {
+									// Create a new value from the user input
+									dispatch(handleGender( newValue.inputValue ));
+								} else {
+									// console.log( newValue );
+									dispatch(handleGender( newValue ));
+								}
+							}}
+						/>
+					</Box>
+				</DialogForm>
+				{/*<ProfileView 
+					userType={props?.userType} 
+					open={isOpenProfileView} 
+					onClose={handleClearUserDataContent} 
+					profileData={userData}
+				/>*/}
+			</div>
+		);
 }
 
 const AccountHeader = props => {
@@ -1164,21 +1245,21 @@ const SubjectBox = props => {
 		}
 	}
 
-	const handleStrandSubjects = async () => {
-		Axios.get(
-			`${window.API_BASE_ADDRESS}/master/get-subject-from-strand/strands/${props?.strand?.join?.(',')}`, 
-			window.requestHeader
-		)
-		.then( res => setSubjects([ ...res.data ]))
-		.catch( err => {
-			throw err;
-		});
-	}
+	// const handleStrandSubjects = async () => {
+	// 	Axios.get(
+	// 		`${window.API_BASE_ADDRESS}/master/get-subject-from-strand/strands/${props?.strand?.join?.(',')}`, 
+	// 		window.requestHeader
+	// 	)
+	// 	.then( res => setSubjects([ ...res.data ]))
+	// 	.catch( err => {
+	// 		throw err;
+	// 	});
+	// }
 
-	React.useEffect(() => {
-		if( props?.strand?.length )
-			handleStrandSubjects();
-	}, [props]);
+	// React.useEffect(() => {
+	// 	if( props?.strand?.length )
+	// 		handleStrandSubjects();
+	// }, [props]);
 
 	const renderSubject = React.useCallback(( ) => {
 		const tempRenderedSubjects = [];
