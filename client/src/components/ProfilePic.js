@@ -68,13 +68,13 @@ const ProfilePic = props => {
 		}
 	}, [isUploading, image]);
 
-	React.useEffect(() => {
-		if( imageSrc ){
-			const getProfilePic = setInterval(() => getUserImageSrc(), 1500);
+	// React.useEffect(() => {
+	// 	if( imageSrc ){
+	// 		const getProfilePic = setInterval(() => getUserImageSrc(), 1500);
 
-			return () => clearInterval( getProfilePic );
-		}
-	}, [imageSrc]);
+	// 		return () => clearInterval( getProfilePic );
+	// 	}
+	// }, [imageSrc]);
 
 	React.useEffect(() => getUserImageSrc(), []);
 

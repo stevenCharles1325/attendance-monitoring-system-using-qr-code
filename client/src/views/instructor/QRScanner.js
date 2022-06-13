@@ -1,4 +1,5 @@
 import React from 'react';
+import uniqid from 'uniqid';
 import Axios from 'axios';
 import Cookies from 'js-cookie';
 import debounce from 'lodash.debounce';
@@ -37,6 +38,25 @@ const QRScanner = props => {
 	const [isCameraDenied, setIsCameraDenied] = React.useState( null );
 	const [rows, setRows] = React.useState( [] );
 
+	const renderedRows = React.useMemo(() => {
+		const tempRenderedRows = [];
+
+		rows?.forEach( row => {
+			tempRenderedRows.push(
+				<div key={uniqid()} className="border-bottom w-full h-fit min-h-[50px] py-3 text-center text-uppercase d-flex">
+					<div className="qams-col p-auto text-truncate">{ row.student.id }</div>
+					<div className="qams-col p-auto text-truncate">{ `${row.student.lastName} ${row.student.firstName}` }</div>
+					<div className="qams-col p-auto text-truncate">{ row.strand }</div>
+					<div className="qams-col p-auto text-truncate">{ row.section }</div>
+					<div className="qams-col p-auto text-truncate">{ row.timein }</div>
+					<div className="qams-col p-auto text-truncate">{ row.timeout }</div>
+				</div>
+				);
+		});
+
+		return tempRenderedRows;
+	}, [rows]);
+
 	const { enqueueSnackbar } = useSnackbar();
 
 	const handleTimingin = (_, isTimingIn) => setIsTimein( isTimein => isTimingIn === null ? isTimein : isTimingIn );
@@ -58,6 +78,7 @@ const QRScanner = props => {
 			}
 
 			setQrData( null );
+			getTimeRecords();
 		})	
 		.catch( err => {
 			const message = err?.response?.data?.message ?? 'Please try again!';
@@ -69,12 +90,13 @@ const QRScanner = props => {
 
 	const handleTimeout = async studentNo => {
 		Axios.put(
-			`${window.API_BASE_ADDRESS}/master/time-out/student/${studentNo}`, 
+			`${window.API_BASE_ADDRESS}/master/time-out/teacherId/${Cookies.get('userId')}/student/${studentNo}`, 
 			null,
 			window.requestHeader
 		)
 		.then(() => {
 			enqueueSnackbar( 'Successfully time-out student', { variant: 'success' });
+			getTimeRecords();
 		})
 		.catch( err => {
 			console.error( err );
@@ -94,10 +116,10 @@ const QRScanner = props => {
 
 	const getTimeRecords = () => {
 		Axios.get(
-			`${window.API_BASE_ADDRESS}/master/get-single-user/type/teacher/id/${Cookies.get('userId')}`, 
+			`${window.API_BASE_ADDRESS}/master/time-records/userType/teacher/id/${Cookies.get('userId')}`, 
 			window.requestHeader
 		)
-		.then( res => setUserData( res.data ))
+		.then( res => setRows( res.data ))
 		.catch( err => {
 			console.error( err );
 		});
@@ -115,6 +137,7 @@ const QRScanner = props => {
 		});
 
 		handleUserDataFetching();
+		getTimeRecords();
 	}, []);
 
 	const createRow = data => (
@@ -200,7 +223,7 @@ const QRScanner = props => {
 							<div className="qams-col p-auto text-truncate">Time-out</div>
 						</div>
 						<div className="flex-grow-1">
-							{ rows }
+							{ renderedRows }
 						</div>
 					</div>
 				</div>

@@ -40,6 +40,25 @@ const QRCode = props => {
 	const [isSubjectDialogOpen, setIsSubjectDialogOpen] = React.useState( false );
 	const [rows, setRows] = React.useState( [] );
 
+	const renderedRows = React.useMemo(() => {
+		const tempRenderedRows = [];
+
+		rows?.forEach( row => {
+			tempRenderedRows.push(
+				<div key={uniqid()} className="border-bottom w-full h-fit min-h-[50px] py-3 text-center text-uppercase d-flex">
+					<div className="qams-col p-auto text-truncate">{ row.student.id }</div>
+					<div className="qams-col p-auto text-truncate">{ `${row.student.lastName} ${row.student.firstName}` }</div>
+					<div className="qams-col p-auto text-truncate">{ row.strand }</div>
+					<div className="qams-col p-auto text-truncate">{ row.section }</div>
+					<div className="qams-col p-auto text-truncate">{ row.timein }</div>
+					<div className="qams-col p-auto text-truncate">{ row.timeout }</div>
+				</div>
+				);
+		});
+
+		return tempRenderedRows;
+	}, [rows]);
+
 	const handleUserDataFetching = () => {
 		Axios.get(
 			`${window.API_BASE_ADDRESS}/master/get-single-user/type/student/id/${Cookies.get('userId')}`, 
@@ -51,11 +70,30 @@ const QRCode = props => {
 		});
 	}
 
-	React.useEffect(() => {
-		const refreshData = setInterval(() => handleUserDataFetching(), 2000);
+	const getTimeRecords = () => {
+		Axios.get(
+			`${window.API_BASE_ADDRESS}/master/time-records/userType/student/id/${Cookies.get('userId')}`, 
+			window.requestHeader
+		)
+		.then( res => setRows( res.data ))
+		.catch( err => {
+			console.error( err );
+		});
+	}
 
-		return () => clearInterval( refreshData );
+
+	// React.useEffect(() => {
+	// 	const refreshData = setInterval(() => handleUserDataFetching(), 2000);
+	// 	getTimeRecords();
+
+	// 	return () => clearInterval( refreshData );
+	// }, []);
+	
+	React.useEffect(() => {
+		handleUserDataFetching();
+		getTimeRecords();
 	}, []);
+
 
 	return(
 		<div className="student-dashboard row d-flex py-3">
@@ -105,7 +143,7 @@ const QRCode = props => {
 							<div className="qams-col p-auto text-truncate">Time-out</div>
 						</div>
 						<div className="flex-grow-1">
-							{ rows }
+							{ renderedRows }
 						</div>
 					</div>
 				</div>

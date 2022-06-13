@@ -20,13 +20,13 @@ import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 
 import Avatar from '@mui/material/Avatar';
+import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 import MenuOpen from '@mui/icons-material/MenuOpen';
 import PowerSettingsNew from '@mui/icons-material/PowerSettingsNew';
 import Grow from '@mui/material/Grow';
 
-import AccountCircle from '@mui/icons-material/AccountCircle';
 import Collapse from '@mui/material/Collapse';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
@@ -34,6 +34,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import Profile from './Profile';
 import ProfilePic from './ProfilePic';
 
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 
 const QamsMenu = props => {
 	const { userRole } = useSelector( state => state.form );
@@ -145,7 +146,12 @@ const QamsMenu = props => {
 									<div 
 										className="col-12 d-flex justify-content-center align-items-center"
 									>
-										<h1 className="font-bold tracking-wide text-[#383735]">{ props?.username ?? 'User' }</h1>
+										<Chip
+											icon={<AccountCircleIcon/>}
+											label={props?.username ?? 'User'}
+											variant="outlined"
+											className="font-bold tracking-wide"
+										/>
 									</div>
 								</div>
 								<br/>

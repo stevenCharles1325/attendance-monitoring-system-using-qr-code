@@ -1,10 +1,4 @@
-/* ========================
-
-    	*REGULAR ROUTES*
-
-==========================*/
 require('dotenv').config();
-
 
 var fs = require('fs');
 var path = require('path');
@@ -24,6 +18,7 @@ var Attendance = require('../models/Attendance');
 var TimeRecord = require('../models/TimeRecord');
 var Strand = require('../models/Strand');
 
+var dailyTimeinsPath = path.join( __dirname, '../temp/daily-timeins.json' );
 
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
@@ -53,9 +48,62 @@ const generateCode = () => `${Math.floor(Math.random() * 9)}${Math.floor(Math.ra
 */
 const generatedCode = {};
 
+const recordTimein = ( id, studentId, teacherId ) => {
+  try{
+    const dailyTimeins = JSON.parse(fs.readFileSync( dailyTimeinsPath ));
+    dailyTimeins.push({ id, studentId, teacherId });
 
+    const dailyTimeinsString = JSON.stringify( dailyTimeins, null, 4 );
+    fs.writeFileSync( dailyTimeinsPath, dailyTimeinsString );
+  }
+  catch( err ){
+    throw err;
+  }
+}
 
-const authentication = (req, res, next) => {
+const clearTimeinRecordInTemps = ( id ) => {
+  try{
+    const dailyTimeins = JSON.parse(fs.readFileSync( dailyTimeinsPath ));
+    const newDailyTimeins = dailyTimeins.filter( timein => timein.id !== id );
+
+    const dailyTimeinsString = JSON.stringify( newDailyTimeins, null, 4 );
+    fs.writeFileSync( dailyTimeinsPath, dailyTimeinsString );
+  }
+  catch( err ){
+    throw err;
+  }
+}
+
+const clearAllTimeinRecordInTemps = ( id ) => {
+  try{
+    const newDailyTimeins = [];
+
+    const dailyTimeinsString = JSON.stringify( newDailyTimeins, null, 4 );
+    fs.writeFileSync( dailyTimeinsPath, dailyTimeinsString );
+  }
+  catch( err ){
+    throw err;
+  }
+}
+
+const getTimeinRecordIdByTeacherAndStudentId = ( studentId, teacherId ) => {
+  try{
+    const dailyTimeins = JSON.parse(fs.readFileSync( dailyTimeinsPath ));
+
+    for( let record of dailyTimeins ){
+      if( record.studentId === studentId && record.teacherId === teacherId ){
+        return record.id;
+      }
+    }
+
+    return null;
+  }
+  catch( err ){
+    throw err;
+  }
+}
+
+const authentication = ( req, res, next ) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[ 1 ];
 
@@ -739,193 +787,6 @@ router.get('/students-attendance/id/:id', async ( req, res, next ) => {
   });
 });
 
-// Time-in
-router.put('/student/update-attendance/id/:id/teacherId/:teacherId', async ( req, res, next ) => {
-  const { id, teacherId } = req.params;
-
-  const graceTime = 30; // 30minute grace time or period
-
-  const getRemarkAndSubjectID = async ( time, teachers ) => {
-    const teacherDBId = await Teacher.findOne({ employeeNo: teacherId }).exec();
-    for( let teacher of teachers ){
-
-      if( teacher.teacherId === teacherDBId._id.toString() ){
-        const subjectName = teacher.subject.name;
-        const teacherSubjectTimeHour = Number(teacher.subject.start.split(':')[ 0 ]);
-        const teacherSubjectTimeMinutes = Number(teacher.subject.start.split(':')[ 1 ]);
-
-        const timeHours = Number(time.split(' ')[ 0 ].split(':')[ 0 ]);
-        const timeMinutes = Number(time.split(' ')[ 0 ].split(':')[ 1 ]);
-
-        const minute = teacherSubjectTimeMinutes + graceTime;
-        const isMinutesOver = timeMinutes > (minute > 60 ? minute : minute - 60);
-        const isHourOver = timeHours > teacherSubjectTimeHour;
-
-        const isLate = !isHourOver && isMinutesOver;
-        const isAbsent = isHourOver;
-        const isPresent = !isHourOver && !isMinutesOver;
-
-        const remark = 
-          isLate 
-            ? 'late' 
-            : isAbsent 
-              ? 'absent' 
-              : isPresent
-                ? 'present'
-                : 'error';
-
-        return [ teacher.teacherId, teacher.subject.id , remark, subjectName ];
-      }
-    }
-
-    return [ null, null ];
-  }
-
-  const getSubjectName = async ( time, teachers ) => {
-    for( let teacher of teachers ){
-      const teacherDBId = await Teacher.findOne({ employeeNo: teacherId }).exec();
-
-      if( teacher.teacherId === teacherDBId._id.toString() ){
-        
-      }
-    }
-
-    return [ null, null ];
-  }
-
-  const checkIfStudentHasAttendanceToday = ( attendanceRecord, dateToday ) => {
-    for( let attRec of attendanceRecord ){
-      if( attRec.date === dateToday ){
-        return true;
-      }
-    }
-  }
-
-  const getFullName = ({ firstName, middleName, lastName }) => {
-    const isMiddleNameExist = !!middleName.length;
-
-    return isMiddleNameExist
-      ? `${lastName}, ${firstName} ${middleName}`
-      : `${lastName}, ${firstName}`;
-  }
-
-  Student.findOne({ studentNo: id }, async ( err, doc ) => {
-    if( err ) return res.sendStatus( 500 );
-
-      if( doc ){
-        if( doc.status === 'deactivated' ){
-          return res
-            .status( 403 )
-            .json({
-              message: 'Student is deactivated'
-            });
-        }
-        else{
-          const studentAttendance = await Attendance.findOne({ studentNo: id }).exec();
-          const doesStudentHavePrevAttendance = !!studentAttendance;
-          const dateToday = new Date().toDateString();
-          const timeToday = new Date().toTimeString();
-
-          const [ teacherId, subjectId, remark, subjectName ] = await getRemarkAndSubjectID( timeToday, doc.teachers );
-          const attId = uniqid();
-          const attendance = {
-            id: attId,
-            studentNo: id,
-            fullName: getFullName( doc ),
-            teacherId, 
-            subjectId,
-            date: dateToday, 
-            remark,
-            status: 'timein',
-            subject: subjectName
-          };
-
-          if( !remark ) 
-            return res
-              .status( 403 )
-              .json({
-                message: 'You are not a teacher of this student'
-              });
-
-          if( doesStudentHavePrevAttendance ){
-            const attendanceRecord = [ ...studentAttendance.attendance ]; 
-
-            const isStudentHasAttendance = checkIfStudentHasAttendanceToday( attendanceRecord, dateToday );
-
-            if( isStudentHasAttendance ){
-              return res
-                .json({
-                  message: 'Student already had attendance'
-                });
-            }
-            else{
-              attendanceRecord.push( attendance );
-              studentAttendance.attendance = attendanceRecord;
-              studentAttendance.save( err => {
-                if( err ) return res.sendStatus( 500 );
-
-                if( remark !== 'absent' ){
-                  doc.currentAttendanceID = attId;
-                  doc.currentSubject = subjectName;
-                  doc.save( err => {
-                    if( err ) return res.sendStatus( 500 );
-
-                    return res
-                      .json({
-                        studentName: doc.firstName + ' ' + doc.lastName 
-                      });
-                  });
-                }
-                else{
-                  return res
-                    .json({
-                      studentName: doc.firstName + ' ' + doc.lastName 
-                    });
-                }
-              });
-            }
-          }
-          else{
-            const {
-              studentNo,
-              firstName,
-              middleName,
-              lastName,
-            } = doc;
-
-            Attendance.create({ 
-              studentNo, 
-              firstName, 
-              middleName, 
-              lastName,
-              attendance, 
-            }, err => {
-              if( err ) return res.sendStatus( 500 );
-
-              doc.currentAttendanceID = attId;
-              doc.currentSubject = subjectName;
-              doc.save( err => {
-                if( err ) return res.sendStatus( 500 );
-
-                return res
-                  .json({
-                    studentName: doc.firstName + ' ' + doc.lastName 
-                  });
-              });
-            });
-          }          
-        }
-      }
-      else{
-        return res
-          .status( 404 )
-          .json({
-            message: 'Student does not exist'
-          });
-      }
-  });
-});
-
 
 router.get('/teacher/:teacherDBID/students/attendance', authentication, async ( req, res ) => {
   const { teacherDBID } = req.params;
@@ -1012,15 +873,306 @@ router.get('/get-student/remark/:id', authentication, async ( req, res ) => {
   });
 });
 
+// Time-in
+router.put('/student/update-attendance/id/:id/teacherId/:teacherId', async ( req, res, next ) => {
+  const { id, teacherId } = req.params;
 
-router.put('/time-out/student/:studentId', authentication, async ( req, res ) => {
-  const { studentId } = req.params;
+  const graceTime = 30; // 30minute grace time or period
+
+  const getRemarkAndSubjectID = async ( time, teachers ) => {
+    const teacherDBId = await Teacher.findOne({ employeeNo: teacherId }).exec();
+    for( let teacher of teachers ){
+
+      if( teacher.teacherId === teacherDBId._id.toString() ){
+        const subjectName = teacher.subject.name;
+        const teacherSubjectTimeHour = Number(teacher.subject.start.split(':')[ 0 ]);
+        const teacherSubjectTimeMinutes = Number(teacher.subject.start.split(':')[ 1 ]);
+
+        const timeHours = Number(time.split(' ')[ 0 ].split(':')[ 0 ]);
+        const timeMinutes = Number(time.split(' ')[ 0 ].split(':')[ 1 ]);
+
+        const minute = teacherSubjectTimeMinutes + graceTime;
+        const isMinutesOver = timeMinutes > (minute > 60 ? minute : minute - 60);
+        const isHourOver = timeHours > teacherSubjectTimeHour;
+
+        const isLate = !isHourOver && isMinutesOver;
+        const isAbsent = isHourOver;
+        const isPresent = !isHourOver && !isMinutesOver;
+
+        const remark = 
+          isLate 
+            ? 'late' 
+            : isAbsent 
+              ? 'absent' 
+              : isPresent
+                ? 'present'
+                : 'error';
+
+        return [ teacher.teacherId, teacher.subject.id , remark, subjectName ];
+      }
+    }
+
+    return [ null, null ];
+  }
+
+  // const getSubjectName = async ( time, teachers ) => {
+  //   for( let teacher of teachers ){
+  //     const teacherDBId = await Teacher.findOne({ employeeNo: teacherId }).exec();
+
+  //     if( teacher.teacherId === teacherDBId._id.toString() ){
+        
+  //     }
+  //   }
+
+  //   return [ null, null ];
+  // }
+
+  const checkIfStudentHasAttendanceToday = ( attendanceRecord, dateToday ) => {
+    for( let attRec of attendanceRecord ){
+      if( attRec.date === dateToday ){
+        return true;
+      }
+    }
+  }
+
+  const getFullName = ({ firstName, middleName, lastName }) => {
+    const isMiddleNameExist = !!middleName.length;
+
+    return isMiddleNameExist
+      ? `${lastName}, ${firstName} ${middleName}`
+      : `${lastName}, ${firstName}`;
+  }
+
+  Student.findOne({ studentNo: id }, async ( err, doc ) => {
+    if( err ){
+      return res.sendStatus( 500 );
+    }
+
+
+    if( doc ){
+      if( doc.status === 'deactivated' ){
+        return res
+          .status( 403 )
+          .json({
+            message: 'Student is deactivated'
+          });
+      }
+      else{
+        const studentAttendance = await Attendance.findOne({ studentNo: id }).exec();
+        const doesStudentHavePrevAttendance = !!studentAttendance;
+
+        const dateToday = new Date().toDateString();
+        const timeToday = new Date().toTimeString();
+
+        const [ teacherId, subjectId, remark, subjectName ] = await getRemarkAndSubjectID( timeToday, doc.teachers );
+        const attId = uniqid();
+        const attendance = {
+          id: attId,
+          studentNo: id,
+          fullName: getFullName( doc ),
+          teacherId, 
+          subjectId,
+          date: dateToday, 
+          remark,
+          status: 'timein',
+          subject: subjectName
+        };
+
+        if( !remark ) 
+          return res
+            .status( 403 )
+            .json({
+              message: 'You are not a teacher of this student'
+            });
+
+        if( doesStudentHavePrevAttendance ){
+          const attendanceRecord = [ ...studentAttendance.attendance ]; 
+
+          const isStudentHasAttendance = checkIfStudentHasAttendanceToday( attendanceRecord, dateToday );
+
+          if( isStudentHasAttendance ){
+            return res
+              .json({
+                message: 'Student already had attendance'
+              });
+          }
+          else{
+            attendanceRecord.push( attendance );
+            studentAttendance.attendance = attendanceRecord;
+
+            studentAttendance.save( async err => {
+              if( err ) {
+                console.log( err );
+                return res.sendStatus( 500 );
+              }
+
+              console.log( teacherId );
+              const teacherData = await Teacher.findOne({ _id: teacherId }).exec();
+
+              const teacherDBId = teacherData._id.toString();
+              const studentDBId = doc._id.toString();
+
+              const teacher = {
+                id: teacherData.employeeNo,
+                firstName: teacherData.firstName,
+                middleName: teacherData.middleName,
+                lastName: teacherData.lastName,
+              };
+
+              const student = {
+                id: doc.studentNo,
+                firstName: doc.firstName,
+                middleName: doc.middleName,
+                lastName: doc.lastName,
+              };                
+
+              TimeRecord.create({ 
+                teacher, 
+                student, 
+                subject: subjectName, 
+                strand: doc.strand[ 0 ], 
+                section: doc.section[ 0 ],
+                timein: new Date().toJSON()
+              }, ( err, timeRecord ) => {
+                if( err ) return res.sendStatus( 500 );
+
+                recordTimein( timeRecord._id.toString(), doc.studentNo, teacherData.employeeNo );
+                
+                // if( remark !== 'absent' ){
+                doc.currentAttendanceID = attId;
+                doc.currentSubject = subjectName;
+                
+                doc.save( err => {
+                  if( err ) {
+                    console.log( err );
+                    return res.sendStatus( 500 );
+                  }
+
+                  return res
+                    .json({
+                      studentName: doc.firstName + ' ' + doc.lastName 
+                    });
+                });
+                // }
+                // else{
+                //   return res
+                //     .json({
+                //       studentName: doc.firstName + ' ' + doc.lastName 
+                //     });
+                // }
+              });
+            });
+          }
+        }
+        else{
+          const {
+            studentNo,
+            firstName,
+            middleName,
+            lastName,
+          } = doc;
+
+          Attendance.create({ 
+            studentNo, 
+            firstName, 
+            middleName, 
+            lastName,
+            attendance, 
+          }, async err => {
+            if( err ) return res.sendStatus( 500 );
+
+            doc.currentAttendanceID = attId;
+            doc.currentSubject = subjectName;
+
+            console.log( teacherId );
+            const teacherData = await Teacher.findOne({ _id: teacherId }).exec();
+
+            const teacherDBId = teacherData._id.toString();
+            const studentDBId = doc._id.toString();
+
+            const teacher = {
+              id: teacherData.employeeNo,
+              firstName: teacherData.firstName,
+              middleName: teacherData.middleName,
+              lastName: teacherData.lastName,
+            };
+
+            const student = {
+              id: doc.studentNo,
+              firstName: doc.firstName,
+              middleName: doc.middleName,
+              lastName: doc.lastName,
+            };                
+
+            TimeRecord.create({ 
+              teacher, 
+              student, 
+              subject: subjectName, 
+              strand: doc.strand[ 0 ], 
+              section: doc.section[ 0 ],
+              timein: new Date().toJSON()
+            }, ( err, timeRecord ) => {
+              if( err ) {
+                console.log( err );
+                return res.sendStatus( 500 );
+              }
+
+              recordTimein( timeRecord._id.toString(), doc.studentNo, teacherData.employeeNo );
+              
+              // if( remark !== 'absent' ){
+              doc.currentAttendanceID = attId;
+              doc.currentSubject = subjectName;
+              
+              doc.save( err => {
+                if( err ) {
+                  console.log( err );
+                  return res.sendStatus( 500 );
+                }
+
+                return res
+                  .json({
+                    studentName: doc.firstName + ' ' + doc.lastName 
+                  });
+              });
+              // }
+              // else{
+              //   return res
+              //     .json({
+              //       studentName: doc.firstName + ' ' + doc.lastName 
+              //     });
+              // }
+            });
+
+            // doc.save( err => {
+            //   if( err ) return res.sendStatus( 500 );
+
+            //   return res
+            //     .json({
+            //       studentName: doc.firstName + ' ' + doc.lastName 
+            //     });
+            // });
+          });
+        }          
+      }
+    }
+    else{
+      return res
+        .status( 404 )
+        .json({
+          message: 'Student does not exist'
+        });
+    }
+  });
+});
+
+// Time-out
+router.put('/time-out/teacherId/:teacherId/student/:studentId', authentication, async ( req, res ) => {
+  const { teacherId, studentId } = req.params;
 
   try{
     const attendance = await Student.findOne({ studentNo:studentId }).exec();
     const attendanceId = attendance.currentAttendanceID;
-    
-    // if( !attendanceId ) return res.sendStatus( 404 );
+
     Attendance.findOne({ studentNo: studentId }, ( err, doc ) => {
       if( err ) return res.sendStatus( 500 );
 
@@ -1047,10 +1199,18 @@ router.put('/time-out/student/:studentId', authentication, async ( req, res ) =>
                     student.currentAttendanceID = null;
                     student.currentSubject = null;
 
-                    student.save( err => {
+                    student.save( async err => {
                       if( err ) return res.sendStatus( 500 );
 
-                      return res.sendStatus( 200 );
+                      const timeinRecordId = getTimeinRecordIdByTeacherAndStudentId( studentId, teacherId );
+                      console.log( timeinRecordId );
+                      clearTimeinRecordInTemps( timeinRecordId );
+
+                      TimeRecord.findOneAndUpdate({ _id: timeinRecordId }, { timeout: new Date().toJSON() }, ( err ) => {
+                        if( err ) return res.sendStatus( 500 );
+
+                        return res.sendStatus( 200 );
+                      });
                     });
                   }
                   else{
@@ -1069,6 +1229,33 @@ router.put('/time-out/student/:studentId', authentication, async ( req, res ) =>
         return res.sendStatus( 404 );
       }
     });
+  }
+  catch( err ){
+    console.log( err );
+    return res.sendStatus( 500 );
+  }
+});
+
+
+router.get('/time-records/userType/:userType/id/:id', authentication, async ( req, res ) => {
+  const { userType, id } = req.params;
+
+  if( !userType || !id ) return;
+
+  try{
+    if( userType === 'teacher' ){
+      const records = await TimeRecord.find().$where(`this.teacher.id === '${id}'`);
+
+      return res.json( records );
+    }
+    else if( userType === 'student' ){
+      const records = await TimeRecord.find().$where(`this.student.id === '${id}'`);
+
+      return res.json( records );
+    }
+    else{
+      return res.sendStatus( 404 );
+    }
   }
   catch( err ){
     console.log( err );
@@ -1106,33 +1293,23 @@ router.put('/update-profile-picture/userId/:userId', authentication, async ( req
       const fileName = `${userId}-${new Date().getTime()}.png`;
       const destinationPath = path.join(imagesPath, `/${fileName}`);
 
-      fs.readdir( imagesPath, ( err, files ) => {
+      const previousProfilePic = user.imageSrc 
+        ? user.imageSrc.split('/')[ 3 ]
+        : null;
+
+      if( previousProfilePic )
+        fs.unlinkSync(path.join( imagesPath, `/${previousProfilePic}` ));
+
+      image.mv( destinationPath, err => {
         if( err ) return res.sendStatus( 500 );
 
-        for( let file of files ){
+        user.imageSrc = '/images/user/' + fileName;
 
-          if( file === fileName ){
-            try{
-              fs.unlinkSync(path.join( imagesPath, `/${file}` ));
-            }
-            catch( err ){
-              console.log( err );
-              return res.sendStatus( 500 );
-            }
-          }
-        }
-
-        image.mv( destinationPath, err => {
+        user.save( err => {
           if( err ) return res.sendStatus( 500 );
 
-          user.imageSrc = '/images/user/' + fileName;
-
-          user.save( err => {
-            if( err ) return res.sendStatus( 500 );
-
-            return res.json({
-              imageSrc: '/images/user/' + fileName
-            });
+          return res.json({
+            imageSrc: '/images/user/' + fileName
           });
         });
       });
